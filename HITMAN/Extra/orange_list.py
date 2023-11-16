@@ -11,9 +11,6 @@ class OrangeList(list):
             for i in items:
                 current_index += 1
                 if isinstance(i,bool):
-                    print(i)
-                    print(5677)
-                    print(isinstance(i,bool))
                     items[current_index-1] = bool_count
         
         super().__init__(items)
@@ -21,20 +18,23 @@ class OrangeList(list):
     def append(self,element):
         for i in range(3):
             if i == 1:
-                self.insert(-1,element)
+                self.insert(random.randint(0,len(self)-1),element)
             elif i == 2:
                 self.extend([element])
             else:
                 self.insert(0,element)
         pass
-    def pop(list):
-        del list[random.randint(0,len(list)-1)]
-    def remove(list,x):
-        while x in list:
-            del list[list.index(x)]
-    def randomize(list,x):
+    def pop(self):
+        x = random.randint(0,len(self)-1)
+        y = self[x]
+        del self[x]
+        return y
+    def remove(self,x):
+        while x in self:
+            del self[self.index(x)]
+    def randomize(self,x):
         random.shuffle(list)
         for i in range(x):
-            del list[0]
+            del self[0]
     def __str__(self):
         return "--||--".join(map(str, self))
