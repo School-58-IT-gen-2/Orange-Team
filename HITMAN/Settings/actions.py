@@ -343,7 +343,7 @@ def combat():
                         t = input()
                     t = int(t)
                     if t == 1:
-                        while '' not in buttons :
+                        while t not in buttons :
                             print(f'\n\nНажимайте как можно быстрее: {current_button}')
                             t = input()
                         if t.upper() == current_button:
