@@ -5,28 +5,27 @@ import pickle
 while True:
     t = input()
     if t.upper() == 'W':
-        time += 0.5
+        time[0] += 0.5
         print(move())
     if t.upper() == 'I':
-        print(inventory(time, yuki, soders))
+        print(inventory())
     if t.upper() == 'E':
-        time += 1
-        print(search(time, yuki, soders))
+        time[0] += 1
+        print(search())
     if t.upper() == 'S':
-        print(status(time, yuki, soders))
+        print(status())
     if t.upper() == 'F':
-        time += 1
-        interaction = interact(time, yuki, soders)
-        print(interaction)
-        if interaction == location_status(player.location) and player.location == morgue:
-            soders = 0
+        time[0] += 1
+        print(interact())
     if t.upper() == 'Q':
         with open('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat', 'wb') as f:
-            pickle.dump([player_lvl], f, protocol=2)
+            pickle.dump([smoking_kills, stretch, personal_goodbye, no_smoking, human_error, suit_only, silent_assasin, sauna_assasination, sushi, heartless, silent_assasin_suit_only, no_evidence, ghost_machine, straight_shot, hold_hair, piano_man, hurt_oneself, tasteless, master_assasin, player_lvl], f, protocol=2)
         sys.exit()
+    if t.upper() == 'C':
+        print(see_challenges())
     if player.disguise != 'VIP - пациент':
-        so = 1
-    if ((target_status[int(time)%9] == player.location.name) and (yuki == 1)) or ((player.location.name == 'Операционная') and (soders == 1)):
+        so[0] = 1
+    if ((target_status[int(time[0])%9] == player.location.name) and (yuki[0] == 1)) or ((player.location.name == 'Операционная') and (soders[0] == 1)):
         print('\n\nВы находитесь в одной локации с целью')
     if morgue_info == 0 and player.location == morgue:
         print('\n\nВы нашли файл на компьютере. Это заметки о Кураторе и его нейрочипе. В них приводятся подробные сведения об устройстве чипа и принципе его работы, а также описание того, как изменение дозы влияет на настроение Куратора. Судя по всему, увеличение дозы приводит к улучшению его настроения, а уменьшение, напротив, возвращает его в привычное подавленное состояние. Что любопытно, научный сотрудник, похоже, сам менял дозу Куратора без его ведома: для этого он использовал пульт управления чипом, который куратор хранит в своей спальне.')
@@ -46,14 +45,14 @@ while True:
     if yoga_info == 0 and player.location == resort:
         print('\n\nДиана: Расписание занятий по йоге. Имя Юки Ямадзаки — в каждой графе. Что ж, судя по всему, Юки Ямадзаки — настоящий фанат йоги. Из расписания у горячего источника видно, что она заняла тренера на целый день. Готов размяться, 47-й?')
         yoga_info = 1
-    if yuki == 0 and soders == 0 and final == 0:
+    if yuki[0] == 0 and soders[0] == 0 and final == 0:
         print('\n\nВсе цели убиты. Найдте выход с миссии.')
         final = 1
     if final == 1 and (player.location == cable_car or player.location == garage or player.location == helipad or player.location == mountain_path):
         print('\n\n1. Завершить миссию')
         t = input()
         print('\n\nДиана: Миссия выполнена, хорошая работа, 47-ой.')
-        print(rating(so))
+        print(rating())
     if (fugu_poison in player.inventory or rat_poison in player.inventory or deadly_poison in player.inventory or emetic_poison in player.inventory) and player.disguise == 'Шеф' and player.location == restaurant and poison_kill == 0:
         print('\n\n1. Отравить роллы\n2. Не отравлять роллы')
         t = input()
@@ -63,6 +62,7 @@ while True:
         if t == 2:
             print(player.location.name)
         elif t == 1:
+            poison_kill = 1
             for i in range(len(poisons)):
                 if poisons[i] in player.inventory:
                     print(f'{i+1}. {poisons[i].name}')
@@ -71,7 +71,10 @@ while True:
                 t = input()
             t = int(t)
             if poisons[t-1].deadly == True:
-                yuki = 0
+                if poisons[t-1] == fugu_poison:
+                    print(sushi.achieved())
+                yuki[0] = 0
+                print(tasteless.achieved())
                 print('Диана: Грамотный ход 47-ой. С Юки Ямадзаки покончено.')
             else:
                 print('Цели стало плохо и она направилась в ванную. Пойти за ней?\n1. Да\n2. Нет')
@@ -87,13 +90,12 @@ while True:
                     t = int(t)
                     if t == 2:
                         print(player.location.name)
-                        poison_kill = 1
                     elif t == 1:
-                        yuki = 0
-                        poison_kill = 1
+                        print(hold_hair.achieved())
+                        print(hurt_oneself.achieved())
+                        yuki[0] = 0
                         print('Цель убита. Хорошая работа.')
                 elif t == 2:
-                    poison_kill = 1
                     print(player.location.name)
     if player.location == water_control_room and sauna_kill == 0:
         print('\n')
@@ -105,14 +107,16 @@ while True:
         if t == 1:
             sauna_kill = 1
             print('Все люди вышли из бани из-за высокой температуры.\n')
-            if yuki == 1:
+            if yuki[0] == 1:
                 print('Юки Ямадзаки: Наконец-то парилка свободна!\nЮки Ямадзаки вошла в баню\n\n1. Запереть дверь в парилку\n2. Уйти')
                 t = input()
                 while t.isdigit() == False:
                     t = input()
                 t = int(t)
                 if t == 1:
-                    yuki = 0
+                    print(sauna_assasination.achieved())
+                    print(hurt_oneself.achieved())
+                    yuki[0] = 0
                     print('Диана: С Юки Ямадзаки покончено. Отличная работа, агент.')
                 elif t == 2:
                     print(player.location.name)
@@ -120,7 +124,7 @@ while True:
                 print(player.location.name)
         elif t == 2:
             print(player.location.name)
-    if player.disguise == 'Инструктор по йоге' and yoga_kill == 0 and player.location == resort and yuki == 1:
+    if player.disguise == 'Инструктор по йоге' and yoga_kill == 0 and player.location == resort and yuki[0] == 1:
         print('\n')
         yoga_kill = 1
         print('Юки Ямадзаки: Наконец-то, сколько можно вас ждать!\n1. Начать тренировку по йоге\n2. Уйти')
@@ -135,7 +139,9 @@ while True:
                 t = input()
             t = int(t)
             if t == 1:
-                yuki = 0
+                print(stretch.achieved())
+                print(hurt_oneself.achieved())
+                yuki[0] = 0
                 print('Диана: Отлично сработано. Юки Ямадзаки нас больше не побеспокоит.')
             if t == 2:
                 print(player.location.name)
@@ -147,6 +153,7 @@ while True:
             t = input()
         t = int(t)
         if t == 1:
+            print(no_smoking.achieved())
             cigar_place = 1
             print('1. Выйти из номера\n2. Пойти на балкон')
             t = input()
@@ -167,7 +174,9 @@ while True:
                         print('1. Выйти из номера')
                         input()
                         player.location = hall
-                        yuki = 0
+                        yuki[0] = 0
+                        print(smoking_kills.achieved())
+                        print(hurt_oneself.achieved())
                         print('Юки Ямадзаки: Пачка сиграрет? Как я могла ее не заметить!\nЮки Ямадзаки вышла на балкон и воспользовалась зажигалкой, что привело к взрыву.\nДиана: Это было умно, 47-й. Юки Ямадзаки больше нас не побеспокоит.')
                     else:
                         print('У вас нет гаечного ключа')
@@ -199,7 +208,9 @@ while True:
                     print('1. Выйти из номера')
                     input()
                     player.location = hall
-                    yuki = 0
+                    print(smoking_kills.achieved())
+                    print(hurt_oneself.achieved())
+                    yuki[0] = 0
                     print('Юки Ямадзаки: Пачка сиграрет? Как я могла ее не заметить!\nЮки Ямадзаки вышла на балкон и воспользовалась зажигалкой, что привело к взрыву.\nДиана: Это было умно, 47-й. Юки Ямадзаки больше нас не побеспокоит.')
                 else:
                     print('У вас нет гаечного ключа')
@@ -210,8 +221,6 @@ while True:
     if (player.location == pilot_room or player.location == helipad) and pilot_info == 0:
         pilot_info = 1
         print('\n\nДиана: 47-й, у меня есть сведения о пилоте. Мне удалось извлечь кое-какие данные из системы безопасности клиники. Главный хирург, Николя Лоран, похоже, часто встречается с пилотом вертолёта у выхода из мед-комплекса. А если верить слухам, у главного хирурга дрожат руки.')
-    if 'Главный хирург' in player.found_disguises:
-        chief_surgeon = 0
     if player.disguise == 'Пилот' and player.location == helipad and chief_surgeon.alive == True and get_chief_surgeon == 0:
         get_chief_surgeon = 1
         print('\n\nГлавный хирург вышел из мед-комплекса\nГлавный хирург: У тебя еще остались те таблетки?\n47-й: Конечно, следуй за мной.')
@@ -232,9 +241,10 @@ while True:
             if t == 2:
                 print(player.location.name)
             if t == 1:
+                chief_surgeon.alive = False
                 player.found_disguises.append('Главный хирург')
                 print(player.location.name)
-    if player.location == operation_room and player.disguise == 'Главный хирург' and surgeon_kill == 0 and soders == 1:
+    if player.location == operation_room and player.disguise == 'Главный хирург' and surgeon_kill == 0 and soders[0] == 1:
         print('\n\n1. Управлять операционным роботом\n2. Не управлять')
         t = input()
         while t.isdigit() == False:
@@ -247,21 +257,25 @@ while True:
                 t = input()
             t = int(t)
             if t == 1:
-                soders = 0
+                print(human_error.achieved())
+                print(hurt_oneself.achieved())
+                soders[0] = 0
                 surgeon_kill = 1
                 print('\n\nДиана: Умно, 47-й. С Содерсом покончено.')
             if t == 2:
                 print(player.location.name)
     if 'Охранник' in player.found_disguises or 'Телохранитель' in player.found_disguises:
         player.inventory.append(pistol)
-    if player.location == server_room and soders == 1:
+    if player.location == server_room and soders[0] == 1:
         print('\n\n1. Повредить серверы\n2. Не повреждать')
         t = input()
         while t.isdigit() == False:
             t = input()
         t = int(t)
         if t == 1:
-            soders = 0
+            print(ghost_machine.achieved())
+            print(hurt_oneself.achieved())
+            soders[0] = 0
             print('\n\nХирург: Что происходит с роботом?! Как его отключить?! Пациент сейчас умрет!')
             print('Диана: Это было впечатляюще, агент. Эрих Содерс мертв.')
         if t == 2:

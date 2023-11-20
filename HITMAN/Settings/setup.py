@@ -17,6 +17,43 @@ class Player:
 
 player_lvl = 10
 
+class Challenge:
+
+    def __init__(self, name, description, completed):
+        self.name = name
+        self.description = description
+        self.completed = completed
+
+    def achieved(self):
+        global player_lvl
+        if self.completed == False:
+            self.completed = True
+            player_lvl += 5
+            return f'\n\nИспытание выполнено: {self.name}'
+        return ''
+    
+smoking_kills = Challenge('Курение убивает', 'Убейте Юки Ямадзаки во время того, как она курит сигареты.', False)
+stretch = Challenge('Хорошая растяжка', 'Убейте Юки Ямадзаки, подстроив несчастный случай во время занятий йогой.', False)
+personal_goodbye = Challenge('Личное прощание', 'Убейте Эриха Содерса выстрелом из пистолета.', False)
+no_smoking = Challenge('Не курить!', 'Положите пачку сигарет в номере Юки Ямадзаки.', False)
+human_error = Challenge('(Не) врачебная ошибка', 'Убейте Эриха Содерса, самостоятельно проведя операцию.', False)
+suit_only = Challenge('Только костюм', '1. Завершите миссию\n2. Сделайте это в маскировке VIP - пациента', False)
+silent_assasin = Challenge('Бесшумный убийца', '1. Завершите миссию\n2. Убивайте только цели\n3. Ни одно тело не должно быть обнаружено\n 4. Не дайте себя заметить', False)
+sauna_assasination = Challenge('Убийство в парилке', 'Убейте Юки Ямадзаки, заперев ее в парилке.', False)
+sushi = Challenge('Приятного аппетита', 'Отравите роллы Юки Ямадзаки ядом рыбы фугу.', False)
+heartless = Challenge('Бессердечный', 'Повредите сердце Эриха содерса.', False)
+silent_assasin_suit_only = Challenge('Бесшумный убйца. Только костюм.', '1. Завершите миссию\n2. Убивайте только цели\n3. Ни одно тело не должно быть обнаружено\n 4. Не дайте себя заметить\n5. Сделайте это в маскировке VIP - пациента', False)
+no_evidence = Challenge('Без улик', 'Завершите миссию, не давая обнаружить тела.', False)
+ghost_machine = Challenge('Призрак в машине', 'Повредите сервера KAI.', False)
+straight_shot = Challenge('Точный выстрел', 'Убейте цель выстрелом из пистолета.', False)
+hold_hair = Challenge('Подержи волосы', 'Убейте цель, утопив ее.', False)
+piano_man = Challenge('Пианист', 'Убейте цель при помощи удавки.', False)
+hurt_oneself = Challenge('Так можно и пораниться', 'Убейте цель, подстроив несчастный случай.', False)
+tasteless = Challenge('Без вкуса, без следа', 'Устраните цель, отравив ее.', False)
+master_assasin = Challenge('Мастер-убийца', f'1. Выполните {straight_shot.name}\n2. Выполните {hold_hair.name}\n3. Выполните {piano_man.name}\n4. Выполните {hurt_oneself.name}\n5. Выполните {tasteless.name}', False)
+
+challenges = [smoking_kills, stretch, personal_goodbye, no_smoking, human_error, suit_only, silent_assasin, sauna_assasination, sushi, heartless, silent_assasin_suit_only, no_evidence, ghost_machine, straight_shot, hold_hair, piano_man, hurt_oneself, tasteless, master_assasin]
+
 lvl_unlocks = {
     1: ['Номер 47-го', suite, 'VIP - пациент'],
     2: ['Зона спа', spa, 'VIP - пациент'],
@@ -31,8 +68,7 @@ lvl_unlocks = {
 
 if os.stat('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat').st_size != 0:
     with open('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat', 'rb') as f:
-        player_lvl = pickle.load(f)
-    player_lvl = int(player_lvl[0])
+        smoking_kills, stretch, personal_goodbye, no_smoking, human_error, suit_only, silent_assasin, sauna_assasination, sushi, heartless, silent_assasin_suit_only, no_evidence, ghost_machine, straight_shot, hold_hair, piano_man, hurt_oneself, tasteless, master_assasin, player_lvl = pickle.load(f)
 
 def start():
     carry_on_items = [fiber_wire, deadly_poison, emetic_poison, disposable_scrambler, combat_knife, coin]
@@ -83,26 +119,6 @@ def start():
 
 player = start()
 
-class Challenge:
-
-    def __init__(self, name, description, completed):
-        self.name = name
-        self.description = description
-        self.completed = completed
-
-    def achieved(self):
-        self.completed = True
-        return f'Испытание выполнено: {self.name}'
-    
-smoking_kills = Challenge('Курение убивает', 'Убейте Юки Ямадзаки во время того, как она курит сигареты.', False)
-stretch = Challenge('Хорошая растяжка', 'Убейте Юки Ямадзаки, подстроила несчастный случай во время занятий йогой.', False)
-personal_goodbye = Challenge('Личное прощание', 'Убейте Эриха Содерса выстрелом из пистолета', False)
-ninja = Challenge('Словно ниндзя', 'Убейте обе цели, будучи в маскировке ниндзя', False)
-human_error = Challenge('(Не) врачебная ошибка', 'Убейте Эриха Содерса, самостоятельно проведя операцию', False)
-silent_assasin = Challenge('Бесшумный убийца', '1. Завершите миссию\n2. Убивайте только цели\n3. Ни одно тело не должно быть обнаружено\n 4. Не дайте себя заметить', False)
-sauna_assasination = Challenge('Убийство в парилке', 'Убейте Юки Ямадзаки, заперев ее в парилке.', False)
-sushi = Challenge('Приятного аппетита', 'Отравите роллы Юки Ямадзаки ядом рыбы фугу.', False)
-
 class NPC:
 
     def __init__(self, guard, disguise, alive, route, witness_chance):
@@ -122,7 +138,7 @@ class NPC:
     def suspicion(self):
         global suspicion_count
         if self.alive == True:
-            suspicion_count += 1
+            suspicion_count[0] += 1
             return f'\n\n{self.disguise}: Эй, ты не можешь здесь находится!'
         else:
             return False
@@ -130,32 +146,32 @@ class NPC:
 
 guard_cable_car_1 = NPC(True, 'Телохранитель', True, {0: 'Канатная дорога'}, 5)
 guard_cable_car_2 = NPC(True, 'Телохранитель', True, {0: 'Канатная дорога'}, 5)
-guard_hall_1 = NPC(True, 'Охранник', True, {0: 'Холл'}, 7)
-guard_hall_2 = NPC(True, 'Охранник', True, {0: 'Холл'}, 7)
+guard_hall_1 = NPC(True, 'Охранник', True, {0: 'Холл'}, 8)
+guard_hall_2 = NPC(True, 'Охранник', True, {0: 'Холл'}, 8)
 guard_hall_3 = NPC(True, 'Охранник', True, {0: 'Холл', 1: 'Комната охраны'}, 8)
 guard_spa_1 = NPC(True, 'Охранник', True, {0: 'Зона спа'}, 4)
-guard_restaurant_1 = NPC(True, 'Охранник', True, {0: 'Ресторан'}, 6)
-guard_restaurant_2 = NPC(True, 'Охранник', True, {0: 'Ресторан'}, 8)
+guard_restaurant_1 = NPC(True, 'Охранник', True, {0: 'Ресторан'}, 8)
+guard_restaurant_2 = NPC(True, 'Охранник', True, {0: 'Ресторан'}, 9)
 guard_garden_1 = NPC(True, 'Охранник', True, {0: 'Внутренний сад'}, 3)
 guard_garden_2 = NPC(True, 'Охранник', True, {0: 'Внутренний сад'}, 5)
-guard_medical_center_1 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс'}, 2)
-guard_medical_center_2 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс'}, 2)
-guard_medical_center_3 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс'}, 1)
-guard_medical_center_4 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс', 1: 'Операционная'}, 2)
-guard_security_room = NPC(True, 'Охранник', True, {0: 'Комната охраны'}, 1)
+guard_medical_center_1 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс'}, 6)
+guard_medical_center_2 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс'}, 7)
+guard_medical_center_3 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс'}, 6)
+guard_medical_center_4 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс', 1: 'Операционная'}, 9)
+guard_security_room = NPC(True, 'Охранник', True, {0: 'Комната охраны'}, 9)
 guard_garage = NPC(True, 'Охранник', True, {0: 'Гараж'}, 7)
 guard_bar = NPC(True, 'Охранник', True, {0: 'Барная стойка'}, 2)
 guard_morgue = NPC(True, 'Телохранитель', True, {0: 'Морг'}, 2)
-guard_target_suite_1 = NPC(True, 'Телохранитель', True, {0: 'Номер Юки Ямадзаки'}, 1)
-guard_target_suite_2 = NPC(True, 'Телохранитель', True, {0: 'Номер Юки Ямадзаки'}, 7)
+guard_target_suite_1 = NPC(True, 'Телохранитель', True, {0: 'Номер Юки Ямадзаки'}, 8)
+guard_target_suite_2 = NPC(True, 'Телохранитель', True, {0: 'Номер Юки Ямадзаки'}, 9)
 guard_target_suite_3 = NPC(True, 'Телохранитель', True, {0: 'Номер Юки Ямадзаки'}, 8)
-guard_target_suite_4 = NPC(True, 'Телохранитель', True, {0: 'Номер Юки Ямадзаки'}, 5)
+guard_target_suite_4 = NPC(True, 'Телохранитель', True, {0: 'Номер Юки Ямадзаки'}, 7)
 guard_helipad_1 = NPC(True, 'Телохранитель', True, {0: 'Вертолетная площадка'}, 8)
 guard_helipad_2 = NPC(True, 'Телохранитель', True, {0: 'Вертолетная площадка'}, 9)
-guard_medical_center_level_2_1 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс (2 этаж)'}, 3)
-guard_medical_center_level_2_2 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс (2 этаж)'}, 5)
-guard_medical_center_level_2_3 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс (2 этаж)'}, 1)
-guard_medical_center_level_2_4 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс (2 этаж)'}, 6)
+guard_medical_center_level_2_1 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс (2 этаж)'}, 8)
+guard_medical_center_level_2_2 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс (2 этаж)'}, 9)
+guard_medical_center_level_2_3 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс (2 этаж)'}, 7)
+guard_medical_center_level_2_4 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс (2 этаж)'}, 8)
 target_guard = NPC(True, 'Телохранитель', True, {0: 'Номер Юки Ямадзаки', 1: 'Холл', 2: 'Ресторан', 3: 'Холл', 4: 'Зона спа', 5: 'Зона отдыха', 6: 'Зона спа', 7: 'Холл', 8: 'Номер Юки Ямадзаки'}, 8)
 
 staff_spa_1 = NPC(False, 'Работник "ГАМА"', True, {0: 'Зона спа', 1: 'Зона отдыха'}, 7)
@@ -164,19 +180,19 @@ staff_restaurant_1 = NPC(False, 'Работник "ГАМА"', True, {0: 'Рес
 staff_restaurant_2 = NPC(False, 'Работник "ГАМА"', True, {0: 'Ресторан'}, 8)
 staff_garden_1 = NPC(False, 'Работник "ГАМА"', True, {0: 'Внутренний сад'}, 1)
 staff_garden_2 = NPC(False, 'Работник "ГАМА"', True, {0: 'Внутренний сад'}, 3)
-surgeon_medical_center = NPC(False, 'Хирург', True, {0: 'Мед-комплекс', 1: 'Операционная'}, 1)
+surgeon_medical_center = NPC(False, 'Хирург', True, {0: 'Мед-комплекс', 1: 'Операционная'}, 9)
 mechanic_garage = NPC(False, 'Механик', True, {0: 'Гараж'}, 1)
 yoga_coach = NPC(False, 'Инструктор по йоге', True, {0: 'Гараж', 1: 'Спальня персонала'}, 1)
-chef_1 = NPC(False, 'Шеф', True, {0: 'Кухня'}, 2)
-chef_2 = NPC(False, 'Шеф', True, {0: 'Кухня'}, 5)
-morgue_worker_1 = NPC(False, 'Работник морга', True, {0: 'Морг'}, 3)
-morgue_worker_2 = NPC(False, 'Работник морга', True, {0: 'Морг'}, 3)
+chef_1 = NPC(False, 'Шеф', True, {0: 'Кухня'}, 7)
+chef_2 = NPC(False, 'Шеф', True, {0: 'Кухня'}, 8)
+morgue_worker_1 = NPC(False, 'Работник морга', True, {0: 'Морг'}, 6)
+morgue_worker_2 = NPC(False, 'Работник морга', True, {0: 'Морг'}, 7)
 morgue_worker_3 = NPC(False, 'Работник морга', True, {0: 'Морг'}, 1)
 surgeon_operation_room_1 = NPC(False, 'Хирург', True, {0: 'Операционная'}, 7)
 surgeon_operation_room_2 = NPC(False, 'Хирург', True, {0: 'Операционная'}, 9)
 surgeon_operation_room_3 = NPC(False, 'Хирург', True, {0: 'Операционная'}, 8)
 chief_surgeon = NPC(False, 'Главный хирург', True, {0: 'Операционная'}, 7)
-pilot = NPC(False, 'Пилот', True, {0: 'Комната пилота'}, 8)
+pilot = NPC(False, 'Пилот', True, {0: 'Комната пилота'}, 3)
 director = NPC(False, 'Директор клиники', True, {0: 'Холл', 1: 'Внутренний сад', 2: 'Холл', 3: 'Мед-комплекс', 4: 'Мед-комплекс (2 этаж)', 5: 'Комната директора клиники', 6: 'Комната директора клиники', 7:'Комната директора клиники', 8: 'Мед-комплекс (2 этаж)', 9: 'Мед-комплекс', 10: 'Холл'}, 7)
 
 npcs = [guard_cable_car_1, 
@@ -227,29 +243,35 @@ npcs = [guard_cable_car_1,
         pilot, 
         director]
 
-def rating(so):
+def rating():
     global player_lvl
     print('\n')
-    print(f'Тел найдено: {bodies}')
-    print(f'Убито невинных: {kills}')
-    print(f'Вы начали бой {combat_count} раз')
-    print(f'Вы были замечены {suspicion_count} раз')
-    rating = int(5-(bodies*0.5)-(kills*0.7)-(combat_count*0.1)-(suspicion_count*0.2))
+    print(f'Тел найдено: {bodies[0]}')
+    print(f'Убито невинных: {kills[0]}')
+    print(f'Вы начали бой {combat_count[0]} раз')
+    print(f'Вы были замечены {suspicion_count[0]} раз')
+    rating = int(5-(bodies[0]*0.5)-(kills[0]*0.7)-(combat_count[0]*0.1)-(suspicion_count[0]*0.2))
     if rating < 0:
         rating = 0
     print(f'Ваш рейтинг: {rating}/5')
-    if int(rating) == 5 and so == 0:
-        player_lvl += 10
-        print('Бесшумный убийца. Только костюм.')
-    elif int(rating) == 5 and so == 1:
-        player_lvl += 5
+    if int(rating) == 5 and so[0] == 1:
+        print(silent_assasin.achieved())
         print('Бесшумный убийца.')
-    elif so == 0:
-        player_lvl += 3
-        print('Только костюм.')
+    elif int(rating) == 5 and so[0] == 0:
+        print(silent_assasin_suit_only.achieved())
+        print('Бесшумный убийца.')
+    elif so[0] == 0:
+        print(suit_only.achieved())
+    if bodies[0] == 0:
+        print(no_evidence.achieved())
+    if straight_shot.completed == True and hold_hair.completed == True and piano_man.completed == True and hurt_oneself.completed == True and tasteless.completed == True:
+        print(master_assasin.achieved())
     player_lvl += rating
+    for i in challenges:
+        if i.completed == True:
+            print(i.name)
     with open('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat', 'wb') as f:
-        pickle.dump([player_lvl], f, protocol=2)
+        pickle.dump([smoking_kills, stretch, personal_goodbye, no_smoking, human_error, suit_only, silent_assasin, sauna_assasination, sushi, heartless, silent_assasin_suit_only, no_evidence, ghost_machine, straight_shot, hold_hair, piano_man, hurt_oneself, tasteless, master_assasin, player_lvl], f, protocol=2)
     return sys.exit()
 
 target_status = {
@@ -264,12 +286,15 @@ target_status = {
     8: 'Номер Юки Ямадзаки'
 }
 
-suspicion_count = 0
-kills = 0
-bodies = 0
-time = 0
-soders = 1
-yuki = 1
+def print_soders():
+    return soders
+
+suspicion_count = [0]
+kills = [0]
+bodies = [0]
+time = [0]
+soders = [1]
+yuki = [1]
 morgue_info = 0
 cigar_info = 0
 cigar_info2 = 0
@@ -278,9 +303,9 @@ chip_info = 0
 yoga_info = 0
 final = 0
 poison_kill = 0
-combat_count = 0
+combat_count = [0]
 poisons = [fugu_poison, rat_poison, deadly_poison, emetic_poison]
-so = 0
+so = [0]
 sauna_kill = 0
 yoga_kill = 0
 cigar_kill = 0
