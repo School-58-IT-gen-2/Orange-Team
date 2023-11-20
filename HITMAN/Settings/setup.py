@@ -1,6 +1,8 @@
-import random
+import sys
+import pickle
 from Settings.locations import *
 from Settings.loot import *
+import os
 
 class Player:
 
@@ -13,7 +15,93 @@ class Player:
         self.compromised_disguises = compromised_disguises
         self.disguise = disguise
 
-player = Player([], 100, suite, ['VIP - пациент'], arms, [], 'VIP - пациент')
+player_lvl = 10
+
+lvl_unlocks = {
+    1: ['Номер 47-го', suite, 'VIP - пациент'],
+    2: ['Зона спа', spa, 'VIP - пациент'],
+    3: ['Горная тропа (в маскировке ниндзя)', mountain_path, 'Ниндзя'],
+    4: ['Ресторан', restaurant, 'VIP - пациент'],
+    5: ['Спальня персонала (в маскировке работника "ГАМА")', chip_room, 'Работник "ГАМА"'],
+    6: ['Кухня (в маскировке шефа)', kitchen, 'Шеф'],
+    7: ['Внутренний сад (в маскировке работника "ГАМА")', garden, 'Работник "ГАМА"'],
+    8: ['Морг', morgue, 'VIP - пациент'],
+    9: ['Оперционная (в маскировке хирурга)', operation_room, 'Хирург']
+}
+
+if os.stat('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat').st_size != 0:
+    with open('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat', 'rb') as f:
+        player_lvl = pickle.load(f)
+    player_lvl = int(player_lvl[0])
+
+def start():
+    carry_on_items = [fiber_wire, deadly_poison, emetic_poison, disposable_scrambler, combat_knife, coin]
+    global player_lvl
+    print('Брифинг:\nДиана: Доброе утро, 47-й. Совет директоров одобрил ликвидацию Эриха Содерса. После Колорадо мы решили пристально изучить личные дела Содерса и выяснили, что его недавно доставили в частную клинику «Гама» на японском острове Хоккайдо для срочной операции на сердце. Без «Провиденс» тут явно не обошлось. Содерс страдает от редкой врожденной патологии — транспозиции органов: его внутренние органы в теле расположены зеркально. Для трансплантации ему необходимо правостороннее сердце, и он явно предал МКА, чтобы получить его. Его приняли прошлой ночью и сейчас он готовится к трёхэтапной операции. Под видом Тобиаса Рипера, крупного бизнесмена, ты отправляешься в «Гаму» для стандартного медицинского обследования, о формальностях мы уже позаботились. В таких условиях придётся импровизировать и самостоятельно добывать снаряжение. Кроме того, тебе нужно ликвидировать Юки Ямадзаки — она адвокат из Токио, работает на «Провиденс». Содерс уже передал Ямадзаки доступ к нашей базе клиентов и согласился предоставить полный список оперативных сотрудников МКА после завершения операции. Этого допустить никак нельзя. Содерс должен заплатить за своё предательство — это послужит хорошим уроком его нанимателям. На кону будущее и репутация МКА. Какой бы властью и могуществом ни обладала «Провиденс», пора поставить их на место. Я оставлю тебя подготавливаться.\n\nВведите любой символ, чтобы начать задание.')
+    input()
+    print('\n\nВыберите начальную локацию:\n')
+    for i in range(1, 10):
+        if i <= player_lvl // 10:
+            print(f'{i}. {lvl_unlocks[i][0]}')
+    t = input()
+    while t.isdigit() == False:
+        t = input()
+    t = int(t)
+    start_location = lvl_unlocks[t]
+    start_inventory = []
+    if player_lvl // 10 > 9:
+        print('\n\nВыберите пистолет:\n')
+        print('1. Пистолет с глушителем\n2. Пистолет без глушителя')
+        t = input()
+        while t.isdigit() == False:
+            t = input()
+        t = int(t)
+        if t == 1:
+            start_inventory.append(silenced_pistol)
+        if t == 2:
+            start_inventory.append(pistol)
+        print('\n\nВыберите первый предмет сняряжения:\n')
+        for i in range(len(carry_on_items)):
+            print(f'{i+1}. {carry_on_items[i].name}')
+        t = input()
+        while t.isdigit() == False:
+            t = input()
+        t = int(t)
+        start_inventory.append(carry_on_items[t-1])
+        carry_on_items.remove(carry_on_items[t-1])
+        print('\n\nВыберите второй предмет сняряжения:\n')
+        for i in range(len(carry_on_items)):
+            print(f'{i+1}. {carry_on_items[i].name}')
+        t = input()
+        while t.isdigit() == False:
+            t = input()
+        t = int(t)
+        start_inventory.append(carry_on_items[t-1])
+    if start_location[1] == suite:
+        print('\n\nДиана: Добро пожаловать на Хоккайдо, 47-й. Частная клиника «Гама» оказывает медицинские услуги высочайшего уровня представителям мировой элиты, выходя при необходимости за рамки закона. Частично здание находится под управлением искусственного интеллекта — KAI. Система контролирует доступ пациентов в разные части клиники и даже принимает участие в ряде медицинских процедур. Эрих Содерс уже находится в операционной, где он проходит предварительную подготовку с применением стволовых клеток. Это крайне противоречивая процедура ещё не одобрена властями Японии. Юки Ямадзаки уже прибыла. Она находится либо в своём номере, либо в ресторане, либо в спа-зоне клиники. Содерсу скоро введут наркоз. Сделай так, чтобы он больше никогда не проснулся. Удачи, 47-й.')
+    return Player(start_inventory, 100, start_location[1], [start_location[2]], arms, [], start_location[2])
+
+player = start()
+
+class Challenge:
+
+    def __init__(self, name, description, completed):
+        self.name = name
+        self.description = description
+        self.completed = completed
+
+    def achieved(self):
+        self.completed = True
+        return f'Испытание выполнено: {self.name}'
+    
+smoking_kills = Challenge('Курение убивает', 'Убейте Юки Ямадзаки во время того, как она курит сигареты.', False)
+stretch = Challenge('Хорошая растяжка', 'Убейте Юки Ямадзаки, подстроила несчастный случай во время занятий йогой.', False)
+personal_goodbye = Challenge('Личное прощание', 'Убейте Эриха Содерса выстрелом из пистолета', False)
+ninja = Challenge('Словно ниндзя', 'Убейте обе цели, будучи в маскировке ниндзя', False)
+human_error = Challenge('(Не) врачебная ошибка', 'Убейте Эриха Содерса, самостоятельно проведя операцию', False)
+silent_assasin = Challenge('Бесшумный убийца', '1. Завершите миссию\n2. Убивайте только цели\n3. Ни одно тело не должно быть обнаружено\n 4. Не дайте себя заметить', False)
+sauna_assasination = Challenge('Убийство в парилке', 'Убейте Юки Ямадзаки, заперев ее в парилке.', False)
+sushi = Challenge('Приятного аппетита', 'Отравите роллы Юки Ямадзаки ядом рыбы фугу.', False)
 
 class NPC:
 
@@ -31,41 +119,11 @@ class NPC:
         else:
             return False
     
-    def investigate(self):
-        if self.alive == True:
-            og_route = self.route
-            og_witness_chance = self.witness_chance
-            self.route = {0: self.move()}
-            self.witness_chance = 0
-            return [og_route, og_witness_chance]
-        else:
-            return False
-
-    def panic(self):
-        if self.alive == True:
-            og_route = self.route
-            og_witness_chance = self.witness_chance
-            if self.guard == True:
-                return True
-            else:
-                self.route = {0: (self.move()).locations[random.randrange(1, len(self.move().locations)+1)]}
-            return [og_route, og_witness_chance]
-        else:
-            return False
-    
-    def calm_down(self, og_route, og_witness_chance):
-        if self.alive == True:
-            self.witness_chance = og_witness_chance
-            self.route = og_route
-            return self.move()
-        else:
-            return False
-    
     def suspicion(self):
         global suspicion_count
         if self.alive == True:
             suspicion_count += 1
-            return f'\n\n{self.disguise}: Эй, ты не должен сдесь находится!'
+            return f'\n\n{self.disguise}: Эй, ты не можешь здесь находится!'
         else:
             return False
         
@@ -169,13 +227,30 @@ npcs = [guard_cable_car_1,
         pilot, 
         director]
 
-def rating():
+def rating(so):
+    global player_lvl
     print('\n')
     print(f'Тел найдено: {bodies}')
     print(f'Убито невинных: {kills}')
     print(f'Вы начали бой {combat_count} раз')
     print(f'Вы были замечены {suspicion_count} раз')
-    return f'Ваш рейтинг: {int(5-(bodies*0.5)-(kills*0.7)-(combat_count*0.1)-(suspicion_count*0.2))}/5'
+    rating = int(5-(bodies*0.5)-(kills*0.7)-(combat_count*0.1)-(suspicion_count*0.2))
+    if rating < 0:
+        rating = 0
+    print(f'Ваш рейтинг: {rating}/5')
+    if int(rating) == 5 and so == 0:
+        player_lvl += 10
+        print('Бесшумный убийца. Только костюм.')
+    elif int(rating) == 5 and so == 1:
+        player_lvl += 5
+        print('Бесшумный убийца.')
+    elif so == 0:
+        player_lvl += 3
+        print('Только костюм.')
+    player_lvl += rating
+    with open('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat', 'wb') as f:
+        pickle.dump([player_lvl], f, protocol=2)
+    return sys.exit()
 
 target_status = {
     0: 'Номер Юки Ямадзаки',
@@ -204,24 +279,13 @@ yoga_info = 0
 final = 0
 poison_kill = 0
 combat_count = 0
-poisons = ['Яд рыбы Фугу', 'Крысиный яд']
+poisons = [fugu_poison, rat_poison, deadly_poison, emetic_poison]
 so = 0
 sauna_kill = 0
 yoga_kill = 0
 cigar_kill = 0
 cigar_place = 0
-pistol = 0
 pilot_info = 0
-chief_surgeon = 1
 get_chief_surgeon = 0
 surgeon_kill = 0
 ai_info = 0
-
-print(staff_garden_1.move().name)
-og_route = staff_garden_1.panic()[0]
-current_time = time
-for i in range(10):
-    if time - current_time == 3:
-        staff_garden_1.calm_down(og_route, staff_garden_1.witness_chance)
-    print(staff_garden_1.move().name)
-    time+=1

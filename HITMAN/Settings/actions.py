@@ -3,185 +3,231 @@ import sys
 import time as tm
 from Settings.locations import *
 from Settings.setup import *
+import pickle
 
-def interact():
-    global witnesses
+def interact(time, yuki, soders):
     global target_status
-    global time
-    global yuki
-    global soders
-    global location_status
-    global current_location
     global bodies
     global kills
-    global found_disguise
-    global current_item
-    global current_inventory
-    if current_inventory.count(current_item) == 0:
-        current_item = 'Нет предмета'
-    t = location_status[current_location]
-    start = t[0]
-    end = t[1]
-    witnesses = random.randrange(start,end)
+    witnesses = location_witnesses(player.location)
+    location_npcs = find_location_npcs(player.location)
+    if player.inventory.count(player.item) == 0:
+        player.item = arms
     print(f'\n\nДействия видят {witnesses} человек\n')
-    item_use = item_usage[current_item]
-    if item_use == []:
-        return 'Нет действий с этим предметом'
+    if player.item.usage == []:
+        return '\n\nНет действий с этим предметом'
     else:
-        for i in range(len(item_use)):
-            print(f'{i+1}. {item_use[i]}')
-    t = input()
-    if t.isdigit():
+        for i in range(len(player.item.usage)):
+            print(f'{i+1}. {player.item.usage[i]}')
+        t = input()
+        while t.isdigit() == False:
+            t = input()
         t = int(t)
-        if item_use[t-1] == 'Выстрелить':
-            if ((target_status[int(time)%9] == current_location) and (yuki == 1)):
-                print('\n\n1. Выстрелить в цель\n2. Выстрелить в охранника')
-                t = input()
-                while t.isdigit() == False:
-                    t = input()
-                t = int(t)
-                if t == 1:
-                    yuki = 0
-                    if witnesses > 0:
-                        bodies += 1
-                        return combat()
-                    else:
-                        return combat()
-                elif t == 2:
-                    kills += 1
-                    if witnesses > 0:
-                        bodies += 1
-                        return combat()
-                    else:
-                        for i in range(2, len(location_status[current_location])):
-                            found_disguise.append(location_status[current_location][i])
-                        return combat()
-            elif (current_location == 'Операционная') and (soders == 1):
-                print('\n\n1. Выстрелить в цель\n2. Выстрелить в охранника')
-                t = input()
-                while t.isdigit() == False:
-                    t = input()
-                t = int(t)
-                if t == 1:
-                    soders = 0
-                    return combat()
-                elif t == 2:
-                    bodies += 1
-                    kills += 1
-                    return combat()
+        if player.item.usage[t-1] == 'Выстрелить':
+            if ((target_status[int(time)%9] == player.location.name) and (yuki == 1)):
+                print(f'\n\n1. Выстрелить в Юки Ямадзаки')
+                for i in range(1, len(location_npcs)):
+                    print(f'{i+1}. Выстрелить в {location_npcs[i].disguise}')
+            elif (player.location.name == 'Операционная') and (soders == 1):
+                print(f'\n\n1. Выстрелить в Эрих Содерс')
+                for i in range(1, len(location_npcs)):
+                    print(f'{i+1}. Выстрелить в {location_npcs[i].disguise}')
             else:
-                kills += 1
-                if witnesses > 0:
-                    bodies += 1
-                    return combat
-                else:
-                    for i in range(2, len(location_status[current_location])):
-                            found_disguise.append(location_status[current_location][i])
-                    return status()
-        elif item_use[t-1] == 'Отменить действие':
-            return status()
-        elif item_use[t-1] == 'Ударить':
-            if witnesses == 0:
-                for i in range(2, len(location_status[current_location])):
-                            found_disguise.append(location_status[current_location][i])
-                return status()
-            else:
-                for i in range(2, len(location_status[current_location])):
-                            found_disguise.append(location_status[current_location][i])
-                return combat()
-        elif item_use[t-1] == 'Бросить':
-            objects_room[current_location].append(current_item)
-            current_inventory.remove(current_item)
-            if witnesses == 0:
-                for i in range(2, len(location_status[current_location])):
-                            found_disguise.append(location_status[current_location][i])
-                return status()
-            else:
-                for i in range(2, len(location_status[current_location])):
-                            found_disguise.append(location_status[current_location][i])
-                return combat()
-        elif item_use[t-1] == 'Ударить (летально)':
-            if ((target_status[int(time)%9] == current_location) and (yuki == 1)):
-                print('1. Атакова цель\n2. Атаковать охранника')
+                if location_npcs == []:
+                    return '\n\nНа локации никого нет'
+                print('\n')
+                for i in range(len(location_npcs)):
+                    print(f'{i+1}. Выстрелить в {location_npcs[i].disguise}')
+            t = input()
+            while t.isdigit() == False:
                 t = input()
-                while t.isdigit() == False:
-                    t = input()
-                t = int(t)
-                if t == 1:
-                    yuki = 0
-                    if witnesses > 0:
-                        bodies += 1
-                        return combat()
-                    else:
-                        return status()
-                elif t == 2:
-                    kills += 1
-                    if witnesses > 0:
-                        bodies += 1
-                        return combat()
-                    else:
-                        for i in range(2, len(location_status[current_location])):
-                            found_disguise.append(location_status[current_location][i])
-                        return status()
-        elif item_use[t-1] == 'Бросить (летально)':
-            if ((target_status[int(time)%9] == current_location) and (yuki == 1)):
-                objects_room[current_location].append(current_item)
-                current_inventory.remove(current_item)
-                print('\n\n1. Атакова цель\n2. Атаковать охранника')
-                t = input()
-                while t.isdigit() == False:
-                    t = input()
-                t = int(t)
-                if t == 1:
-                    yuki = 0
-                    if witnesses > 0:
-                        
-                        bodies += 1
-                        return combat()
-                    else:
-                        return status()
-                elif t == 2:
-                    kills += 1
-                    if witnesses > 0:
-                        bodies += 1
-                        return combat()
-                    else:
-                        for i in range(2, len(location_status[current_location])):
-                            found_disguise.append(location_status[current_location][i])
-                            return status()
-            else:
-                kills += 1
+            t = int(t)
+            if ((target_status[int(time)%9] == player.location.name) and (yuki == 1)) and t == 1:
+                yuki = 0
                 if witnesses > 0:
                     bodies += 1
                     return combat()
                 else:
-                    for i in range(2, len(location_status[current_location])):
-                        found_disguise.append(location_status[current_location][i])
-                        return status()
-        elif item_use[t-1] == 'Бросить для отвлечения':
-            if current_item == 'Монета':
-                objects_room[current_location].append(current_item)
-            current_inventory.remove(current_item)
-            return safe_move()
-        elif item_use[t-1] == 'Усмирить':
-            if witnesses == 0:
-                for i in range(2, len(location_status[current_location])):
-                            found_disguise.append(location_status[current_location][i])
-                return status()
+                    return '\n\nДиана: С Юки Ямадзаки покончено, отличная работа.'
+            elif (player.location.name == 'Операционная') and (soders == 1) and t == 1:
+                soders = 0
+                if witnesses > 0:
+                    bodies += 1
+                    return combat()
+                else:
+                    return '\n\nДиана: Содерс нас больше не побеспокоит, отличная работа.'
             else:
-                for i in range(2, len(location_status[current_location])):
-                            found_disguise.append(location_status[current_location][i])
+                location_npcs[t-1].alive = False
+                player.found_disguises.append(location_npcs[t-1].disguise)
+                if witnesses > 0:
+                    bodies += 1
+                    kills += 1
+                    return combat()
+                else:
+                    kills += 1
+                    return location_status(player.location)
+        elif player.item.usage[t-1] == 'Отменить действие':
+            return location_status(player.location)
+        elif player.item.usage[t-1] == 'Ударить':
+            if location_npcs == []:
+                    return '\n\nНа локации никого нет'
+            print('\n')
+            for i in range(len(location_npcs)):
+                    print(f'{i+1}. Ударить {location_npcs[i].disguise}')
+            t = input()
+            while t.isdigit() == False:
+                t = input()
+            t = int(t)
+            location_npcs[t-1].alive = False
+            player.found_disguises.append(location_npcs[t-1].disguise)
+            if witnesses > 0:
+                bodies += 1
                 return combat()
-        elif item_use[t-1] == 'Использовать':
-            if current_location == 'Морг':
-                current_inventory.remove(current_item)
+            else:
+                return location_status(player.location)
+        elif player.item.usage[t-1] == 'Бросить':
+            if location_npcs == []:
+                    return '\n\nНа локации никого нет'
+            print('\n')
+            player.location.loot.append(player.item)
+            player.inventory.remove(player.item)
+            for i in range(len(location_npcs)):
+                    print(f'{i+1}. Бросить в {location_npcs[i].disguise}')
+            t = input()
+            while t.isdigit() == False:
+                t = input()
+            t = int(t)
+            location_npcs[t-1].alive = False
+            player.found_disguises.append(location_npcs[t-1].disguise)
+            if witnesses > 0:
+                bodies += 1
+                return combat()
+            else:
+                return location_status(player.location)
+        elif player.item.usage[t-1] == 'Ударить (летально)':
+            if ((target_status[int(time)%9] == player.location.name) and (yuki == 1)):
+                print(f'\n\n1. Ударить Юки Ямадзаки')
+                for i in range(1, len(location_npcs)):
+                    print(f'{i+1}. Ударить {location_npcs[i].disguise}')
+            else:
+                if location_npcs == []:
+                    return '\n\nНа локации никого нет'
+                print('\n')
+                for i in range(len(location_npcs)):
+                    print(f'{i+1}. Ударить {location_npcs[i].disguise}')
+            t = input()
+            while t.isdigit() == False:
+                t = input()
+            t = int(t)
+            if ((target_status[int(time)%9] == player.location) and (yuki == 1)) and t == 1:
+                yuki = 0
+                if witnesses > 0:
+                    bodies += 1
+                    return combat()
+                else:
+                    return '\n\nДиана: С Юки Ямадзаки покончено, отличная работа.'
+            else:
+                location_npcs[t-1].alive = False
+                player.found_disguises.append(location_npcs[t-1].disguise)
+                if witnesses > 0:
+                    bodies += 1
+                    kills += 1
+                    return combat()
+                else:
+                    kills += 1
+                    return location_status(player.location)
+        elif player.item.usage[t-1] == 'Бросить (летально)':
+            player.location.loot.append(player.item)
+            player.inventory.remove(player.item)
+            if ((target_status[int(time)%9] == player.location.name) and (yuki == 1)):
+                print(f'\n\n1. Бросить в Юки Ямадзаки')
+                for i in range(1, len(location_npcs)):
+                    print(f'{i+1}. Бросить в {location_npcs[i].disguise}')
+            else:
+                if location_npcs == []:
+                    return '\n\nНа локации никого нет'
+                print('\n')
+                for i in range(len(location_npcs)):
+                    print(f'{i+1}. Бросить в {location_npcs[i].disguise}')
+            t = input()
+            while t.isdigit() == False:
+                t = input()
+            t = int(t)
+            if ((target_status[int(time)%9] == player.location) and (yuki == 1)) and t == 1:
+                yuki = 0
+                if witnesses > 0:
+                    bodies += 1
+                    return combat()
+                else:
+                    return '\n\nДиана: С Юки Ямадзаки покончено, отличная работа.'
+            else:
+                location_npcs[t-1].alive = False
+                player.found_disguises.append(location_npcs[t-1].disguise)
+                if witnesses > 0:
+                    bodies += 1
+                    kills += 1
+                    return combat()
+                else:
+                    kills += 1
+                    return location_status(player.location)
+        elif player.item.usage[t-1] == 'Бросить для отвлечения':
+            if location_npcs == []:
+                    return '\n\nНа локации никого нет'
+            if player.item == coin:
+                player.location.loot.append(player.item)
+            player.inventory.remove(player.item)
+            print('\n')
+            for i in range(len(location_npcs)):
+                    print(f'{i+1}. Отвлечь {location_npcs[i].disguise}')
+            print(f'{len(location_npcs)+1}. Отвлечь для перемещения')
+            t = input()
+            while t.isdigit() == False:
+                t = input()
+            t = int(t)
+            if t > len(location_npcs):
+                return safe_move()
+            else:
+                print(f'\n\n1. Вырубить {location_npcs[t-1].disguise}\n2. Убить {location_npcs[t-1].disguise}')
+                x = input()
+                while x.isdigit() == False:
+                    x = input()
+                x = int(x)
+                if x == 1:
+                    player.found_disguises.append(location_npcs[t-1].disguise)
+                    location_npcs[t-1].alive = False
+                    return location_status(player.location)
+                if x == 2:
+                    kills += 1
+                    location_npcs[t-1].alive = False
+                    player.found_disguises.append(location_npcs[t-1].disguise)
+                    return location_status(player.location)
+        elif player.item.usage[t-1] == 'Усмирить':
+            if location_npcs == []:
+                    return '\n\nНа локации никого нет'
+            print('\n')
+            for i in range(len(location_npcs)):
+                    print(f'{i+1}. Усмирить {location_npcs[i].disguise}')
+            t = input()
+            while t.isdigit() == False:
+                t = input()
+            t = int(t)
+            location_npcs[t-1].alive = False
+            player.found_disguises.append(location_npcs[t-1].disguise)
+            if witnesses > 0:
+                bodies += 1
+                return combat()
+            else:
+                return location_status(player.location)
+        elif player.item.usage[t-1] == 'Использовать':
+            if player.location == morgue:
+                player.inventory.remove(player.item)
                 print('\n\nНейрочип подействовал на одного из работников морга и тот отправился в комнату, где хранится сердце, которое должны пересадить Эриху Содерсу. Последовать за ним?\n1. Да\n2. Нет')
                 t = input()
                 while t.isdigit() == False:
                     t = input()
                 t = int(t)
                 if t == 2:
-                    return current_location
+                    return player.location.name
                 elif t == 1:
                     print('\n\n1. Выйти\n2. Повредить сердце')
                     t = input()
@@ -189,31 +235,22 @@ def interact():
                         t = input()
                     t = int(t)
                     if t == 1:
-                        return current_location
+                        return player.location.name
                     elif t == 2:
-                        soders = 0
                         print('\n\nДиана: 47-й, без сердца для пересадки Содерс не выживет. Ты смог от него избавиться даже не прикасаясь, изящный ход.')
-                        return current_location
+                        return location_status(player.location)
             else:
                 return '\n\nВне зоны действия'
-    else:
-        if t == 'w' or t == 'W':
-            return move()
-        elif t == 'i' or t == 'I':
-            return inventory()
-        elif t == 'e' or t == 'e':
-            return search()
-        elif t == 's' or t == 's':
-            return status()    
-def status():
-    global location_status
-    global current_location
-    t = location_status[current_location]
-    if len(t) > 2:
-        print(f'\n\n{current_location}')
-        print('На локации можно получить маскировки:')
-        for i in range(2, len(t)):
-            print(t[i])
+
+def status(time, yuki, soders):
+    print(f'\n\n1. Статус {player.location.name}\n2. Общий статус')
+    t = input()
+    while t.isdigit() == False:
+        t = input()
+    t = int(t)
+    if t == 1:
+        return location_status(player.location)
+    if t == 2:
         if yuki == 1:
             print('\nЮки Ямадзаки:',target_status[int(time)%9])
         else:
@@ -222,87 +259,72 @@ def status():
             print('Эрих Содерс: Операционная')
         else:
             print('Эрих Содерс мертв')
-        print(f'\nТекущая маскировка: {current_disguise}')
-        return f'Предмет в руках: {current_item}'
-    else:
-        print(f'\n\n{current_location}')
-        if yuki == 1:
-            print('Юки Ямадзаки:',target_status[int(time)%9])
-        else:
-            print('Юки Ямадзаки мертва')
-        if soders == 1:
-            print('Эрих Содерс: Операционная')
-        else:
-            print('Эрих Содерс мертв')
-        print(f'\nТекущая маскировка: {current_disguise}')
-        return f'Предмет в руках: {current_item}'
-def inventory():
-    global current_disguise
-    global current_item
-    global so
-    global time
+        print(f'\nТекущая маскировка: {player.disguise}')
+        return f'Предмет в руках: {player.item.name}'
+    
+def inventory(time, yuki, soders):
     inventory = []
     print('\n')
     for i in objects:
-        if current_inventory.count(i) > 0:
-            if i == 'Пистолет без глушителя':
-                inventory.append(i+'(1)')
+        if player.inventory.count(i) > 0:
+            if i == pistol:
+                inventory.append(i.name+' (1)')
             else:
-                inventory.append(i+'('+str(current_inventory.count(i))+')')
+                inventory.append(i.name+' ('+str(player.inventory.count(i))+')')
     inventory.append('Убрать предмет из рук')
-    inventory.append(current_disguise)
+    inventory.append(player.disguise)
     for i in range(len(inventory)-2):
         print(str(i+1)+'.', inventory[i])
-    print(f'\nСейчас в руках: {current_item}')
+    print(f'\nСейчас в руках: {player.item.name}')
     print(f'{len(inventory)-1}. Убрать предмет из рук')
-    print(f'\n{len(inventory)}. {current_disguise}')
+    print(f'\n{len(inventory)}. {player.disguise}')
     t = input()
     if t.isdigit() == True:
         t = int(t)
     else:
         if t == 'w' or t == 'W':
-            time += 0.5
             return move()
         if t == 'e' or t == 'E':
-            time += 1
             return search()
         if t == 's' or t == 'S':
-            return status()
+            return status(time, yuki, soders)
         if t == 'f' or t == 'F':
-            return interact()
+            return interact(time, yuki, soders)
         if t == 'q' or t == 'Q':
+            with open('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat', 'wb') as f:
+                pickle.dump([player_lvl], f, protocol=2)
             sys.exit()
-    if inventory[t-1] == current_disguise:
+    if inventory[t-1] == player.disguise:
         print('\n')
-        for i in range(len(found_disguise)):
-            print(str(i+1)+'.', found_disguise[i])
+        for i in range(len(player.found_disguises)):
+            print(str(i+1)+'.', player.found_disguises[i])
         t = input()
         while t.isdigit() == False:
             t = input()
         t = int(t)
-        current_disguise = found_disguise[t-1]
-        so = 1
-        return f'\n\nТекущая маскировка: {current_disguise}'
+        player.disguise = player.found_disguises[t-1]
+        return f'\n\nТекущая маскировка: {player.disguise}'
     elif inventory[t-1] == 'Убрать предмет из рук':
-        current_item = 'Нет предмета'
-        return f'\n\nСейчас в руках: {current_item}'
-    elif inventory[t-1] == 'Пистолет без глушителя':
-        if current_disguise == 'Охранник' or current_disguise == 'Телохранитель':
-            current_item = 'Пистолет без глушителя'
-            return f'\n\nСейчас в руках: {current_item}'
+        player.item = arms
+        return f'\n\nСейчас в руках: {player.item.name}'
+    elif item_by_name(inventory[t-1][:-4]).illegal:
+        if player.disguise == 'Охранник' or player.disguise == 'Телохранитель':
+            player.item = item_by_name(inventory[t-1][:-4])
+            return f'\n\nСейчас в руках: {player.item.name}'
         else:
-            print('Пистолет без глушителя -- это не легальное оружие. Достать предмет?\n1. Да\n2. Нет')
+            print(f'{inventory[t-1]} -- это нелегальный прдмет. Достать предмет?\n1. Да\n2. Нет')
             t = input()
             while t.isdigit() == False:
                 t = input()
             t = int(t)
             if t == 1:
-                current_item = 'Пистолет без глушителя'
+                player.item = item_by_name(inventory[t-1][:-4])
             else:
-                return inventory()
+                return inventory(time, yuki, soders)
     else:
-        current_item = inventory[t-1][:-3]
-        return f'\n\nСейчас в руках: {current_item}'
+        player.item = item_by_name(inventory[t-1][:-4])
+        return f'\n\nСейчас в руках: {player.item.name}'
+
 def combat():
     current_kills = 0
     current_bodies = 0
@@ -311,11 +333,14 @@ def combat():
         if i.guard == True:
             enemies.append(i)
     if enemies == []:
-        return ''
+        return location_status(player.location)
     global kills
     global bodies
     global combat_count
-    buttons = ['A', 'D', 'W', 'X', 'S']
+    global time
+    global player_lvl
+    combat_count += 1
+    buttons = ['A', 'D', 'W', 'X', 'S', 'Q', 'E', 'Z']
     print(f'\n\nНачался бой\n1. Прятаться (5/10)\n2. Напасть')
     t = input()
     while t.isdigit() == False:
@@ -327,13 +352,14 @@ def combat():
             player.compromised_disguises.append(player.disguise)
             return player.disguise
         else:
+            with open('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat', 'wb') as f:
+                pickle.dump([player_lvl], f, protocol=2)
             print('\n\nВы умерли. Миссия провалена.')
             sys.exit()
     elif t == 2:
         for i in enemies:
             enemy_health = 100
             while enemy_health > 0:
-                tm.sleep(random.randint(1,3))
                 current_button = random.choice(buttons)
                 crit = random.randint(1,11)
                 if pistol in player.inventory:
@@ -342,81 +368,109 @@ def combat():
                     while t.isdigit() == False:
                         t = input()
                     t = int(t)
-                    if t == 1:
-                        while t not in buttons :
-                            print(f'\n\nНажимайте как можно быстрее: {current_button}')
-                            t = input()
-                        if t.upper() == current_button:
-                            if crit <= 5 :
-                                enemy_health -= 100
-                            else:
-                                enemy_health -= 50
-                        else:
-                            print('\n\nПромах')
                     if t == 2:
-                        current_kills += 1
-                        while '' not in buttons:
-                            t = input(f'\n\nНажимайте как можно быстрее: {current_button}\n')
-                        if t == current_button:
-                            if crit <= 5 :
+                        print(f'\n\nНажимайте как можно быстрее: {current_button}')
+                        s_time = tm.time()
+                        t = input()
+                        e_time = tm.time()
+                        if e_time - s_time <= 2 and t.upper() == current_button:
+                            if crit <= 5:
                                 enemy_health -= 50 
                             else:
                                 enemy_health -= 25
                         else:
-                            print('\n\nПромах')
+                            player.health -= 25
+                            if player.health != 0:
+                                print('\n\nПромах. Вы пропустили удар.')
+                            else:
+                                with open('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat', 'wb') as f:
+                                    pickle.dump([player_lvl], f, protocol=2)
+                                print('\n\nВы умерли. Миссия провалена.')
+                                sys.exit()
+                    if t == 1:
+                        current_kills += 1
+                        print(f'\n\nНажимайте как можно быстрее: {current_button}')
+                        s_time = tm.time()
+                        t = input()
+                        e_time = tm.time()
+                        if e_time - s_time <= 2 and t.upper() == current_button:
+                            if crit <= 5:
+                                enemy_health -= 100 
+                            else:
+                                enemy_health -= 50
+                        else:
+                            player.health -= 25
+                            if player.health != 0:
+                                print('\n\nПромах. Вы пропустили удар.')
+                            else:
+                                with open('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat', 'wb') as f:
+                                    pickle.dump([player_lvl], f, protocol=2)
+                                print('\n\nВы умерли. Миссия провалена.')
+                                sys.exit()
                 else:
-                    while '' not in buttons:
-                        t = input(f'\n\nНажимайте как можно быстрее: {current_button}\n')
-                    if t == current_button:
-                        if crit <= 5 :
+                    print(f'\n\nНажимайте как можно быстрее: {current_button}')
+                    s_time = tm.time()
+                    t = input()
+                    e_time = tm.time()
+                    if e_time - s_time <= 2 and t.upper() == current_button:
+                        if crit <= 5:
                             enemy_health -= 50 
                         else:
                             enemy_health -= 25
                     else:
-                        print('\n\nПромах')
+                        player.health -= 25
+                        if player.health != 0:
+                            print('\n\nПромах. Вы пропустили удар.')
+                        else:
+                            with open('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat', 'wb') as f:
+                                    pickle.dump([player_lvl], f, protocol=2)
+                            print('\n\nВы умерли. Миссия провалена.')
+                            sys.exit()
                 enemy_attack = random.randint(1,10)
                 if enemy_attack > 7 :
                     current_button = random.choice(buttons)
-                    print(f'\n\n{i.disguise} атакует, нажимайте как можно быстрее: {current_button}\n')
+                    print(f'\n\n{i.disguise} атакует, нажимайте как можно быстрее: {current_button}')
                     s_time = tm.time()
-                    i = input()
+                    t = input()
                     e_time = tm.time()
-                    if e_time - s_time <= 1.7 and i == current_button:
+                    if e_time - s_time <= 2 and t.upper() == current_button:
                         print('\n\nВы увернулись')
-                        time.sleep(3)
                     else:
                         player.health -= 25
                         if player.health != 0:
                             print('\n\nВы пропустили удар')
                         else:
+                            with open('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat', 'wb') as f:
+                                    pickle.dump([player_lvl], f, protocol=2)
                             print('\n\nВы умерли. Миссия провалена.')
                             sys.exit()
-                        tm.sleep(3)
             print(f'\n\n{i.disguise} обезврежен')
-            i.disguise.append(player.found_disguises)
+            tm.sleep(2)
+            i.alive = False
+            player.found_disguises.append(i.disguise)
             if location_witnesses(player.location) > 0:
                 current_bodies += 1
-        print('\n\nУбийств невинных:', current_kills)
-        print('Тел найдено:', current_bodies)
         bodies += current_bodies
         kills += current_kills
+        print('\n\nУбийств невинных:', current_kills)
+        return f'Тел найдено: {current_bodies}'
 
 def safe_move():
-    global current_location
-    location = locations[current_location]
+    global time
     print('\n')
-    for i in range(len(location)):
-        print(str(i+1)+'.',location[i+1])
+    for i in range(len(player.location.locations)):
+        print(str(i+1)+'.',player.location.locations[i+1])
     t = input()
     while t.isdigit() == False:
         t = input()
     t = int(t)
-    current_location = location[t]
-    return f'\n\n{location[t]}'
+    player.location = location_by_name(player.location.locations[t])
+    return f'\n\n{player.location.name}'
 
 def move():
     global time
     global bodies
+    global suspicion_count
     print('\n')
     for i in range(len(player.location.locations)):
         print(str(i+1)+'.',player.location.locations[i+1])
@@ -426,15 +480,14 @@ def move():
         x = input()
     x = int(x)
     if x > len(player.location.locations):
-        return status()
+        return location_status(player.location)
     for i in locations:
         if i.name == player.location.locations[x]:
             move_to_location = i
     if move_to_location.name == 'Комната с серверами':
-        if player.disguise == 'Директор клиники' or 'Ключ-карта' in player.inventory:
+        if player.disguise == 'Директор клиники' or keycard in player.inventory or disposable_scrambler in player.inventory:
             player.location = move_to_location
-            time += 0.5
-            return f'\n\n{player.location.name}'
+            return f'\n\n{location_status(player.location)}'
         else:
             return '\n\nДля входа необходима маскировка директора клиники или ключ-карта'
     else:
@@ -442,111 +495,129 @@ def move():
             if find_location_npcs(player.location) != []:
                 npc = find_location_npcs(player.location)[random.randrange(len(find_location_npcs(player.location)))]
                 print(npc.suspicion())
-                print('\n1. Напасть (5/10)\n2. Уйти')
+                print('\n1. Напасть (3/10)\n2. Уйти')
                 t = input()
                 while t.isdigit() == False:
                     t = input()
                 t = int(t)
                 if t == 2:
-                    time += 0.5
-                    return f'\n\n{player.location.name}'
+                    return f'\n\n{location_status(player.location)}'
                 if t == 1:
-                    if random.randrange(1, 11) <= 5:
+                    if random.randrange(1, 11) <= 3:
                         npc.alive = False
                         player.found_disguises.append(npc.disguise)
                         player.location = move_to_location
                         print(f'\nВам удалось тихо устранить {npc.disguise}')
-                        time += 0.5
-                        return f'\n\n{player.location.name}'
+                        return f'\n\n{location_status(player.location)}'
                     else:
                         return combat()
             else:
                 player.location = move_to_location
-                time += 0.5
-                return f'\n\n{player.location.name}'
+                return f'\n\n{location_status(player.location)}'
         else:
-            if player.disguise in move_to_location.disguise:
+            if (player.item.illegal == True and player.disguise != 'Охранник' and player.disguise != 'Телохранитель'):
                 player.location = move_to_location
-                time += 0.5
-                return f'\n\n{player.location.name}'
-            else:
-                if location_witnesses(player.location) > 10:
-                    chance = 10
-                else:
-                    chance = location_witnesses(player.location)
-                print(location_status(player.location))
-                print(f'\nУ вас нет подходящей маскировки. Переместиться на локацию? ({10-chance}/10)\n1. Да\n2. Нет')
-                t = input()
-                while t.isdigit() == False:
+                if find_location_npcs(player.location) != []:
+                    npc = find_location_npcs(player.location)[random.randrange(len(find_location_npcs(player.location)))]
+                    suspicion_count += 1
+                    print(f'\n\n{npc.disguise}: Он вооружен!\n')
+                    print('1. Напасть (3/10)\n2. Скрыться (7/10)')
                     t = input()
-                t = int(t)
-                if t == 2:
-                    return f'\n\n{player.location.name}'
-                elif t == 1:
-                    if random.randrange(1,11) <= 10-chance:
-                        player.location = move_to_location
-                        time += 0.5
-                        return f'\n\n{player.location.name}'
-                    else:
-                        if find_location_npcs(player.location) != []:
-                            npc = find_location_npcs(player.location)[random.randrange(len(find_location_npcs(player.location)))]
-                            print(npc.suspicion())
-                            print('\n1. Напасть (5/10)\n2. Уйти')
-                            t = input()
-                            while t.isdigit() == False:
-                                t = input()
-                            t = int(t)
-                            if t == 2:
-                                time += 0.5
-                                return f'\n\n{player.location.name}'
-                            if t == 1:
-                                if random.randrange(1, 11) <= 5:
-                                    if location_witnesses(player.location) > 0:
-                                        bodies += 1
-                                    npc.alive = False
-                                    player.found_disguises.append(npc.disguise)
-                                    player.location = move_to_location
-                                    print(f'\nВам удалось устранить {npc.disguise}')
-                                    time += 0.5
-                                    return f'\n\n{player.location.name}'
-                                else:
-                                    return combat()
+                    while t.isdigit() == False:
+                        t = input()
+                    t = int(t)
+                    if t == 1:
+                        if random.randrange(1, 11) <= 3:
+                            npc.alive = False
+                            return f'\n\nВам удалось тихо устранить {npc.disguise}'
                         else:
+                            return combat()
+                    if t == 2:
+                        if random.randrange(1, 11) <= 7:
+                            player.compromised_disguises.append(player.disguise)
+                            print('\n\nВаша маскировка раскрыта, при перемещении в любую локацию вас будут узнавать.')
+                            return f'\n\n{location_status(player.location)}'
+            else:
+                if player.disguise in move_to_location.disguise:
+                    player.location = move_to_location
+                    return f'\n\n{location_status(player.location)}'
+                else:
+                    if location_witnesses(player.location) > 10:
+                        chance = 10
+                    else:
+                        chance = location_witnesses(player.location)
+                    print(location_status(player.location))
+                    print(f'\nУ вас нет подходящей маскировки. Переместиться на локацию? ({10-chance}/10)\n1. Да\n2. Нет')
+                    t = input()
+                    while t.isdigit() == False:
+                        t = input()
+                    t = int(t)
+                    if t == 2:
+                        return f'\n\n{location_status(player.location)}'
+                    elif t == 1:
+                        if random.randrange(1,11) <= 10-chance:
                             player.location = move_to_location
-                            time += 0.5
-                            return f'\n\n{player.location.name}'
+                            return f'\n\n{location_status(player.location)}'
+                        else:
+                            if find_location_npcs(player.location) != []:
+                                npc = find_location_npcs(player.location)[random.randrange(len(find_location_npcs(player.location)))]
+                                print(npc.suspicion())
+                                print('\n1. Напасть (5/10)\n2. Уйти')
+                                t = input()
+                                while t.isdigit() == False:
+                                    t = input()
+                                t = int(t)
+                                if t == 2:
+                                    return f'\n\n{location_status(player.location)}'
+                                if t == 1:
+                                    if random.randrange(1, 11) <= 5:
+                                        if location_witnesses(player.location) > 0:
+                                            bodies += 1
+                                        npc.alive = False
+                                        player.found_disguises.append(npc.disguise)
+                                        player.location = move_to_location
+                                        print(f'\nВам удалось устранить {npc.disguise}')
+                                        return f'\n\n{location_status(player.location)}'
+                                    else:
+                                        return combat()
+                            else:
+                                player.location = move_to_location
+                                return f'\n\n{location_status(player.location)}'
 
-def search():
+def search(time, yuki, soders):
     for i in player.location.loot:
         player.inventory.append(i)
     player.location.loot = []
-    return inventory()
+    return inventory(time, yuki, soders)
 
 def location_witnesses(location):
     location_npcs = find_location_npcs(location)
     witnesses = 0
     for i in location_npcs:
-        if random.randrange(11) <= i.witness_chance:
+        if random.randrange(11) <= i.witness_chance and i.alive == True:
             witnesses += 1
     return witnesses + location.witnesses
 
 def location_status(location):
-    location_npcs = []
-    print(f'\n\nНа локации находятся:\n\n{location.witnesses} Пациент')
-    for i in npcs:
-        if i.route[int(time)%len(i.route)] == location.name:
-            location_npcs.append(i.disguise)
-    for i in range(1, len(disguises)+1):
-        if disguises[i] in location_npcs:
-            print(location_npcs.count(disguises[i]), disguises[i])
-    return f'\nВсего {location_witnesses(location)} свидетелей'
+    print(f'\n\n{location.name}\n')
+    location_npcs = find_location_npcs(location)
+    location_disguises = []
+    for i in location_npcs:
+        if i.alive == True:
+            location_disguises.append(i.disguise)
+    if location_npcs != []:
+        if location.witnesses > 0:
+            print(f'На локации находятся:\n\n{location.witnesses} Пациент')
+        for i in range(1, len(disguises)+1):
+            if disguises[i] in location_disguises:
+                print(location_disguises.count(disguises[i]), disguises[i])
+        return f'Всего {location_witnesses(location)} свидетелей'
+    else:
+        return 'На локации нет свидетелей'
 
 def find_location_npcs(location):
     location_npcs = []
     for i in npcs:
-        if i.route[int(time)%len(i.route)] == location.name and i.alive == True:
+        if i.route[int(time)%len(i.route)] == location.name:
             location_npcs.append(i)
     return location_npcs
-
-while True:
-    print(move())
