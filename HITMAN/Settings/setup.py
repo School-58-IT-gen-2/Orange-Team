@@ -15,7 +15,7 @@ class Player:
         self.compromised_disguises = compromised_disguises
         self.disguise = disguise
 
-player_lvl = 100
+player_lvl = 10
 
 class Challenge:
 
