@@ -15,7 +15,7 @@ class Player:
         self.compromised_disguises = compromised_disguises
         self.disguise = disguise
 
-player_lvl = 10
+player_lvl = 100
 
 class Challenge:
 
@@ -52,8 +52,6 @@ hurt_oneself = Challenge('Так можно и пораниться', 'Убей�
 tasteless = Challenge('Без вкуса, без следа', 'Устраните цель, отравив ее.', False)
 master_assasin = Challenge('Мастер-убийца', f'1. Выполните {straight_shot.name}\n2. Выполните {hold_hair.name}\n3. Выполните {piano_man.name}\n4. Выполните {hurt_oneself.name}\n5. Выполните {tasteless.name}', False)
 
-challenges = [smoking_kills, stretch, personal_goodbye, no_smoking, human_error, suit_only, silent_assasin, sauna_assasination, sushi, heartless, silent_assasin_suit_only, no_evidence, ghost_machine, straight_shot, hold_hair, piano_man, hurt_oneself, tasteless, master_assasin]
-
 lvl_unlocks = {
     1: ['Номер 47-го', suite, 'VIP - пациент'],
     2: ['Зона спа', spa, 'VIP - пациент'],
@@ -66,9 +64,12 @@ lvl_unlocks = {
     9: ['Оперционная (в маскировке хирурга)', operation_room, 'Хирург']
 }
 
-if os.stat('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat').st_size != 0:
-    with open('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat', 'rb') as f:
+os.chdir('HITMAN')
+if os.stat('save_file.dat').st_size != 0:
+    with open('save_file.dat', 'rb') as f:
         smoking_kills, stretch, personal_goodbye, no_smoking, human_error, suit_only, silent_assasin, sauna_assasination, sushi, heartless, silent_assasin_suit_only, no_evidence, ghost_machine, straight_shot, hold_hair, piano_man, hurt_oneself, tasteless, master_assasin, player_lvl = pickle.load(f)
+
+challenges = [smoking_kills, stretch, personal_goodbye, no_smoking, human_error, suit_only, silent_assasin, sauna_assasination, sushi, heartless, silent_assasin_suit_only, no_evidence, ghost_machine, straight_shot, hold_hair, piano_man, hurt_oneself, tasteless, master_assasin]
 
 def start():
     carry_on_items = [fiber_wire, deadly_poison, emetic_poison, disposable_scrambler, combat_knife, coin]
@@ -121,12 +122,16 @@ player = start()
 
 class NPC:
 
-    def __init__(self, guard, disguise, alive, route, witness_chance):
+    def __init__(self, guard, disguise, alive, route, witness_chance, name):
         self.guard = guard
         self.disguise = disguise
         self.alive = alive
         self.route = route
         self.witness_chance = witness_chance
+        self.name = name
+
+    def print_name(self):
+        return f'{self.disguise} ({self.name})'
 
     def move(self):
         if self.alive == True:
@@ -139,61 +144,63 @@ class NPC:
         global suspicion_count
         if self.alive == True:
             suspicion_count[0] += 1
-            return f'\n\n{self.disguise}: Эй, ты не можешь здесь находится!'
+            return f'\n\n{self.print_name()}: Эй, ты не можешь здесь находится!'
         else:
             return False
-        
 
-guard_cable_car_1 = NPC(True, 'Телохранитель', True, {0: 'Канатная дорога'}, 5)
-guard_cable_car_2 = NPC(True, 'Телохранитель', True, {0: 'Канатная дорога'}, 5)
-guard_hall_1 = NPC(True, 'Охранник', True, {0: 'Холл'}, 8)
-guard_hall_2 = NPC(True, 'Охранник', True, {0: 'Холл'}, 8)
-guard_hall_3 = NPC(True, 'Охранник', True, {0: 'Холл', 1: 'Комната охраны'}, 8)
-guard_spa_1 = NPC(True, 'Охранник', True, {0: 'Зона спа'}, 4)
-guard_restaurant_1 = NPC(True, 'Охранник', True, {0: 'Ресторан'}, 8)
-guard_restaurant_2 = NPC(True, 'Охранник', True, {0: 'Ресторан'}, 9)
-guard_garden_1 = NPC(True, 'Охранник', True, {0: 'Внутренний сад'}, 3)
-guard_garden_2 = NPC(True, 'Охранник', True, {0: 'Внутренний сад'}, 5)
-guard_medical_center_1 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс'}, 6)
-guard_medical_center_2 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс'}, 7)
-guard_medical_center_3 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс'}, 6)
-guard_medical_center_4 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс', 1: 'Операционная'}, 9)
-guard_security_room = NPC(True, 'Охранник', True, {0: 'Комната охраны'}, 9)
-guard_garage = NPC(True, 'Охранник', True, {0: 'Гараж'}, 7)
-guard_bar = NPC(True, 'Охранник', True, {0: 'Барная стойка'}, 2)
-guard_morgue = NPC(True, 'Телохранитель', True, {0: 'Морг'}, 2)
-guard_target_suite_1 = NPC(True, 'Телохранитель', True, {0: 'Номер Юки Ямадзаки'}, 8)
-guard_target_suite_2 = NPC(True, 'Телохранитель', True, {0: 'Номер Юки Ямадзаки'}, 9)
-guard_target_suite_3 = NPC(True, 'Телохранитель', True, {0: 'Номер Юки Ямадзаки'}, 8)
-guard_target_suite_4 = NPC(True, 'Телохранитель', True, {0: 'Номер Юки Ямадзаки'}, 7)
-guard_helipad_1 = NPC(True, 'Телохранитель', True, {0: 'Вертолетная площадка'}, 8)
-guard_helipad_2 = NPC(True, 'Телохранитель', True, {0: 'Вертолетная площадка'}, 9)
-guard_medical_center_level_2_1 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс (2 этаж)'}, 8)
-guard_medical_center_level_2_2 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс (2 этаж)'}, 9)
-guard_medical_center_level_2_3 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс (2 этаж)'}, 7)
-guard_medical_center_level_2_4 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс (2 этаж)'}, 8)
-target_guard = NPC(True, 'Телохранитель', True, {0: 'Номер Юки Ямадзаки', 1: 'Холл', 2: 'Ресторан', 3: 'Холл', 4: 'Зона спа', 5: 'Зона отдыха', 6: 'Зона спа', 7: 'Холл', 8: 'Номер Юки Ямадзаки'}, 8)
+guard_cable_car_1 = NPC(True, 'Телохранитель', True, {0: 'Канатная дорога'}, 5, 'Shoichi Kataoka')
+guard_cable_car_2 = NPC(True, 'Телохранитель', True, {0: 'Канатная дорога'}, 5, 'Hidaka Uno')
+guard_hall_1 = NPC(True, 'Охранник', True, {0: 'Холл'}, 8, 'Nikica Pranjić')
+guard_hall_2 = NPC(True, 'Охранник', True, {0: 'Холл'}, 8, 'Toshimi Shinden')
+guard_hall_3 = NPC(True, 'Охранник', True, {0: 'Холл', 1: 'Комната охраны'}, 8, 'Hans Hansson')
+guard_spa_1 = NPC(True, 'Охранник', True, {0: 'Зона спа'}, 4, 'Masashi Morioka')
+guard_restaurant_1 = NPC(True, 'Охранник', True, {0: 'Ресторан'}, 8, 'Tadao Motsuzuki')
+guard_restaurant_2 = NPC(True, 'Охранник', True, {0: 'Ресторан'}, 9, 'Hidetoshi Higa')
+guard_garden_1 = NPC(True, 'Охранник', True, {0: 'Внутренний сад'}, 3, 'Oliver Drabløs')
+guard_garden_2 = NPC(True, 'Охранник', True, {0: 'Внутренний сад'}, 5, 'Yasuaki Inagaki')
+guard_medical_center_1 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс'}, 6, 'Junya Andou')
+guard_medical_center_2 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс'}, 7, 'Homare Kanai')
+guard_medical_center_3 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс'}, 6, 'Toshihisa Taniguchi')
+guard_medical_center_4 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс', 1: 'Операционная'}, 9, 'Shuusuke Seki')
+guard_security_room = NPC(True, 'Охранник', True, {0: 'Комната охраны'}, 9, 'Kyuuya Sugiyama')
+guard_garage = NPC(True, 'Охранник', True, {0: 'Гараж'}, 7, 'Max Gerber')
+guard_bar = NPC(True, 'Охранник', True, {0: 'Барная стойка'}, 2, 'John Maverick')
+guard_morgue = NPC(True, 'Телохранитель', True, {0: 'Морг'}, 2, 'Miamoto San')
+guard_target_suite_1 = NPC(True, 'Телохранитель', True, {0: 'Номер Юки Ямадзаки', 1: 'Холл'}, 8, 'Kyouta Shinden')
+guard_target_suite_2 = NPC(True, 'Телохранитель', True, {0: 'Номер Юки Ямадзаки', 1: 'Холл'}, 9, 'Hayaki Fukasawa')
+guard_target_suite_3 = NPC(True, 'Телохранитель', True, {0: 'Номер Юки Ямадзаки'}, 8, 'Kaimei Kuroki')
+guard_target_suite_4 = NPC(True, 'Телохранитель', True, {0: 'Номер Юки Ямадзаки'}, 7, 'Kou Tokunaga')
+guard_target_suite_5 = NPC(True, 'Телохранитель', True, {0: 'Номер Юки Ямадзаки'}, 7, 'Salvio Parra Rojo')
+guard_target_suite_6 = NPC(True, 'Телохранитель', True, {0: 'Номер Юки Ямадзаки'}, 7, 'Yoshikazu Sasaki')
+guard_helipad_1 = NPC(True, 'Телохранитель', True, {0: 'Вертолетная площадка'}, 8, 'Samuel Santos Lima')
+guard_helipad_2 = NPC(True, 'Телохранитель', True, {0: 'Вертолетная площадка'}, 9, 'Rafn Helguson')
+guard_medical_center_level_2_1 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс (2 этаж)'}, 8, 'Hayato Shinden')
+guard_medical_center_level_2_2 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс (2 этаж)'}, 9, 'Shuusuke Kitajima')
+guard_medical_center_level_2_3 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс (2 этаж)'}, 7, 'Sorahiko Satou')
+guard_medical_center_level_2_4 = NPC(True, 'Телохранитель', True, {0: 'Мед-комплекс (2 этаж)'}, 8, 'Satomu Sugiyama')
+target_guard_1 = NPC(True, 'Телохранитель', True, {0: 'Номер Юки Ямадзаки', 1: 'Холл', 2: 'Ресторан', 3: 'Холл', 4: 'Зона спа', 5: 'Зона отдыха', 6: 'Зона спа', 7: 'Холл', 8: 'Номер Юки Ямадзаки'}, 8, 'Nokadota')
+target_guard_2 = NPC(True, 'Телохранитель', True, {0: 'Номер Юки Ямадзаки', 1: 'Холл', 2: 'Ресторан', 3: 'Холл', 4: 'Зона спа', 5: 'Зона отдыха', 6: 'Зона спа', 7: 'Холл', 8: 'Номер Юки Ямадзаки'}, 8, 'Yuuto Saiki')
 
-staff_spa_1 = NPC(False, 'Работник "ГАМА"', True, {0: 'Зона спа', 1: 'Зона отдыха'}, 7)
-staff_spa_2 = NPC(False, 'Работник "ГАМА"', True, {0: 'Зона спа'}, 8)
-staff_restaurant_1 = NPC(False, 'Работник "ГАМА"', True, {0: 'Ресторан'}, 7)
-staff_restaurant_2 = NPC(False, 'Работник "ГАМА"', True, {0: 'Ресторан'}, 8)
-staff_garden_1 = NPC(False, 'Работник "ГАМА"', True, {0: 'Внутренний сад'}, 1)
-staff_garden_2 = NPC(False, 'Работник "ГАМА"', True, {0: 'Внутренний сад'}, 3)
-surgeon_medical_center = NPC(False, 'Хирург', True, {0: 'Мед-комплекс', 1: 'Операционная'}, 9)
-mechanic_garage = NPC(False, 'Механик', True, {0: 'Гараж'}, 1)
-yoga_coach = NPC(False, 'Инструктор по йоге', True, {0: 'Гараж', 1: 'Спальня персонала'}, 1)
-chef_1 = NPC(False, 'Шеф', True, {0: 'Кухня'}, 7)
-chef_2 = NPC(False, 'Шеф', True, {0: 'Кухня'}, 8)
-morgue_worker_1 = NPC(False, 'Работник морга', True, {0: 'Морг'}, 6)
-morgue_worker_2 = NPC(False, 'Работник морга', True, {0: 'Морг'}, 7)
-morgue_worker_3 = NPC(False, 'Работник морга', True, {0: 'Морг'}, 1)
-surgeon_operation_room_1 = NPC(False, 'Хирург', True, {0: 'Операционная'}, 7)
-surgeon_operation_room_2 = NPC(False, 'Хирург', True, {0: 'Операционная'}, 9)
-surgeon_operation_room_3 = NPC(False, 'Хирург', True, {0: 'Операционная'}, 8)
-chief_surgeon = NPC(False, 'Главный хирург', True, {0: 'Операционная'}, 7)
-pilot = NPC(False, 'Пилот', True, {0: 'Комната пилота'}, 3)
-director = NPC(False, 'Директор клиники', True, {0: 'Холл', 1: 'Внутренний сад', 2: 'Холл', 3: 'Мед-комплекс', 4: 'Мед-комплекс (2 этаж)', 5: 'Комната директора клиники', 6: 'Комната директора клиники', 7:'Комната директора клиники', 8: 'Мед-комплекс (2 этаж)', 9: 'Мед-комплекс', 10: 'Холл'}, 7)
+staff_spa_1 = NPC(False, 'Работник "ГАМА"', True, {0: 'Зона спа', 1: 'Зона отдыха'}, 7, 'Tamika Oomori')
+staff_spa_2 = NPC(False, 'Работник "ГАМА"', True, {0: 'Зона спа'}, 8, 'Harumi Sakei')
+staff_restaurant_1 = NPC(False, 'Работник "ГАМА"', True, {0: 'Ресторан'}, 7, 'Kouko Yoshioka')
+staff_restaurant_2 = NPC(False, 'Работник "ГАМА"', True, {0: 'Ресторан'}, 8, 'Risae Oosawa')
+staff_garden_1 = NPC(False, 'Работник "ГАМА"', True, {0: 'Внутренний сад'}, 1, 'Maury Veich')
+staff_garden_2 = NPC(False, 'Работник "ГАМА"', True, {0: 'Внутренний сад'}, 3, 'Johan Ishibashi')
+surgeon_medical_center = NPC(False, 'Хирург', True, {0: 'Мед-комплекс', 1: 'Операционная'}, 9, 'Saita Shinoda')
+mechanic_garage = NPC(False, 'Механик', True, {0: 'Гараж'}, 1, 'Tomochika Honma')
+yoga_coach = NPC(False, 'Инструктор по йоге', True, {0: 'Гараж', 1: 'Спальня персонала'}, 1, 'J. Brooke')
+chef_1 = NPC(False, 'Шеф', True, {0: 'Кухня'}, 7, 'Ikkei Tsutsui')
+chef_2 = NPC(False, 'Шеф', True, {0: 'Кухня'}, 8, 'Minao Morishita')
+morgue_worker_1 = NPC(False, 'Работник морга', True, {0: 'Морг'}, 6, 'Katshi Ito')
+morgue_worker_2 = NPC(False, 'Работник морга', True, {0: 'Морг'}, 7, 'Tenri Shinosaki')
+morgue_worker_3 = NPC(False, 'Работник морга', True, {0: 'Морг'}, 5, 'Shoudai Kurosawa')
+surgeon_operation_room_1 = NPC(False, 'Хирург', True, {0: 'Операционная'}, 7, 'Kii Ine')
+surgeon_operation_room_2 = NPC(False, 'Хирург', True, {0: 'Операционная'}, 9, 'Emiri Nimiya')
+surgeon_operation_room_3 = NPC(False, 'Хирург', True, {0: 'Операционная'}, 8, 'Gakushi Yamaoka')
+chief_surgeon = NPC(False, 'Главный хирург', True, {0: 'Операционная'}, 7, 'Nicholas Laurent')
+pilot = NPC(False, 'Пилот', True, {0: 'Комната пилота'}, 3, 'Nails')
+director = NPC(False, 'Директор клиники', True, {0: 'Холл', 1: 'Внутренний сад', 2: 'Холл', 3: 'Мед-комплекс', 4: 'Мед-комплекс (2 этаж)', 5: 'Комната директора клиники', 6: 'Комната директора клиники', 7:'Комната директора клиники', 8: 'Мед-комплекс (2 этаж)', 9: 'Мед-комплекс', 10: 'Холл'}, 7, 'Akira Nakamura')
 
 npcs = [guard_cable_car_1, 
         guard_cable_car_2, 
@@ -213,6 +220,8 @@ npcs = [guard_cable_car_1,
         guard_target_suite_2,
         guard_target_suite_3,
         guard_target_suite_4,
+        guard_target_suite_6,
+        guard_target_suite_5,
         guard_medical_center_1, 
         guard_medical_center_2, 
         guard_medical_center_3, 
@@ -223,7 +232,8 @@ npcs = [guard_cable_car_1,
         guard_medical_center_level_2_2, 
         guard_medical_center_level_2_3, 
         guard_medical_center_level_2_4, 
-        target_guard, 
+        target_guard_1,
+        target_guard_2,
         staff_spa_1, 
         staff_spa_2, 
         staff_restaurant_1, 
@@ -270,7 +280,7 @@ def rating():
     for i in challenges:
         if i.completed == True:
             print(i.name)
-    with open('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat', 'wb') as f:
+    with open('save_file.dat', 'wb') as f:
         pickle.dump([smoking_kills, stretch, personal_goodbye, no_smoking, human_error, suit_only, silent_assasin, sauna_assasination, sushi, heartless, silent_assasin_suit_only, no_evidence, ghost_machine, straight_shot, hold_hair, piano_man, hurt_oneself, tasteless, master_assasin, player_lvl], f, protocol=2)
     return sys.exit()
 

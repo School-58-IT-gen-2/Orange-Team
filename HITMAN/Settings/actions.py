@@ -29,17 +29,17 @@ def interact():
             if ((target_status[int(time[0])%9] == player.location.name) and (yuki[0] == 1)):
                 print(f'\n\n1. Выстрелить в Юки Ямадзаки')
                 for i in range(1, len(location_npcs)):
-                    print(f'{i+1}. Выстрелить в {location_npcs[i].disguise}')
+                    print(f'{i+1}. Выстрелить в {location_npcs[i].print_name()}')
             elif (player.location.name == 'Операционная') and (soders[0] == 1):
                 print(f'\n\n1. Выстрелить в Эрих Содерс')
                 for i in range(1, len(location_npcs)):
-                    print(f'{i+1}. Выстрелить в {location_npcs[i].disguise}')
+                    print(f'{i+1}. Выстрелить в {location_npcs[i].print_name()}')
             else:
                 if location_npcs == []:
                     return '\n\nНа локации никого нет'
                 print('\n')
                 for i in range(len(location_npcs)):
-                    print(f'{i+1}. Выстрелить в {location_npcs[i].disguise}')
+                    print(f'{i+1}. Выстрелить в {location_npcs[i].print_name()}')
             t = input()
             while t.isdigit() == False:
                 t = input()
@@ -78,7 +78,7 @@ def interact():
                     return '\n\nНа локации никого нет'
             print('\n')
             for i in range(len(location_npcs)):
-                    print(f'{i+1}. Ударить {location_npcs[i].disguise}')
+                    print(f'{i+1}. Ударить {location_npcs[i].print_name()}')
             t = input()
             while t.isdigit() == False:
                 t = input()
@@ -97,7 +97,7 @@ def interact():
             player.location.loot.append(player.item)
             player.inventory.remove(player.item)
             for i in range(len(location_npcs)):
-                    print(f'{i+1}. Бросить в {location_npcs[i].disguise}')
+                    print(f'{i+1}. Бросить в {location_npcs[i].print_name()}')
             t = input()
             while t.isdigit() == False:
                 t = input()
@@ -113,7 +113,7 @@ def interact():
             if ((target_status[int(time[0])%9] == player.location.name) and (yuki[0] == 1)):
                 print(f'\n\n1. Ударить Юки Ямадзаки')
                 for i in range(1, len(location_npcs)):
-                    print(f'{i+1}. Ударить {location_npcs[i].disguise}')
+                    print(f'{i+1}. Ударить {location_npcs[i].print_name()}')
             else:
                 if location_npcs == []:
                     return '\n\nНа локации никого нет'
@@ -136,10 +136,10 @@ def interact():
                 player.found_disguises.append(location_npcs[t-1].disguise)
                 if witnesses > 0:
                     bodies[0] += 1
-                    kills += 1
+                    kills[0] += 1
                     return combat()
                 else:
-                    kills += 1
+                    kills[0] += 1
                     return location_status(player.location)
         elif player.item.usage[t-1] == 'Бросить (летально)':
             player.location.loot.append(player.item)
@@ -147,13 +147,13 @@ def interact():
             if ((target_status[int(time[0])%9] == player.location.name) and (yuki[0] == 1)):
                 print(f'\n\n1. Бросить в Юки Ямадзаки')
                 for i in range(1, len(location_npcs)):
-                    print(f'{i+1}. Бросить в {location_npcs[i].disguise}')
+                    print(f'{i+1}. Бросить в {location_npcs[i].print_name()}')
             else:
                 if location_npcs == []:
                     return '\n\nНа локации никого нет'
                 print('\n')
                 for i in range(len(location_npcs)):
-                    print(f'{i+1}. Бросить в {location_npcs[i].disguise}')
+                    print(f'{i+1}. Бросить в {location_npcs[i].print_name()}')
             t = input()
             while t.isdigit() == False:
                 t = input()
@@ -183,7 +183,7 @@ def interact():
             player.inventory.remove(player.item)
             print('\n')
             for i in range(len(location_npcs)):
-                    print(f'{i+1}. Отвлечь {location_npcs[i].disguise}')
+                    print(f'{i+1}. Отвлечь {location_npcs[i].print_name()}')
             print(f'{len(location_npcs)+1}. Отвлечь для перемещения')
             t = input()
             while t.isdigit() == False:
@@ -192,7 +192,7 @@ def interact():
             if t > len(location_npcs):
                 return safe_move()
             else:
-                print(f'\n\n1. Вырубить {location_npcs[t-1].disguise}\n2. Убить {location_npcs[t-1].disguise}')
+                print(f'\n\n1. Вырубить {location_npcs[t-1].print_name()}\n2. Убить {location_npcs[t-1].print_name()}')
                 x = input()
                 while x.isdigit() == False:
                     x = input()
@@ -211,7 +211,7 @@ def interact():
                     return '\n\nНа локации никого нет'
             print('\n')
             for i in range(len(location_npcs)):
-                    print(f'{i+1}. Усмирить {location_npcs[i].disguise}')
+                    print(f'{i+1}. Усмирить {location_npcs[i].print_name()}')
             t = input()
             while t.isdigit() == False:
                 t = input()
@@ -246,41 +246,41 @@ def interact():
                         soders[0] = 0
                         print('\n\nДиана: 47-й, без сердца для пересадки Содерс не выживет. Ты смог от него избавиться даже не прикасаясь, изящный ход.')
                         return location_status(player.location)
-            elif player.item.usage[t-1] == 'Задушить':
-                if ((target_status[int(time[0])%9] == player.location.name) and (yuki[0] == 1)):
-                    print(f'\n\n1. Задушить Юки Ямадзаки')
-                    for i in range(1, len(location_npcs)):
-                        print(f'{i+1}. Ударить {location_npcs[i].disguise}')
-                else:
-                    if location_npcs == []:
-                        return '\n\nНа локации никого нет'
-                    print('\n')
-                    for i in range(len(location_npcs)):
-                        print(f'{i+1}. Задушить {location_npcs[i].disguise}')
-                t = input()
-                while t.isdigit() == False:
-                    t = input()
-                t = int(t)
-                if ((target_status[int(time[0])%9] == player.location) and (yuki[0] == 1)) and t == 1:
-                    print(piano_man.achieved())
-                    yuki[0] = 0
-                    if witnesses > 0:
-                        bodies[0] += 1
-                        return combat()
-                    else:
-                        return '\n\nДиана: С Юки Ямадзаки покончено, отличная работа.'
-                else:
-                    location_npcs[t-1].alive = False
-                    player.found_disguises.append(location_npcs[t-1].disguise)
-                    if witnesses > 0:
-                        bodies[0] += 1
-                        kills += 1
-                        return combat()
-                    else:
-                        kills += 1
-                        return location_status(player.location)
             else:
                 return '\n\nВне зоны действия'
+        elif player.item.usage[t-1] == 'Задушить':
+            if ((target_status[int(time[0])%9] == player.location.name) and (yuki[0] == 1)):
+                print(f'\n\n1. Задушить Юки Ямадзаки')
+                for i in range(1, len(location_npcs)):
+                    print(f'{i+1}. Задушить {location_npcs[i].print_name()}')
+            else:
+                if location_npcs == []:
+                    return '\n\nНа локации никого нет'
+                print('\n')
+                for i in range(len(location_npcs)):
+                    print(f'{i+1}. Задушить {location_npcs[i].print_name()}')
+            t = input()
+            while t.isdigit() == False:
+                t = input()
+            t = int(t)
+            if ((target_status[int(time[0])%9] == player.location.name) and (yuki[0] == 1)) and t == 1:
+                print(piano_man.achieved())
+                yuki[0] = 0
+                if witnesses > 0:
+                    bodies[0] += 1
+                    return combat()
+                else:
+                    return '\n\nДиана: С Юки Ямадзаки покончено, отличная работа.'
+            else:
+                location_npcs[t-1].alive = False
+                player.found_disguises.append(location_npcs[t-1].disguise)
+                if witnesses > 0:
+                    bodies[0] += 1
+                    kills[0] += 1
+                    return combat()
+                else:
+                    kills[0] += 1
+                    return location_status(player.location)
 
 def status():
     global time
@@ -334,7 +334,7 @@ def inventory():
         if t == 'f' or t == 'F':
             return interact()
         if t == 'q' or t == 'Q':
-            with open('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat', 'wb') as f:
+            with open('save_file.dat', 'wb') as f:
                 pickle.dump([smoking_kills, stretch, personal_goodbye, no_smoking, human_error, suit_only, silent_assasin, sauna_assasination, sushi, heartless, silent_assasin_suit_only, no_evidence, ghost_machine, straight_shot, hold_hair, piano_man, hurt_oneself, tasteless, master_assasin, player_lvl], f, protocol=2)
             sys.exit()
     if inventory[t-1] == player.disguise:
@@ -395,7 +395,7 @@ def combat():
             player.compromised_disguises.append(player.disguise)
             return player.disguise
         else:
-            with open('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat', 'wb') as f:
+            with open('save_file.dat', 'wb') as f:
                 pickle.dump([smoking_kills, stretch, personal_goodbye, no_smoking, human_error, suit_only, silent_assasin, sauna_assasination, sushi, heartless, silent_assasin_suit_only, no_evidence, ghost_machine, straight_shot, hold_hair, piano_man, hurt_oneself, tasteless, master_assasin, player_lvl], f, protocol=2)
             print('\n\nВы умерли. Миссия провалена.')
             sys.exit()
@@ -426,7 +426,7 @@ def combat():
                             if player.health != 0:
                                 print('\n\nПромах. Вы пропустили удар.')
                             else:
-                                with open('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat', 'wb') as f:
+                                with open('save_file.dat', 'wb') as f:
                                     pickle.dump([smoking_kills, stretch, personal_goodbye, no_smoking, human_error, suit_only, silent_assasin, sauna_assasination, sushi, heartless, silent_assasin_suit_only, no_evidence, ghost_machine, straight_shot, hold_hair, piano_man, hurt_oneself, tasteless, master_assasin, player_lvl], f, protocol=2)
                                 print('\n\nВы умерли. Миссия провалена.')
                                 sys.exit()
@@ -446,7 +446,7 @@ def combat():
                             if player.health != 0:
                                 print('\n\nПромах. Вы пропустили удар.')
                             else:
-                                with open('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat', 'wb') as f:
+                                with open('save_file.dat', 'wb') as f:
                                     pickle.dump([smoking_kills, stretch, personal_goodbye, no_smoking, human_error, suit_only, silent_assasin, sauna_assasination, sushi, heartless, silent_assasin_suit_only, no_evidence, ghost_machine, straight_shot, hold_hair, piano_man, hurt_oneself, tasteless, master_assasin, player_lvl], f, protocol=2)
                                 print('\n\nВы умерли. Миссия провалена.')
                                 sys.exit()
@@ -465,14 +465,14 @@ def combat():
                         if player.health != 0:
                             print('\n\nПромах. Вы пропустили удар.')
                         else:
-                            with open('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat', 'wb') as f:
+                            with open('save_file.dat', 'wb') as f:
                                     pickle.dump([player_lvl], f, protocol=2)
                             print('\n\nВы умерли. Миссия провалена.')
                             sys.exit()
                 enemy_attack = random.randint(1,10)
                 if enemy_attack > 7 :
                     current_button = random.choice(buttons)
-                    print(f'\n\n{i.disguise} атакует, нажимайте как можно быстрее: {current_button}')
+                    print(f'\n\n{i.print_name()} атакует, нажимайте как можно быстрее: {current_button}')
                     s_time = tm.time()
                     t = input()
                     e_time = tm.time()
@@ -483,11 +483,11 @@ def combat():
                         if player.health != 0:
                             print('\n\nВы пропустили удар')
                         else:
-                            with open('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat', 'wb') as f:
+                            with open('save_file.dat', 'wb') as f:
                                     pickle.dump([player_lvl], f, protocol=2)
                             print('\n\nВы умерли. Миссия провалена.')
                             sys.exit()
-            print(f'\n\n{i.disguise} обезврежен')
+            print(f'\n\n{i.print_name()} обезврежен')
             tm.sleep(2)
             i.alive = False
             player.found_disguises.append(i.disguise)
@@ -549,7 +549,7 @@ def move():
                         npc.alive = False
                         player.found_disguises.append(npc.disguise)
                         player.location = move_to_location
-                        print(f'\nВам удалось тихо устранить {npc.disguise}')
+                        print(f'\nВам удалось тихо устранить {npc.print_name()}')
                         return f'\n\n{location_status(player.location)}'
                     else:
                         return combat()
@@ -562,7 +562,7 @@ def move():
                 if find_location_npcs(player.location) != []:
                     npc = find_location_npcs(player.location)[random.randrange(len(find_location_npcs(player.location)))]
                     suspicion_count[0] += 1
-                    print(f'\n\n{npc.disguise}: Он вооружен!\n')
+                    print(f'\n\n{npc.print_name()}: Он вооружен!\n')
                     print('1. Напасть (3/10)\n2. Скрыться (7/10)')
                     t = input()
                     while t.isdigit() == False:
@@ -571,7 +571,7 @@ def move():
                     if t == 1:
                         if random.randrange(1, 11) <= 3:
                             npc.alive = False
-                            return f'\n\nВам удалось тихо устранить {npc.disguise}'
+                            return f'\n\nВам удалось тихо устранить {npc.print_name()}'
                         else:
                             return combat()
                     if t == 2:
@@ -618,7 +618,7 @@ def move():
                                         npc.alive = False
                                         player.found_disguises.append(npc.disguise)
                                         player.location = move_to_location
-                                        print(f'\nВам удалось устранить {npc.disguise}')
+                                        print(f'\nВам тихо удалось устранить {npc.print_name()}')
                                         return f'\n\n{location_status(player.location)}'
                                     else:
                                         return combat()
@@ -671,7 +671,7 @@ def see_challenges():
             print(f'{i+1}. {challenges[i].name + ' (выполнено)'}')
         else:
             print(f'{i+1}. {challenges[i].name}')
-    print(f'{len(challenges) + 1}. Выйти')
+    print(f'\n{len(challenges) + 1}. Выйти')
     t = input()
     while t.isdigit() == False:
         t = input()

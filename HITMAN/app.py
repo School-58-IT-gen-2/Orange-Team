@@ -18,7 +18,7 @@ while True:
         time[0] += 1
         print(interact())
     if t.upper() == 'Q':
-        with open('/Users/alexey/Python/Orange-Team/HITMAN/Settings/savefile.dat', 'wb') as f:
+        with open('save_file.dat', 'wb') as f:
             pickle.dump([smoking_kills, stretch, personal_goodbye, no_smoking, human_error, suit_only, silent_assasin, sauna_assasination, sushi, heartless, silent_assasin_suit_only, no_evidence, ghost_machine, straight_shot, hold_hair, piano_man, hurt_oneself, tasteless, master_assasin, player_lvl], f, protocol=2)
         sys.exit()
     if t.upper() == 'C':
@@ -60,8 +60,10 @@ while True:
             t = input()
         t = int(t)
         if t == 2:
+            print('\n')
             print(player.location.name)
         elif t == 1:
+            print('\n')
             poison_kill = 1
             for i in range(len(poisons)):
                 if poisons[i] in player.inventory:
@@ -75,15 +77,15 @@ while True:
                     print(sushi.achieved())
                 yuki[0] = 0
                 print(tasteless.achieved())
-                print('Диана: Грамотный ход 47-ой. С Юки Ямадзаки покончено.')
+                print('\n\nДиана: Грамотный ход 47-ой. С Юки Ямадзаки покончено.')
             else:
-                print('Цели стало плохо и она направилась в ванную. Пойти за ней?\n1. Да\n2. Нет')
+                print('\n\nЦели стало плохо и она направилась в ванную. Пойти за ней?\n1. Да\n2. Нет')
                 t = input()
                 while t.isdigit() == False:
                     t = input()
                 t = int(t)
                 if t == 1:
-                    print('1. Утопить цель\n2. Уйти')
+                    print('\n\n1. Утопить цель\n2. Уйти')
                     t = input()
                     while t.isdigit() == False:
                         t = input()
@@ -94,8 +96,9 @@ while True:
                         print(hold_hair.achieved())
                         print(hurt_oneself.achieved())
                         yuki[0] = 0
-                        print('Цель убита. Хорошая работа.')
+                        print('\n\nЦель убита. Хорошая работа.')
                 elif t == 2:
+                    print('\n')
                     print(player.location.name)
     if player.location == water_control_room and sauna_kill == 0:
         print('\n')
@@ -106,7 +109,7 @@ while True:
         t = int(t)
         if t == 1:
             sauna_kill = 1
-            print('Все люди вышли из бани из-за высокой температуры.\n')
+            print('\n\nВсе люди вышли из бани из-за высокой температуры.\n')
             if yuki[0] == 1:
                 print('Юки Ямадзаки: Наконец-то парилка свободна!\nЮки Ямадзаки вошла в баню\n\n1. Запереть дверь в парилку\n2. Уйти')
                 t = input()
@@ -117,12 +120,15 @@ while True:
                     print(sauna_assasination.achieved())
                     print(hurt_oneself.achieved())
                     yuki[0] = 0
-                    print('Диана: С Юки Ямадзаки покончено. Отличная работа, агент.')
+                    print('\n\nДиана: С Юки Ямадзаки покончено. Отличная работа, агент.')
                 elif t == 2:
+                    print('\n')
                     print(player.location.name)
             else:
+                print('\n')
                 print(player.location.name)
         elif t == 2:
+            print('\n')
             print(player.location.name)
     if player.disguise == 'Инструктор по йоге' and yoga_kill == 0 and player.location == resort and yuki[0] == 1:
         print('\n')
@@ -133,7 +139,7 @@ while True:
             t = input()
         t = int(t)
         if t == 1:
-            print('Агент 47: Приступим, эта тренировка смертельно вам понравится.\nЮки Ямадзаки отозвала всю охрану и вывела всех людей из зоны отдыха\n1. Толкнуть Юки Ямадзаки с горы\n2. Завершить тренировку')
+            print('\n\nАгент 47: Приступим, эта тренировка смертельно вам понравится.\nЮки Ямадзаки отозвала всю охрану и вывела всех людей из зоны отдыха\n1. Толкнуть Юки Ямадзаки с горы\n2. Завершить тренировку')
             t = input()
             while t.isdigit() == False:
                 t = input()
@@ -142,7 +148,7 @@ while True:
                 print(stretch.achieved())
                 print(hurt_oneself.achieved())
                 yuki[0] = 0
-                print('Диана: Отлично сработано. Юки Ямадзаки нас больше не побеспокоит.')
+                print('\n\nДиана: Отлично сработано. Юки Ямадзаки нас больше не побеспокоит.')
             if t == 2:
                 print(player.location.name)
     if player.location == target_suite and cigars in player.inventory and cigar_place == 0:
@@ -155,7 +161,7 @@ while True:
         if t == 1:
             print(no_smoking.achieved())
             cigar_place = 1
-            print('1. Выйти из номера\n2. Пойти на балкон')
+            print('\n\n1. Выйти из номера\n2. Пойти на балкон')
             t = input()
             while t.isdigit() == False:
                 t = input()
@@ -164,27 +170,29 @@ while True:
                 player.location = hall
                 print(player.location.name)
             elif t == 2:
-                print('1. Создать утечку газа у обогревателя\n2. Уйти из номера')
+                print('\n\n1. Создать утечку газа у обогревателя\n2. Уйти из номера')
                 t = input()
                 while t.isdigit() == False:
                     t = input()
                 t = int(t)
                 if t == 1:
                     if wrench in player.inventory:
-                        print('1. Выйти из номера')
+                        print('\n\n1. Выйти из номера')
                         input()
                         player.location = hall
                         yuki[0] = 0
                         print(smoking_kills.achieved())
                         print(hurt_oneself.achieved())
-                        print('Юки Ямадзаки: Пачка сиграрет? Как я могла ее не заметить!\nЮки Ямадзаки вышла на балкон и воспользовалась зажигалкой, что привело к взрыву.\nДиана: Это было умно, 47-й. Юки Ямадзаки больше нас не побеспокоит.')
+                        print('\n\nЮки Ямадзаки: Пачка сиграрет? Как я могла ее не заметить!\nЮки Ямадзаки вышла на балкон и воспользовалась зажигалкой, что привело к взрыву.\nДиана: Это было умно, 47-й. Юки Ямадзаки больше нас не побеспокоит.')
                     else:
-                        print('У вас нет гаечного ключа')
+                        print('\n\nУ вас нет гаечного ключа')
                         print(player.location.name)
                 elif t == 2:
+                    print('\n')
                     player.location = hall
                     print(player.location.name)
         elif t == 2:
+            print('\n')
             player.location = hall
             print(player.location.name)
     if player.location == target_suite and cigars in player.inventory and cigar_place == 1:
@@ -198,24 +206,25 @@ while True:
             player.location = hall
             print(player.location.name)
         elif t == 2:
-            print('1. Создать утечку газа у обогревателя\n2. Уйти из номера')
+            print('\n\n1. Создать утечку газа у обогревателя\n2. Уйти из номера')
             t = input()
             while t.isdigit() == False:
                 t = input()
             t = int(t)
             if t == 1:
                 if wrench in player.inventory:
-                    print('1. Выйти из номера')
+                    print('\n\n1. Выйти из номера')
                     input()
                     player.location = hall
                     print(smoking_kills.achieved())
                     print(hurt_oneself.achieved())
                     yuki[0] = 0
-                    print('Юки Ямадзаки: Пачка сиграрет? Как я могла ее не заметить!\nЮки Ямадзаки вышла на балкон и воспользовалась зажигалкой, что привело к взрыву.\nДиана: Это было умно, 47-й. Юки Ямадзаки больше нас не побеспокоит.')
+                    print('\n\nЮки Ямадзаки: Пачка сиграрет? Как я могла ее не заметить!\nЮки Ямадзаки вышла на балкон и воспользовалась зажигалкой, что привело к взрыву.\nДиана: Это было умно, 47-й. Юки Ямадзаки больше нас не побеспокоит.')
                 else:
-                    print('У вас нет гаечного ключа')
+                    print('\n\nУ вас нет гаечного ключа')
                     print(player.location.name)
             elif t == 2:
+                print('\n')
                 player.location = hall
                 print(player.location.name)
     if (player.location == pilot_room or player.location == helipad) and pilot_info == 0:
