@@ -178,6 +178,19 @@ def interact():
         elif player.item.usage[t-1] == 'Бросить для отвлечения':
             if location_npcs == []:
                     return '\n\nНа локации никого нет'
+            if witnesses > 3:
+                print('\n\nНа локации слишком много свидетелей\n')
+                print('1. Отвлечь для перемещения\n2. Отменить действие')
+                t = input()
+                while t.isdigit() == False:
+                    t = input()
+                t = int(t)
+                if t == 1:
+                    player.inventory.remove(player.item)
+                    return safe_move()
+                else:
+                    print('\n\n')
+                    return player.location.name
             if player.item == coin:
                 player.location.loot.append(player.item)
             player.inventory.remove(player.item)
