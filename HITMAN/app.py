@@ -5,18 +5,18 @@ import pickle
 while True:
     t = input()
     if t.upper() == 'W':
-        time[0] += 0.5
         print(move())
+        time[0] += 0.5
     if t.upper() == 'I':
         print(inventory())
     if t.upper() == 'E':
-        time[0] += 1
         print(search())
+        time[0] += 1
     if t.upper() == 'S':
         print(status())
     if t.upper() == 'F':
-        time[0] += 1
         print(interact())
+        time[0] += 1
     if t.upper() == 'Q':
         with open('save_file.dat', 'wb') as f:
             pickle.dump([smoking_kills, stretch, personal_goodbye, no_smoking, human_error, suit_only, silent_assasin, sauna_assasination, sushi, heartless, silent_assasin_suit_only, no_evidence, ghost_machine, straight_shot, hold_hair, piano_man, hurt_oneself, tasteless, master_assasin, player_lvl], f, protocol=2)

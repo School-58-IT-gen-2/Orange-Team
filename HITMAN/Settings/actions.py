@@ -119,7 +119,7 @@ def interact():
                     return '\n\nНа локации никого нет'
                 print('\n')
                 for i in range(len(location_npcs)):
-                    print(f'{i+1}. Ударить {location_npcs[i].disguise}')
+                    print(f'{i+1}. Ударить {location_npcs[i].print_name()}')
             t = input()
             while t.isdigit() == False:
                 t = input()
@@ -375,7 +375,7 @@ def inventory():
             t = int(t)
             if t == 1:
                 player.item = item_by_name(inventory[t-1][:-4])
-                return location_status(player.location)
+                return f'\n\nСейчас в руках: {player.item.name}'
             else:
                 return inventory()
     else:
@@ -673,7 +673,7 @@ def location_status(location):
 def find_location_npcs(location):
     location_npcs = []
     for i in npcs:
-        if i.route[int(time[0])%len(i.route)] == location.name:
+        if i.route[int(time[0])%len(i.route)] == location.name and i.alive == True:
             location_npcs.append(i)
     return location_npcs
 
