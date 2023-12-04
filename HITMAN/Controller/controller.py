@@ -3,12 +3,13 @@ import sys
 from View.player_view import *
 from View.console_view import *
 from View.telegram_view import *
-from Model.location_variables import *
 from Model.global_variables import *
 from Model.challenges import Challenge
 from Model.loot import Item
 from Model.npcs import NPC
 from Model.player import Player
+from Hokkaido.hokkaido_loot import *
+from Model.location_variables import locations, challenges, objects, targets
 
 
 class PlayerController():
@@ -65,7 +66,6 @@ class PlayerController():
         result_string += f'\n{len(inventory)}. {self.disguise}'
         self.player_view.response(result_string)
         request = self.player_view.request()
-        t = input()
         if request.isdigit() == True:
             request = int(request)
         else:

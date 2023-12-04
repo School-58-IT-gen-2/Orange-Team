@@ -1,12 +1,18 @@
-from Hokkaido.hokkaido_challenges import hokkaido_challenges
-from Hokkaido.hokkaido_npcs import hokkaido_npcs
-from Hokkaido.hokkaido_locations import hokkaido_locations, hokkaido_objects, hokkaido_disguises
-from Hokkaido.hokkaido_loot import *
+from Model.locator import Locator
 
 
-npcs = hokkaido_npcs
-locations = hokkaido_locations
-challenges = hokkaido_challenges
-objects = hokkaido_objects
-disguises = hokkaido_disguises
-targets = {}
+locator = Locator()
+
+def init():
+    global npcs
+    global locations
+    global challenges
+    global objects
+    global disguises
+    global targets
+    npcs = locator.get_npcs('Хоккайдо')
+    locations = locator.get_locations('Хоккайдо')
+    challenges = locator.get_challenges('Хоккайдо')
+    objects = locator.get_objects('Хоккайдо')
+    disguises = locator.get_disguises('Хоккайдо')
+    targets = {}

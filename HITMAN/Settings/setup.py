@@ -280,7 +280,6 @@ os.chdir('HITMAN')
 if os.stat('save_file.dat').st_size != 0:
     with open('save_file.dat', 'rb') as f:
         smoking_kills, stretch, personal_goodbye, no_smoking, human_error, suit_only, silent_assasin, sauna_assasination, sushi, heartless, silent_assasin_suit_only, no_evidence, ghost_machine, straight_shot, hold_hair, piano_man, hurt_oneself, tasteless, master_assasin, player_lvl = pickle.load(f)
-    
 else:
     print('Пройти обучение?\n1. Да\n2. Нет')
     t = input()

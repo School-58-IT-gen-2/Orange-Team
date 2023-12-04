@@ -2,6 +2,7 @@ import random
 from Model.location_variables import npcs
 from Model.location_variables import disguises
 
+
 class Location:
 
     def __init__(self, name, locations, disguise, witnesses, loot):
