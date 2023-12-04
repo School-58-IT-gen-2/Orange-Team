@@ -1,7 +1,12 @@
-from Controller.controller import *
+from controller.controller import *
 
 
-player = Player([], 100, locations[0], [], arms, [], 'Телохранитель')
+player = Player(inventory=[],
+                health=100,
+                found_disguises=[],
+                item=arms,
+                compromised_disguises=[],
+                disguise='Телохранитель')
 controller = PlayerController(player)
 while True:
     controller.move()

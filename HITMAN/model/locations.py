@@ -1,6 +1,5 @@
 import random
-from Model.location_variables import npcs
-from Model.location_variables import disguises
+from HITMAN.model.location_variables import LocationVariables
 
 
 class Location:
@@ -10,11 +9,12 @@ class Location:
         self.locations = locations
         self.disguise = disguise
         self.witnesses = witnesses
+        self.location_variables = LocationVariables()
         self.loot = loot
 
     def find_location_npcs(self):
         location_npcs = []
-        for i in npcs:
+        for i in self.location_variables.npcs:
             if i.move() == self and i.alive == True:
                 location_npcs.append(i)
         return location_npcs

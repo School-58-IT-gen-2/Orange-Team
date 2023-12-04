@@ -1,25 +1,32 @@
 import pickle
 import sys
-from View.player_view import *
-from View.console_view import *
-from View.telegram_view import *
-from Model.global_variables import *
-from Model.challenges import Challenge
-from Model.loot import Item
-from Model.npcs import NPC
-from Model.player import Player
-from Hokkaido.hokkaido_loot import *
-from Model.location_variables import locations, challenges, objects, targets
+
+from HITMAN.settings.actions import location_witnesses, find_location_npcs
+from HITMAN.view.console_view import *
+from HITMAN.view.player_view import PlayerView
+from HITMAN.view.telegram_view import *
+from HITMAN.model.global_variables import *
+from HITMAN.model.challenges import Challenge
+from HITMAN.model.loot import Item
+from HITMAN.model.npcs import NPC
+from HITMAN.model.player import Player
+from HITMAN.hokkaido.hokkaido_loot import *
+from HITMAN.model.location_variables import LocationVariables
+
+from HITMAN.view.console_view import ConsoleView
 
 
 class PlayerController():
 
-    def __init__(self, player=Player, npc=NPC, player_view:PlayerView=None):
+    def __init__(self, player=Player(), npc=NPC, player_view:PlayerView=None):
+
         if player_view:
             self.player_view = player_view
         else:
             self.player_view = ConsoleView()
+        self.location_variables = LocationVariables()
         self.player = player
+        self.player.set_location('Хоккайдо')
         self.npc = npc
     
     def search(self):
@@ -66,7 +73,7 @@ class PlayerController():
         result_string += f'\n{len(inventory)}. {self.disguise}'
         self.player_view.response(result_string)
         request = self.player_view.request()
-        if request.isdigit() == True:
+        if request.isdigit():
             request = int(request)
         else:
             if request.upper() == 'W':
