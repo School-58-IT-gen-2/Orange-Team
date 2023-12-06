@@ -1,5 +1,5 @@
 import sys
-from settings.actions import *
+from Settings.actions import *
 import pickle
 
 while True:

@@ -1,5 +1,5 @@
 import random
-from HITMAN.model.location_variables import LocationVariables
+from model.location_variables import LocationVariables
 
 
 class Location:
@@ -11,6 +11,11 @@ class Location:
         self.witnesses = witnesses
         self.location_variables = LocationVariables()
         self.loot = loot
+        self.npcs = self.location_variables.npcs
+        self.locations = self.location_variables.locations
+        self.challenges = self.location_variables.challenges
+        self.objects = self.location_variables.objects
+        self.disguises = self.location_variables.disguises
 
     def find_location_npcs(self):
         location_npcs = []
@@ -37,9 +42,9 @@ class Location:
         if location_npcs != []:
             if self.witnesses > 0:
                 result_string += f'\nНа локации находятся:\n\n{self.witnesses} Пациент'
-            for i in range(1, len(disguises)+1):
-                if disguises[i] in location_disguises:
-                    result_string += f'\n{location_disguises.count(disguises[i]), disguises[i]}'
+            for i in range(1, len(self.disguises)+1):
+                if self.disguises[i] in location_disguises:
+                    result_string += f'\n{location_disguises.count(self.disguises[i]), self.disguises[i]}'
             result_string += f'\n\nВсего {self.location_witnesses()} свидетелей'
             return result_string
         else:

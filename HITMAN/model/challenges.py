@@ -1,4 +1,4 @@
-from Model.global_variables import player_lvl
+from model.global_variables import player_lvl
 
 
 class Challenge:

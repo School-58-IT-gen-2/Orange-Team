@@ -1,1 +1,1 @@
-from View.player_view import PlayerView
+from view.player_view import PlayerView

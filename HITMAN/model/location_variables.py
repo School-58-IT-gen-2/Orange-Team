@@ -1,4 +1,4 @@
-from HITMAN.model.locator import Locator
+from model.locator import Locator
 
 locator = Locator()
 

@@ -1,6 +1,6 @@
-from Hokkaido.hokkaido_npcs import hokkaido_npcs
-from Hokkaido.hokkaido_challenges import hokkaido_challenges
-from Hokkaido.hokkaido_locations import hokkaido_locations, hokkaido_objects, hokkaido_disguises
+from hokkaido.hokkaido_npcs import hokkaido_npcs
+from hokkaido.hokkaido_challenges import hokkaido_challenges
+from hokkaido.hokkaido_locations import hokkaido_locations, hokkaido_objects, hokkaido_disguises
 
 
 class Locator:

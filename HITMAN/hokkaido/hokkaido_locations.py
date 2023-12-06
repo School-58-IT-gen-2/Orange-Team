@@ -1,5 +1,5 @@
-from HITMAN.model.locations import Location
-from HITMAN.hokkaido.hokkaido_loot import *
+from model.locations import Location
+from hokkaido.hokkaido_loot import *
 
 
 suite = Location('Номер 47-го', {

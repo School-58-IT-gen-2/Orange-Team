@@ -1,5 +1,5 @@
-from Model.npcs import NPC
-from Hokkaido.hokkaido_locations import *
+from model.npcs import NPC
+from hokkaido.hokkaido_locations import *
 
 
 guard_cable_car_1 = NPC(True, 'Телохранитель', True, {0: cable_car}, 5, 'Shoichi Kataoka')

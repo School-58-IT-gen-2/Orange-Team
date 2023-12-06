@@ -1,4 +1,4 @@
-from Model.global_variables import time, suspicion_count
+from model.global_variables import time, suspicion_count
 
 
 class NPC:

@@ -1,4 +1,4 @@
-from Model.loot import Item
+from model.loot import Item
 
 
 pistol = Item('Пистолет без глушителя', ['Выстрелить', 'Отменить действие'], True, True)

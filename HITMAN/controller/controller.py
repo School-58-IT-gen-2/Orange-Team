@@ -1,19 +1,18 @@
 import pickle
 import sys
 
-from HITMAN.settings.actions import location_witnesses, find_location_npcs
-from HITMAN.view.console_view import *
-from HITMAN.view.player_view import PlayerView
-from HITMAN.view.telegram_view import *
-from HITMAN.model.global_variables import *
-from HITMAN.model.challenges import Challenge
-from HITMAN.model.loot import Item
-from HITMAN.model.npcs import NPC
-from HITMAN.model.player import Player
-from HITMAN.hokkaido.hokkaido_loot import *
-from HITMAN.model.location_variables import LocationVariables
+from view.console_view import *
+from view.player_view import PlayerView
+from view.telegram_view import *
+from model.global_variables import *
+from model.challenges import Challenge
+from model.loot import Item
+from model.npcs import NPC
+from model.player import Player
+from hokkaido.hokkaido_loot import *
+from model.location_variables import LocationVariables
 
-from HITMAN.view.console_view import ConsoleView
+from view.console_view import ConsoleView
 
 
 class PlayerController():
