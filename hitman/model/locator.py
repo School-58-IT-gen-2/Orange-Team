@@ -1,6 +1,6 @@
-from hokkaido.hokkaido_npcs import hokkaido_npcs
-from hokkaido.hokkaido_challenges import hokkaido_challenges
-from hokkaido.hokkaido_locations import hokkaido_locations, hokkaido_objects, hokkaido_disguises
+from hitman.hokkaido.hokkaido_npcs import hokkaido_npcs
+from hitman.hokkaido.hokkaido_challenges import hokkaido_challenges
+from hitman.hokkaido.hokkaido_locations import hokkaido_locations, hokkaido_objects, hokkaido_disguises
 
 
 class Locator:

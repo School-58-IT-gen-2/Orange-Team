@@ -1,4 +1,4 @@
-from model.global_variables import time, suspicion_count
+from hitman.model.global_variables import time, suspicion_count
 
 
 class NPC:

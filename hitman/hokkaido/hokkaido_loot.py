@@ -1,4 +1,4 @@
-from model.loot import Item
+from hitman.model.loot import Item
 
 
 pistol = Item('Пистолет без глушителя', ['Выстрелить', 'Отменить действие'], True, True)

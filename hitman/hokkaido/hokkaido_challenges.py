@@ -1,4 +1,4 @@
-from model.challenges import Challenge
+from hitman.model.challenges import Challenge
 
 
 smoking_kills = Challenge('Курение убивает', 'Убейте Юки Ямадзаки во время того, как она курит сигареты.', False)

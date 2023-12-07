@@ -1,4 +1,4 @@
-from model.global_variables import player_lvl
+from hitman.model.global_variables import player_lvl
 
 
 class Challenge:

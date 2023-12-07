@@ -1,5 +1,6 @@
 import random
-from model.location_variables import LocationVariables
+
+from hitman.model.location_variables import LocationVariables
 
 
 class Location:
