@@ -9,17 +9,21 @@ from hitman.model.hokkaido.hokkaido_locator import HokkaidoLocator
 class PlayerController():
 
     def __init__(self,
-                 player=Player(),
+                 player=Player(HokkaidoLocator().get_init_location()),
                  player_view:PlayerView=None,
-                 locator=HokkaidoLocator()):
+                 locator=HokkaidoLocator(),
+                 location_name=None):
 
         if player_view:
             self.player_view = player_view
         else:
             self.player_view = ConsoleView()
-        self.player = player
         if locator:
             self.__locator = locator
+        self.player = player
+        if location_name:
+            player.set_location(self.__locator.get_location_by_name(location_name))
+
 
     
     def search(self):
