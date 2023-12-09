@@ -319,7 +319,7 @@ def start():
             start_inventory.append(pistol)
         print('\n\nВыберите первый предмет сняряжения:\n')
         for i in range(len(carry_on_items)):
-            print(f'{i+1}. {carry_on_items[i].name}')
+            print(f'{i+1}. {carry_on_items[i].__name}')
         t = input()
         while t.isdigit() == False:
             t = input()
@@ -328,7 +328,7 @@ def start():
         carry_on_items.remove(carry_on_items[t-1])
         print('\n\nВыберите второй предмет сняряжения:\n')
         for i in range(len(carry_on_items)):
-            print(f'{i+1}. {carry_on_items[i].name}')
+            print(f'{i+1}. {carry_on_items[i].__name}')
         t = input()
         while t.isdigit() == False:
             t = input()

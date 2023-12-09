@@ -1,6 +1,3 @@
-from hitman.model.global_variables import player_lvl
-
-
 class Challenge:
 
     def __init__(self, name, description, completed):
