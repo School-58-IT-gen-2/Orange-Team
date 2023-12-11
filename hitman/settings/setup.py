@@ -1,7 +1,7 @@
 import sys
 import pickle
-from hitman.settings.locations import *
-from hitman.settings.loot import *
+from settings.locations import *
+from settings.loot import *
 import os
 
 class Player:

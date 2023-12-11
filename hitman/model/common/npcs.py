@@ -1,4 +1,4 @@
-from hitman.model.player.player_info import time
+from model.player.player_info import time
 
 
 class NPC:
@@ -19,7 +19,7 @@ class NPC:
 
     def move(self):
         if self.alive == True:
-            location = self.route[int(time)%len(self.route)]
+            location = self.route[int(time[0])%len(self.route)]
             return location
         else:
             return False

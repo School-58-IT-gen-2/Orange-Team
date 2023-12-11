@@ -1,19 +1,19 @@
 import pickle
 import sys
+import random
 
-from hitman.view.player_view import PlayerView
-from hitman.model.player.player import Player
-from hitman.view.console_view import ConsoleView
-from hitman.model.hokkaido.hokkaido_locator import HokkaidoLocator
+from view.player_view import PlayerView
+from model.player.player import Player
+from view.console_view import ConsoleView
+from model.hokkaido.hokkaido_locator import HokkaidoLocator
 
 class PlayerController():
 
     def __init__(self,
-                 player=Player(HokkaidoLocator().get_init_location()),
+                 player,
                  player_view:PlayerView=None,
-                 locator=HokkaidoLocator(),
-                 location_name=None):
-
+                 locator=HokkaidoLocator()):
+        
         if player_view:
             self.player_view = player_view
         else:
@@ -21,10 +21,6 @@ class PlayerController():
         if locator:
             self.__locator = locator
         self.player = player
-        if location_name:
-            player.set_location(self.__locator.get_location_by_name(location_name))
-
-
     
     def search(self):
         for i in self.player.current_location.get_items():
@@ -148,21 +144,21 @@ class PlayerController():
         global bodies
         global suspicion_count
         result_string = ''
-        for i in range(len(self.player.current_location.__locations)):
-            result_string += f"{(str(i+1)+'.',self.player.current_location.__locations[i + 1])}\n"
-        result_string += (f'\n{len(self.player.current_location.__locations) + 1}. Отменить действие')
+        for i in range(len(self.player.current_location.get_connected_locations())):
+            result_string += f"{str(i+1)+'. '+ str(self.player.current_location.get_connected_locations()[i + 1])}\n"
+        result_string += f'\n{len(self.player.current_location.get_connected_locations()) + 1}. Отменить действие'
         self.player_view.response(result_string)
         request = self.player_view.request()
         while request.isdigit() == False:
             self.player_view.response('Введите номер ответа')
             request = self.player_view.request()
         request = int(request)
-        if request > len(self.player.current_location.__locations):
-            return self.player_view.response(self.player.current_location.location_status())
-        for i in locations:
-            if i.__name == self.player.current_location.__locations[request]:
-                move_to_location = i
-        if move_to_location.__name == 'Комната с серверами':
+        if request > len(self.player.current_location.get_connected_locations()):
+            return self.player_view.response(self.__locator.location_status(self.player.current_location))
+        for i in self.__locator.get_locations():
+            if i == self.player.current_location.get_connected_locations()[request]:
+                move_to_location = self.__locator.get_location_by_name(i)
+        if move_to_location.get_name() == 'Комната с серверами':
             if self.player.disguise == 'Директор клиники' or keycard in self.player.inventory or disposable_scrambler in self.player.inventory:
                 self.player.current_location = move_to_location
                 return self.player_view.response(f'{self.player.current_location.location_status()}')
@@ -194,7 +190,7 @@ class PlayerController():
                             return self.combat()
                 else:
                     self.player.current_location = move_to_location
-                    return self.player_view.response(f'{self.player.current_location.location_status()}')
+                    return self.player_view.response(f'{self.__locator.location_status(self.player.current_location.get_name())}')
             else:
                 if (self.player.item.illegal == True and self.player.disguise != 'Охранник' and self.player.disguise != 'Телохранитель'):
                     self.player.current_location = move_to_location
@@ -222,11 +218,11 @@ class PlayerController():
                                 result_string += f'\n\n{self.player.current_location.location_status()}'
                                 return self.player_view.response(result_string)
                 else:
-                    if self.player.disguise in move_to_location.__disguise:
+                    if self.__locator.get_disguise_by_name(self.player.disguise) in move_to_location.get_disguise():
                         self.player.current_location = move_to_location
-                        return self.player_view.response(f'{self.player.current_location.location_status()}')
+                        return self.player_view.response(f'{self.__locator.location_status(self.player.current_location)}')
                     else:
-                        if self.player.current_location.location_witnesses() > 10:
+                        if self.__locator.location_witnesses(self.player.current_location.get_name()) > 10:
                             chance = 10
                         else:
                             chance = self.player.current_location.location_witnesses()

@@ -1,4 +1,4 @@
-from hitman.settings.loot import *
+from settings.loot import *
 
 class Location:
     def __init__(self, name, locations, disguise, witnesses, loot):

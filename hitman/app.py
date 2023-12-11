@@ -1,5 +1,5 @@
 import sys
-from hitman.settings.actions import *
+from settings.actions import *
 import pickle
 
 while True:

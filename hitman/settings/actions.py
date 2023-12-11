@@ -1,8 +1,8 @@
 import random
 import sys
 import time as tm
-from hitman.settings.locations import *
-from hitman.settings.setup import *
+from settings.locations import *
+from settings.setup import *
 import pickle
 
 def interact():

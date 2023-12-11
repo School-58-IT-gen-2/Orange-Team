@@ -1,4 +1,4 @@
-from hitman.model.common.disguise import Disguise
+from model.common.disguise import Disguise
 
 
 class HokkaidoDisguises():
@@ -21,3 +21,6 @@ class HokkaidoDisguises():
 
     def get_by_name(self, name):
         return self.__disguises[name]
+    
+    def get_all(self):
+        return self.__disguises.values()

@@ -1,4 +1,4 @@
-from hitman.model.common.npcs import NPC
+from model.common.npcs import NPC
 
 
 class HokkaidoNPCs():

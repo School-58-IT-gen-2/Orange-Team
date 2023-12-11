@@ -1,4 +1,4 @@
-from hitman.model.common.challenges import Challenge
+from model.common.challenges import Challenge
 
 class HokkaidoChalLenges():
     def __init__(self):

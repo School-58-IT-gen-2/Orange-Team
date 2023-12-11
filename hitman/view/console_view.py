@@ -1,4 +1,4 @@
-from hitman.view.player_view import PlayerView
+from view.player_view import PlayerView
 
 
 class ConsoleView(PlayerView):
