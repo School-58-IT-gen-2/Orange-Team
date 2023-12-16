@@ -7,5 +7,5 @@ class ConsoleView(PlayerView):
         print(f'\n\n{response}')
 
     def request(self):
-        request = input()
+        request = input('\n')
         return request

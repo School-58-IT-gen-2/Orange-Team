@@ -10,7 +10,7 @@ class Player:
                  item=None,
                  compromised_disguises=None,
                  disguise=None,
-                 locator=None):
+                 ):
 
         self.current_location = location
         self.inventory = inventory
@@ -19,6 +19,3 @@ class Player:
         self.item = item
         self.compromised_disguises = compromised_disguises
         self.disguise = disguise
-
-    def set_location(self, location):
-        self.current_location = location

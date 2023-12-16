@@ -23,4 +23,4 @@ class HokkaidoDisguises():
         return self.__disguises[name]
     
     def get_all(self):
-        return self.__disguises.values()
+        return list(self.__disguises.values())

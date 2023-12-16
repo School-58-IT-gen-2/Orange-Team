@@ -1,4 +1,4 @@
-from model.player.player_info import time
+from model.player.player_info import time, suspicion_count
 
 
 class NPC:
@@ -18,16 +18,21 @@ class NPC:
         return f'{self.__disguise} ({self.name})'
 
     def move(self):
-        if self.alive == True:
-            location = self.route[int(time[0])%len(self.route)]
-            return location
-        else:
-            return False
+        location = self.route[int(time[0])%len(self.route)]
+        return location
     
     def suspicion(self):
         global suspicion_count
-        if self.alive == True:
-            suspicion_count[0] += 1
-            return f'{self.get_name()}: Эй, ты не можешь здесь находится!'
-        else:
-            return False
+        suspicion_count[0] += 1
+        return f'{self.get_name()}: Эй, подойди сюда!'
+    
+class Target:
+
+    def __init__(self, alive, route, name):
+        self.alive = alive
+        self.route = route
+        self.name = name
+
+    def move(self):
+        location = self.route[int(time[0])%len(self.route)]
+        return location

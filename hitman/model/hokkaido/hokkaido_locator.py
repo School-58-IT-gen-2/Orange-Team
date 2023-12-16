@@ -1,16 +1,17 @@
 import random
 from model.common.location import Location
 from model.hokkaido.hokkaido_items import HokkaidoItems
-from model.hokkaido.hokkaido_npcs import HokkaidoNPCs
+from model.hokkaido.hokkaido_npcs import HokkaidoNPCs, HokkaidoTargets
 from model.hokkaido.hokkaido_disguises import HokkaidoDisguises
 from model.hokkaido.hokkaido_challenges import HokkaidoChalLenges
 
 class HokkaidoLocator():
     def __init__(self):
-        items = HokkaidoItems()
+        self.__items = HokkaidoItems()
         self.__disguises = HokkaidoDisguises()
         self.__npcs = HokkaidoNPCs()
         self.__challenges = HokkaidoChalLenges()
+        self.__targets = HokkaidoTargets()
         self.__locations = {
             'Номер 47-го':
                 Location(
@@ -24,10 +25,10 @@ class HokkaidoLocator():
                 ],
                 witnesses=0,
                 items=[
-                    items.get_by_name('Ножницы'),
-                    items.get_by_name('Бюст'),
-                    items.get_by_name('Пачка сигарет'),
-                    items.get_by_name('Монета')
+                    self.__items.get_by_name('Ножницы'),
+                    self.__items.get_by_name('Бюст'),
+                    self.__items.get_by_name('Пачка сигарет'),
+                    self.__items.get_by_name('Монета')
                 ]
             ),
             'Канатная дорога':
@@ -53,7 +54,7 @@ class HokkaidoLocator():
                     ],
                     witnesses=0,
                     items=[
-                        items.get_by_name('Жестяная банка')
+                        self.__items.get_by_name('Жестяная банка')
                     ]
                 ),
             'Холл':
@@ -85,8 +86,8 @@ class HokkaidoLocator():
                     ],
                     witnesses=2,
                     items=[
-                        items.get_by_name('Жестяная банка'),
-                        items.get_by_name('Жестяная банка'),
+                        self.__items.get_by_name('Жестяная банка'),
+                        self.__items.get_by_name('Жестяная банка'),
                     ]
                 ),
             'Зона спа':
@@ -112,7 +113,7 @@ class HokkaidoLocator():
                     ], 
                     witnesses=8, 
                     items=[
-                        items.get_by_name('Ножницы')
+                        self.__items.get_by_name('Ножницы')
                     ]
                 ),
             'Ресторан':
@@ -166,7 +167,7 @@ class HokkaidoLocator():
                     ], 
                     witnesses=0, 
                     items=[
-                        items.get_by_name('Молоток')
+                        self.__items.get_by_name('Молоток')
                     ]
                 ),
             'Мед-комплекс':
@@ -191,7 +192,7 @@ class HokkaidoLocator():
                     ], 
                     witnesses=0, 
                     items=[
-                        items.get_by_name('Скальпель')
+                        self.__items.get_by_name('Скальпель')
                     ]
                 ),
             'Комната охраны':
@@ -207,7 +208,7 @@ class HokkaidoLocator():
                     ], 
                     witnesses=0, 
                     items=[
-                        items.get_by_name('Ключ-карта')
+                        self.__items.get_by_name('Ключ-карта')
                     ]
                 ),
             'Зона отдыха':
@@ -233,8 +234,8 @@ class HokkaidoLocator():
                     ], 
                     witnesses=7, 
                     items=[
-                        items.get_by_name('Монета'),
-                        items.get_by_name('Монета')
+                        self.__items.get_by_name('Монета'),
+                        self.__items.get_by_name('Монета')
                     ]
                 ),
             'Гараж':
@@ -259,9 +260,9 @@ class HokkaidoLocator():
                     ], 
                     witnesses=0, 
                     items=[
-                        items.get_by_name('Молоток'),
-                        items.get_by_name('Гаечный ключ'),
-                        items.get_by_name('Крысиный яд'),
+                        self.__items.get_by_name('Молоток'),
+                        self.__items.get_by_name('Гаечный ключ'),
+                        self.__items.get_by_name('Крысиный яд'),
                     ]
                 ),
             'Коридор за барной стойкой':
@@ -288,7 +289,7 @@ class HokkaidoLocator():
                     ], 
                     witnesses=0, 
                     items=[
-                        items.get_by_name('Крысиный яд'),
+                        self.__items.get_by_name('Крысиный яд'),
                     ]
                 ),
             'Кухня':
@@ -307,8 +308,8 @@ class HokkaidoLocator():
                     ], 
                     witnesses=0, 
                     items=[
-                        items.get_by_name('Крысиный яд'),
-                        items.get_by_name('Яд рыбы Фугу')
+                        self.__items.get_by_name('Крысиный яд'),
+                        self.__items.get_by_name('Яд рыбы Фугу')
                     ]
                 ),
             'Спальня персонала':
@@ -334,8 +335,8 @@ class HokkaidoLocator():
                     ], 
                     witnesses=0, 
                     items=[
-                        items.get_by_name('Пульт для управления нейрочипом'),
-                        items.get_by_name('Монета')
+                        self.__items.get_by_name('Пульт для управления нейрочипом'),
+                        self.__items.get_by_name('Монета')
                     ]
                 ),
             'Операционная':
@@ -351,7 +352,7 @@ class HokkaidoLocator():
                     ], 
                     witnesses=0, 
                     items=[
-                        items.get_by_name('Скальпель')
+                        self.__items.get_by_name('Скальпель')
                     ]
                 ),
             'Номер Юки Ямадзаки':
@@ -365,8 +366,8 @@ class HokkaidoLocator():
                     ], 
                     witnesses=0, 
                     items=[
-                        items.get_by_name('Бюст'),
-                        items.get_by_name('Жестяная банка')
+                        self.__items.get_by_name('Бюст'),
+                        self.__items.get_by_name('Жестяная банка')
                     ]
                 ),
             'Комната управления системой водоснабжения спа':
@@ -403,7 +404,7 @@ class HokkaidoLocator():
                     ], 
                     witnesses=0, 
                     items=[
-                        items.get_by_name('Крысиный яд')
+                        self.__items.get_by_name('Крысиный яд')
                     ]
                 ),
             'Комната пилота':
@@ -424,7 +425,7 @@ class HokkaidoLocator():
                     ], 
                     witnesses=0, 
                     items=[
-                        items.get_by_name('Гаечный ключ')
+                        self.__items.get_by_name('Гаечный ключ')
                     ]
                 ),
             'Мед-комплекс (2 этаж)':
@@ -535,7 +536,7 @@ class HokkaidoLocator():
                     ], 
                     witnesses=0, 
                     items=[
-                        items.get_by_name('Скальпель'),
+                        self.__items.get_by_name('Скальпель'),
                     ]
                 )
         }
@@ -587,3 +588,9 @@ class HokkaidoLocator():
     
     def get_disguise_by_name(self, disuise):
         return self.__disguises.get_by_name(disuise)
+    
+    def get_items(self):
+        return self.__items
+    
+    def get_targets(self):
+        return self.__targets

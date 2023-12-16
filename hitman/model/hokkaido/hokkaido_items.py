@@ -49,3 +49,6 @@ class HokkaidoItems:
 
     def get_by_name(self, name):
         return self.__items[name]
+    
+    def get_all(self):
+        return list(self.__items.values())
