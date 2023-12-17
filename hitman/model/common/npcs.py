@@ -36,3 +36,6 @@ class Target:
     def move(self):
         location = self.route[int(time[0])%len(self.route)]
         return location
+    
+    def get_name(self):
+        return f'{self.name}'

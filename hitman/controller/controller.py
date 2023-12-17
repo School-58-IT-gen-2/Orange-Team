@@ -7,11 +7,13 @@ from model.player.player_info import *
 from model.player.player import Player
 from view.console_view import ConsoleView
 from model.hokkaido.hokkaido_locator import HokkaidoLocator
+from model.common.npcs import Target
+
 
 class PlayerController():
 
     def __init__(self,
-                 player=Player(location=HokkaidoLocator().get_location_by_name('Номер 47-го')),
+                 player=Player(),
                  player_view:PlayerView=None,
                  locator=HokkaidoLocator()):
         
@@ -29,13 +31,13 @@ class PlayerController():
         if self.player.current_location.get_items() == []:
             return self.player_view.response('На локации нет предметов')
         else:
-            for i in self.player.current_location.get_items():
-                result_string += f'{i.name}\n'
+            for i in self.__locator.get_items().get_all():
+                if i in self.player.current_location.get_items():
+                    result_string += f'{i.name} ({self.player.current_location.get_items().count(i)})\n'
         self.player.current_location.set_items([])
         return self.player_view.response(result_string)
     
     def status(self):
-        global time
         self.player_view.response(f'1. Статус {self.player.current_location.get_name()}\n2. Общий статус')
         request = self.player_view.request()
         while request.isdigit() == False:
@@ -51,10 +53,16 @@ class PlayerController():
                     result_string += f'{i.name}: Цель устранена\n'
             result_string += f'\n\nТекущая маскировка: {self.player.disguise}\n'
             result_string += f'Предмет в руках: {self.player.item.name}'
+            if int(5-(bodies[0]*0.5)-(kills[0]*0.7)-(combat_count[0]*0.1)-(suspicion_count[0]*0.2)) == 5:
+                result_string += f'\n\nБесшумный убийца'
             return self.player_view.response(result_string)
+        else:
+            return self.player_view.response(self.__locator.location_status(self.player.current_location))
     
     def inventory(self):
         inventory = []
+        if self.player.inventory.count(self.player.item) == 0:
+            self.player.item = self.__locator.get_items().get_by_name('Нет предмета')
         result_string = ''
         for i in self.player.inventory:
             if i.name == 'Пистолет без глушителя' or i.name == 'Пистолет с глушителем':
@@ -156,7 +164,7 @@ class PlayerController():
             if i == self.player.current_location.get_connected_locations()[request]:
                 move_to_location = self.__locator.get_location_by_name(i)
         if move_to_location.get_name() == 'Комната с серверами':
-            if self.__locator.get_disguise_by_name(self.player.disguise) == 'Директор клиники' or self.__locator.get_items().get_by_name('Ключ-карта') in self.player.inventory or self.__locator.get_items().get_by_name('Электронный дешифровщик') in self.player.inventory:
+            if self.player.disguise == 'Директор клиники' or self.__locator.get_items().get_by_name('Ключ-карта') in self.player.inventory or self.__locator.get_items().get_by_name('Электронный дешифровщик') in self.player.inventory:
                 self.player.current_location = move_to_location
                 return self.player_view.response(f'{self.__locator.location_status(self.player.current_location)}')
             else:
@@ -225,7 +233,7 @@ class PlayerController():
                             chance = 10
                         else:
                             chance = self.__locator.location_witnesses(self.player.current_location.get_name())
-                        result_string = f'\n\nУ вас нет подходящей маскировки. Переместиться на локацию? ({10-chance}/10)\n1. Да\n2. Нет'
+                        result_string = f'\n\nУ вас нет подходящей маскировки. Переместиться на локацию? ({10-chance}/10)\n\n1. Да\n2. Нет'
                         self.player_view.response(result_string)
                         request = self.player_view.request()
                         while request.isdigit() == False:
@@ -266,297 +274,306 @@ class PlayerController():
                                 else:
                                     self.player.current_location = move_to_location
                                     return self.player_view.response(f'{self.__locator.location_status(self.player.current_location)}')
-                                
-def interact():
-    global bodies
-    global kills
-    global yuki
-    global soders
-    global target_status
-    witnesses = location_witnesses(player.current_location)
-    location_npcs = find_location_npcs(player.current_location)
-    if player.inventory.count(player.item) == 0:
-        player.item = arms
-    print(f'\n\nДействия видят {witnesses} человек\n')
-    if player.item.usage == []:
-        return '\n\nНет действий с этим предметом'
-    else:
-        for i in range(len(player.item.usage)):
-            print(f'{i+1}. {player.item.usage[i]}')
-        t = input()
-        while t.isdigit() == False:
-            t = input()
-        t = int(t)
-        if player.item.usage[t-1] == 'Выстрелить':
-            if ((target_status[int(time[0])%9] == player.current_location.__name) and (yuki[0] == 1)):
-                print(f'\n\n1. Выстрелить в Юки Ямадзаки')
-                for i in range(1, len(location_npcs)):
-                    print(f'{i+1}. Выстрелить в {location_npcs[i].print_name()}')
-            elif (player.current_location.__name == 'Операционная') and (soders[0] == 1):
-                print(f'\n\n1. Выстрелить в Эрих Содерс')
-                for i in range(1, len(location_npcs)):
-                    print(f'{i+1}. Выстрелить в {location_npcs[i].print_name()}')
-            else:
-                if location_npcs == []:
-                    return '\n\nНа локации никого нет'
-                print('\n')
-                for i in range(len(location_npcs)):
-                    print(f'{i+1}. Выстрелить в {location_npcs[i].print_name()}')
-            t = input()
-            while t.isdigit() == False:
-                t = input()
-            t = int(t)
-            if ((target_status[int(time[0])%9] == player.current_location.__name) and (yuki[0] == 1)) and t == 1:
-                print(straight_shot.achieved())
-                yuki[0] = 0
-                if witnesses > 0:
-                    bodies[0] += 1
-                    return combat()
-                else:
-                    return '\n\nДиана: С Юки Ямадзаки покончено, отличная работа.'
-            elif (player.current_location.__name == 'Операционная') and (soders[0] == 1) and t == 1:
-                print(straight_shot.achieved())
-                print(personal_goodbye.achieved())
-                soders[0] = 0
-                if witnesses > 0:
-                    bodies[0] += 1
-                    return combat()
-                else:
-                    return '\n\nДиана: Содерс нас больше не побеспокоит, отличная работа.'
-            else:
-                location_npcs[t-1].alive = False
-                player.found_disguises.append(location_npcs[t-1].__disguise)
-                if witnesses > 0:
-                    bodies[0] += 1
-                    kills[0] += 1
-                    return combat()
-                else:
-                    kills[0] += 1
-                    return location_status(player.current_location)
-        elif player.item.usage[t-1] == 'Отменить действие':
-            return location_status(player.current_location)
-        elif player.item.usage[t-1] == 'Ударить':
-            if location_npcs == []:
-                    return '\n\nНа локации никого нет'
-            print('\n')
-            for i in range(len(location_npcs)):
-                    print(f'{i+1}. Ударить {location_npcs[i].print_name()}')
-            t = input()
-            while t.isdigit() == False:
-                t = input()
-            t = int(t)
-            location_npcs[t-1].alive = False
-            player.found_disguises.append(location_npcs[t-1].__disguise)
-            if witnesses > 0:
-                bodies[0] += 1
-                return combat()
-            else:
-                return location_status(player.current_location)
-        elif player.item.usage[t-1] == 'Бросить':
-            if location_npcs == []:
-                    return '\n\nНа локации никого нет'
-            print('\n')
-            player.current_location.__items.append(player.item)
-            player.inventory.remove(player.item)
-            for i in range(len(location_npcs)):
-                    print(f'{i+1}. Бросить в {location_npcs[i].print_name()}')
-            t = input()
-            while t.isdigit() == False:
-                t = input()
-            t = int(t)
-            location_npcs[t-1].alive = False
-            player.found_disguises.append(location_npcs[t-1].__disguise)
-            if witnesses > 0:
-                bodies[0] += 1
-                return combat()
-            else:
-                return location_status(player.current_location)
-        elif player.item.usage[t-1] == 'Ударить (летально)':
-            if ((target_status[int(time[0])%9] == player.current_location.__name) and (yuki[0] == 1)):
-                print(f'\n\n1. Ударить Юки Ямадзаки')
-                for i in range(1, len(location_npcs)):
-                    print(f'{i+1}. Ударить {location_npcs[i].print_name()}')
-            else:
-                if location_npcs == []:
-                    return '\n\nНа локации никого нет'
-                print('\n')
-                for i in range(len(location_npcs)):
-                    print(f'{i+1}. Ударить {location_npcs[i].print_name()}')
-            t = input()
-            while t.isdigit() == False:
-                t = input()
-            t = int(t)
-            if ((target_status[int(time[0])%9] == player.current_location) and (yuki[0] == 1)) and t == 1:
-                yuki[0] = 0
-                if witnesses > 0:
-                    bodies[0] += 1
-                    return combat()
-                else:
-                    return '\n\nДиана: С Юки Ямадзаки покончено, отличная работа.'
-            else:
-                location_npcs[t-1].alive = False
-                player.found_disguises.append(location_npcs[t-1].__disguise)
-                if witnesses > 0:
-                    bodies[0] += 1
-                    kills[0] += 1
-                    return combat()
-                else:
-                    kills[0] += 1
-                    return location_status(player.current_location)
-        elif player.item.usage[t-1] == 'Бросить (летально)':
-            player.current_location.__items.append(player.item)
-            player.inventory.remove(player.item)
-            if ((target_status[int(time[0])%9] == player.current_location.__name) and (yuki[0] == 1)):
-                print(f'\n\n1. Бросить в Юки Ямадзаки')
-                for i in range(1, len(location_npcs)):
-                    print(f'{i+1}. Бросить в {location_npcs[i].print_name()}')
-            else:
-                if location_npcs == []:
-                    return '\n\nНа локации никого нет'
-                print('\n')
-                for i in range(len(location_npcs)):
-                    print(f'{i+1}. Бросить в {location_npcs[i].print_name()}')
-            t = input()
-            while t.isdigit() == False:
-                t = input()
-            t = int(t)
-            if ((target_status[int(time[0])%9] == player.current_location) and (yuki[0] == 1)) and t == 1:
-                yuki[0] = 0
-                if witnesses > 0:
-                    bodies[0] += 1
-                    return combat()
-                else:
-                    return '\n\nДиана: С Юки Ямадзаки покончено, отличная работа.'
-            else:
-                location_npcs[t-1].alive = False
-                player.found_disguises.append(location_npcs[t-1].__disguise)
-                if witnesses > 0:
-                    bodies[0] += 1
-                    kills[0] += 1
-                    return combat()
-                else:
-                    kills[0] += 1
-                    return location_status(player.current_location)
-        elif player.item.usage[t-1] == 'Бросить для отвлечения':
-            if location_npcs == []:
-                    return '\n\nНа локации никого нет'
-            if witnesses > 3:
-                print('\n\nНа локации слишком много свидетелей\n')
-                print('1. Отвлечь для перемещения\n2. Отменить действие')
-                t = input()
-                while t.isdigit() == False:
-                    t = input()
-                t = int(t)
-                if t == 1:
-                    player.inventory.remove(player.item)
-                    return safe_move()
-                else:
-                    print('\n\n')
-                    return player.current_location.__name
-            if player.item == coin:
-                player.current_location.__items.append(player.item)
-            player.inventory.remove(player.item)
-            print('\n')
-            for i in range(len(location_npcs)):
-                    print(f'{i+1}. Отвлечь {location_npcs[i].print_name()}')
-            print(f'{len(location_npcs)+1}. Отвлечь для перемещения')
-            t = input()
-            while t.isdigit() == False:
-                t = input()
-            t = int(t)
-            if t > len(location_npcs):
-                return safe_move()
-            else:
-                print(f'\n\n1. Вырубить {location_npcs[t-1].print_name()}\n2. Убить {location_npcs[t-1].print_name()}')
-                x = input()
-                while x.isdigit() == False:
-                    x = input()
-                x = int(x)
-                if x == 1:
-                    player.found_disguises.append(location_npcs[t-1].__disguise)
-                    location_npcs[t-1].alive = False
-                    return location_status(player.current_location)
-                if x == 2:
-                    kills[0] += 1
-                    location_npcs[t-1].alive = False
-                    player.found_disguises.append(location_npcs[t-1].__disguise)
-                    return location_status(player.current_location)
-        elif player.item.usage[t-1] == 'Усмирить':
-            if location_npcs == []:
-                    return '\n\nНа локации никого нет'
-            print('\n')
-            for i in range(len(location_npcs)):
-                    print(f'{i+1}. Усмирить {location_npcs[i].print_name()}')
-            t = input()
-            while t.isdigit() == False:
-                t = input()
-            t = int(t)
-            location_npcs[t-1].alive = False
-            player.found_disguises.append(location_npcs[t-1].__disguise)
-            if witnesses > 0:
-                bodies[0] += 1
-                return combat()
-            else:
-                return location_status(player.current_location)
-        elif player.item.usage[t-1] == 'Использовать':
-            if player.current_location == morgue:
-                player.inventory.remove(player.item)
-                print('\n\nНейрочип подействовал на одного из работников морга и тот отправился в комнату, где хранится сердце, которое должны пересадить Эриху Содерсу. Последовать за ним?\n1. Да\n2. Нет')
-                t = input()
-                while t.isdigit() == False:
-                    t = input()
-                t = int(t)
-                if t == 2:
-                    return player.current_location.__name
-                elif t == 1:
-                    print('\n\n1. Выйти\n2. Повредить сердце')
-                    t = input()
-                    while t.isdigit() == False:
-                        t = input()
-                    t = int(t)
-                    if t == 1:
-                        return player.current_location.__name
-                    elif t == 2:
-                        print(heartless.achieved())
-                        soders[0] = 0
-                        print('\n\nДиана: 47-й, без сердца для пересадки Содерс не выживет. Ты смог от него избавиться даже не прикасаясь, изящный ход.')
-                        return location_status(player.current_location)
-            else:
-                return '\n\nВне зоны действия'
-        elif player.item.usage[t-1] == 'Задушить':
-            if ((target_status[int(time[0])%9] == player.current_location.__name) and (yuki[0] == 1)):
-                print(f'\n\n1. Задушить Юки Ямадзаки')
-                for i in range(1, len(location_npcs)):
-                    print(f'{i+1}. Задушить {location_npcs[i].print_name()}')
-            else:
-                if location_npcs == []:
-                    return '\n\nНа локации никого нет'
-                print('\n')
-                for i in range(len(location_npcs)):
-                    print(f'{i+1}. Задушить {location_npcs[i].print_name()}')
-            t = input()
-            while t.isdigit() == False:
-                t = input()
-            t = int(t)
-            if ((target_status[int(time[0])%9] == player.current_location.__name) and (yuki[0] == 1)) and t == 1:
-                print(piano_man.achieved())
-                yuki[0] = 0
-                if witnesses > 0:
-                    bodies[0] += 1
-                    return combat()
-                else:
-                    return '\n\nДиана: С Юки Ямадзаки покончено, отличная работа.'
-            else:
-                location_npcs[t-1].alive = False
-                player.found_disguises.append(location_npcs[t-1].__disguise)
-                if witnesses > 0:
-                    bodies[0] += 1
-                    kills[0] += 1
-                    return combat()
-                else:
-                    kills[0] += 1
-                    return location_status(player.current_location)
     
+    def safe_move(self):
+        global time
+        result_string = ''
+        for i in range(len(self.player.current_location.get_connected_locations())):
+            result_string += f"{str(i+1)+'. '+ str(self.player.current_location.get_connected_locations()[i + 1])}\n"
+        self.player_view.response(result_string)
+        request = self.player_view.request()
+        while request.isdigit() == False:
+            self.player_view.response('Введите номер ответа')
+            request = self.player_view.request()
+        request = int(request)
+        self.player.current_location = self.__locator.get_location_by_name(self.player.current_location.get_connected_locations()[request])
+        return self.player_view.response(self.__locator.location_status(self.player.current_location))
+                                
+    def interact(self):
+        global bodies
+        global kills
+        witnesses = self.__locator.location_witnesses(self.player.current_location.get_name())
+        location_npcs = self.__locator.find_location_npcs(self.player.current_location.get_name())
+        if self.player.inventory.count(self.player.item) == 0:
+            self.player.item = self.__locator.get_items().get_by_name('Нет предмета')
+        result_string = f'Действия видят {witnesses} человек\n\n'
+        if self.player.item.usage == []:
+            return self.player_view.response('Нет действий с этим предметом')
+        else:
+            for i in range(len(self.player.item.usage)):
+                result_string += f'{i + 1}. {self.player.item.usage[i]}\n'
+            self.player_view.response(result_string)
+            request = self.player_view.request()
+            while request.isdigit() == False:
+                self.player_view.response('Введите номер ответа')
+                request = self.player_view.request()
+            request = int(request)
+            if self.player.item.usage[request - 1] == 'Выстрелить':
+                for i in self.__locator.get_targets().get_all():
+                    if i.move() == self.player.current_location.get_name():
+                        location_npcs = [i] + location_npcs
+                if location_npcs == []:
+                    return self.player_view.response('На локации никого нет')
+                result_string = ''
+                for i in range(len(location_npcs)):
+                    result_string += f'{i+1}. Выстрелить в {location_npcs[i].get_name()}\n'
+                self.player_view.response(result_string)
+                request = self.player_view.request()
+                while request.isdigit() == False:
+                    self.player_view.response('Введите номер ответа')
+                    request = self.player_view.request()
+                request = int(request)
+                location_npcs[request - 1].alive = False
+                result_string = ''
+                if isinstance(location_npcs[request - 1], Target):
+                    result_string += self.__locator.get_challenges().get_by_name('Точный выстрел').achieved()
+                    if location_npcs[request - 1].get_name() == 'Эрих Содерс':
+                        result_string += f'\n\n{self.__locator.get_challenges().get_by_name('Личное прощание').achieved()}'
+                    result_string += f'\n\nДиана: С {location_npcs[request - 1].get_name()} покончено, отличная работа.'
+                    self.player_view.response(result_string)
+                else:
+                    kills[0] += 1
+                    self.player.found_disguises.append(location_npcs[request - 1].get_disguise())
+                if witnesses > 0:
+                    bodies[0] += 1
+                    return self.combat()
+                else:
+                    return self.player_view.response(self.__locator.location_status(self.player.current_location))
+            elif self.player.item.usage[request - 1] == 'Отменить действие':
+                return self.player_view.response(self.__locator.location_status(self.player.current_location))
+            elif self.player.item.usage[request - 1] == 'Ударить':
+                if location_npcs == []:
+                        return self.player_view.response('На локации никого нет')
+                result_string = ''
+                for i in range(len(location_npcs)):
+                        result_string += f'{i+1}. Ударить {location_npcs[i].get_name()}\n'
+                self.player_view.response(result_string)
+                request = self.player_view.request()
+                while request.isdigit() == False:
+                    self.player_view.response('Введите номер ответа')
+                    request = self.player_view.request()
+                request = int(request)
+                location_npcs[request - 1].alive = False
+                self.player.found_disguises.append(location_npcs[request - 1].get_disguise())
+                if witnesses > 0:
+                    bodies[0] += 1
+                    return self.combat()
+                else:
+                    return self.player_view.response(self.__locator.location_status(self.player.current_location))
+            elif self.player.item.usage[request - 1] == 'Бросить':
+                if location_npcs == []:
+                        return self.player_view.response('На локации никого нет')
+                self.player.current_location.set_items(self.player.current_location.get_items() + [self.player.item])
+                self.player.inventory.remove(self.player.item)
+                result_string = ''
+                for i in range(len(location_npcs)):
+                        result_string += f'{i+1}. Бросить в {location_npcs[i].get_name()}\n'
+                self.player_view.response(result_string)
+                request = self.player_view.request()
+                while request.isdigit() == False:
+                    self.player_view.response('Введите номер ответа')
+                    request = self.player_view.request()
+                request = int(request)
+                location_npcs[request - 1].alive = False
+                self.player.found_disguises.append(location_npcs[request - 1].get_disguise())
+                if witnesses > 0:
+                    bodies[0] += 1
+                    return self.combat()
+                else:
+                    return self.player_view.response(self.__locator.location_status(self.player.current_location))
+            elif self.player.item.usage[request - 1] == 'Ударить (летально)':
+                for i in self.__locator.get_targets().get_all():
+                    if i.move() == self.player.current_location.get_name():
+                        if i.get_name() == 'Эрих Содерс':
+                            pass
+                        else:
+                            location_npcs = [i] + location_npcs
+                if location_npcs == []:
+                    return self.player_view.response('На локации никого нет')
+                result_string = ''
+                for i in range(len(location_npcs)):
+                    result_string += f'{i+1}. Ударить {location_npcs[i].get_name()}\n'
+                self.player_view.response(result_string)
+                request = self.player_view.request()
+                while request.isdigit() == False:
+                    self.player_view.response('Введите номер ответа')
+                    request = self.player_view.request()
+                request = int(request)
+                location_npcs[request - 1].alive = False
+                result_string = ''
+                if isinstance(location_npcs[request - 1], Target):
+                    result_string += f'Диана: С {location_npcs[request - 1].get_name()} покончено, отличная работа.'
+                    self.player_view.response(result_string)
+                else:
+                    kills[0] += 1
+                    self.player.found_disguises.append(location_npcs[request - 1].get_disguise())
+                if witnesses > 0:
+                    bodies[0] += 1
+                    return self.combat()
+                else:
+                    return self.player_view.response(self.__locator.location_status(self.player.current_location))
+            elif self.player.item.usage[request - 1] == 'Бросить (летально)':
+                self.player.current_location.set_items(self.player.current_location.get_items() + [self.player.item])
+                self.player.inventory.remove(self.player.item)
+                for i in self.__locator.get_targets().get_all():
+                    if i.move() == self.player.current_location.get_name():
+                        if i.get_name() == 'Эрих Содерс':
+                            pass
+                        else:
+                            location_npcs = [i] + location_npcs
+                if location_npcs == []:
+                    return self.player_view.response('На локации никого нет')
+                result_string = ''
+                for i in range(len(location_npcs)):
+                    result_string += f'{i+1}. Бросить в {location_npcs[i].get_name()}\n'
+                self.player_view.response(result_string)
+                request = self.player_view.request()
+                while request.isdigit() == False:
+                    self.player_view.response('Введите номер ответа')
+                    request = self.player_view.request()
+                request = int(request)
+                location_npcs[request - 1].alive = False
+                result_string = ''
+                if isinstance(location_npcs[request - 1], Target):
+                    result_string += f'Диана: С {location_npcs[request - 1].get_name()} покончено, отличная работа.'
+                    self.player_view.response(result_string)
+                else:
+                    kills[0] += 1
+                    self.player.found_disguises.append(location_npcs[request - 1].get_disguise())
+                if witnesses > 0:
+                    bodies[0] += 1
+                    return self.combat()
+                else:
+                    return self.player_view.response(self.__locator.location_status(self.player.current_location))
+            elif self.player.item.usage[request - 1] == 'Бросить для отвлечения':
+                if location_npcs == []:
+                        return self.player_view.response('На локации никого нет')
+                if witnesses > 3:
+                    self.player_view.response('На локации слишком много свидетелей\n\n1. Отвлечь для перемещения\n2. Отменить действие')
+                    request = self.player_view.request()
+                    while request.isdigit() == False:
+                        self.player_view.response('Введите номер ответа')
+                        request = self.player_view.request()
+                    request = int(request)
+                    if request == 1:
+                        self.player.inventory.remove(self.player.item)
+                        if self.player.item == self.__locator.get_items().get_by_name('Монета'):
+                            self.player.current_location.set_items(self.player.current_location.get_items() + [self.player.item])
+                        return self.safe_move()
+                    else:
+                        return self.player_view.response(self.__locator.location_status(self.player.current_location))
+                if self.player.item == self.__locator.get_items().get_by_name('Монета'):
+                    self.player.current_location.set_items(self.player.current_location.get_items() + [self.player.item])
+                self.player.inventory.remove(self.player.item)
+                result_string = ''
+                for i in range(len(location_npcs)):
+                        result_string += f'{i+1}. Отвлечь {location_npcs[i].get_name()}\n'
+                result_string += f'{len(location_npcs)+1}. Отвлечь для перемещения'
+                self.player_view.response(result_string)
+                request = self.player_view.request()
+                while request.isdigit() == False:
+                    self.player_view.response('Введите номер ответа')
+                    request = self.player_view.request()
+                request = int(request)
+                if request > len(location_npcs):
+                    return self.safe_move()
+                else:
+                    self.player_view.response(f'1. Вырубить {location_npcs[request - 1].get_name()}\n2. Убить {location_npcs[request - 1].get_name()}')
+                    second_request = self.player_view.request()
+                    while second_request.isdigit() == False:
+                        self.player_view.response('Введите номер ответа')
+                        second_request = self.player_view.request()
+                    second_request = int(second_request)
+                    self.player.found_disguises.append(location_npcs[request - 1].get_disguise())
+                    location_npcs[request - 1].alive = False
+                    if second_request == 1:
+                        return self.player_view.response(self.__locator.location_status(self.player.current_location))
+                    elif second_request == 2:
+                        kills[0] += 1
+                        return self.player_view.response(self.__locator.location_status(self.player.current_location))
+            elif self.player.item.usage[request - 1] == 'Усмирить':
+                if location_npcs == []:
+                        return self.player_view.response('На локации никого нет')
+                result_string = ''
+                for i in range(len(location_npcs)):
+                        result_string += f'{i+1}. Усмирить {location_npcs[i].get_name()}\n'
+                self.player_view.response(result_string)
+                request = self.player_view.request()
+                while request.isdigit() == False:
+                    self.player_view.response('Введите номер ответа')
+                    request = self.player_view.request()
+                request = int(request)
+                location_npcs[request - 1].alive = False
+                self.player.found_disguises.append(location_npcs[request - 1].get_disguise())
+                if witnesses > 0:
+                    bodies[0] += 1
+                    return self.combat()
+                else:
+                    return self.player_view.response(self.__locator.location_status(self.player.current_location))
+            elif self.player.item.usage[request - 1] == 'Использовать':
+                if self.player.item.name == 'Пульт для управления нейрочипом':
+                    if self.player.current_location.get_name() == 'Морг':
+                        self.player.inventory.remove(self.player.item)
+                        self.player_view.response('Нейрочип подействовал на одного из работников морга и тот отправился в комнату, где хранится сердце, которое должны пересадить Эриху Содерсу. Последовать за ним?\n\n1. Да\n2. Нет')
+                        request = self.player_view.request()
+                        while request.isdigit() == False:
+                            self.player_view.response('Введите номер ответа')
+                            request = self.player_view.request()
+                        request = int(request)
+                        if request == 2:
+                            return self.player_view.response(self.__locator.location_status(self.player.current_location))
+                        elif request == 1:
+                            self.player_view.response('\n\n1. Выйти\n2. Повредить сердце')
+                            request = self.player_view.request()
+                            while request.isdigit() == False:
+                                self.player_view.response('Введите номер ответа')
+                                request = self.player_view.request()
+                            request = int(request)
+                            if request == 1:
+                                return self.player_view.response(self.__locator.location_status(self.player.current_location))
+                            elif request == 2:
+                                self.__locator.get_targets().get_by_name('Эрих Содерс').alive = False
+                                result_string = f'{self.__locator.get_challenges().get_by_name('Бессердечный').achieved()}\n\n'
+                                result_string += 'Диана: 47-й, без сердца для пересадки Содерс не выживет. Ты смог от него избавиться даже не прикасаясь, изящный ход.'
+                                self.player_view.response(result_string)
+                                return self.player_view.response(self.__locator.location_status(self.player.current_location))
+                    else:
+                        return self.player_view.response('Вне зоны действия')
+            elif self.player.item.usage[request - 1] == 'Задушить':
+                for i in self.__locator.get_targets().get_all():
+                    if i.move() == self.player.current_location.get_name():
+                        if i.get_name() == 'Эрих Содерс':
+                            pass
+                        else:
+                            location_npcs = [i] + location_npcs
+                if location_npcs == []:
+                    return self.player_view.response('На локации никого нет')
+                result_string = ''
+                for i in range(len(location_npcs)):
+                    result_string += f'{i+1}. Задушить {location_npcs[i].get_name()}\n'
+                self.player_view.response(result_string)
+                request = self.player_view.request()
+                while request.isdigit() == False:
+                    self.player_view.response('Введите номер ответа')
+                    request = self.player_view.request()
+                request = int(request)
+                location_npcs[request - 1].alive = False
+                result_string = ''
+                if isinstance(location_npcs[request - 1], Target):
+                    result_string += f'Диана: С {location_npcs[request - 1].get_name()} покончено, отличная работа.'
+                    self.player_view.response(result_string)
+                else:
+                    kills[0] += 1
+                    self.player.found_disguises.append(location_npcs[request - 1].get_disguise())
+                if witnesses > 0:
+                    bodies[0] += 1
+                    return self.combat()
+                else:
+                    return self.player_view.response(self.__locator.location_status(self.player.current_location))
+
+    def combat(self):
+        pass
+
 def combat():
     global kills
     global bodies
@@ -685,15 +702,3 @@ def combat():
         kills[0] += current_kills
         print('\n\nУбийств невинных:', current_kills)
         return f'Тел найдено: {current_bodies}'
-
-def safe_move():
-    global time
-    print('\n')
-    for i in range(len(player.current_location.__locations)):
-        print(str(i+1) +'.', player.current_location.__locations[i + 1])
-    t = input()
-    while t.isdigit() == False:
-        t = input()
-    t = int(t)
-    player.current_location = location_by_name(player.current_location.__locations[t])
-    return f'\n\n{player.current_location.__name}'

@@ -3,14 +3,14 @@ from model.common.location import Location
 from model.hokkaido.hokkaido_items import HokkaidoItems
 from model.hokkaido.hokkaido_npcs import HokkaidoNPCs, HokkaidoTargets
 from model.hokkaido.hokkaido_disguises import HokkaidoDisguises
-from model.hokkaido.hokkaido_challenges import HokkaidoChalLenges
+from model.hokkaido.hokkaido_challenges import HokkaidoChallenges
 
-class HokkaidoLocator():
-    def __init__(self):
+class HokkaidoLocator:
+    def __init__(self, challenges=HokkaidoChallenges()):
         self.__items = HokkaidoItems()
         self.__disguises = HokkaidoDisguises()
         self.__npcs = HokkaidoNPCs()
-        self.__challenges = HokkaidoChalLenges()
+        self.__challenges = challenges
         self.__targets = HokkaidoTargets()
         self.__locations = {
             'Номер 47-го':
@@ -294,7 +294,7 @@ class HokkaidoLocator():
                 ),
             'Кухня':
                 Location(
-                    name='Зона отдыха',
+                    name='Кухня',
                     connetcted_locations={
                         1: 'Ресторан', 
                         2: 'Спальня персонала'
@@ -562,8 +562,11 @@ class HokkaidoLocator():
         location_disguises = []
         for i in location_npcs:
             location_disguises.append(i.get_disguise())
-        if self.location_witnesses(location.get_name()) != 0:
+        if self.find_location_npcs(location.get_name()) != []:
             result_string += '\nНа локации находятся:\n'
+            for i in self.__targets.get_all():
+                if i.move() == location.get_name():
+                    result_string += f'\n{i.get_name()}\n'
             if location.get_witnesses() > 0:
                 result_string += f'\n{location.get_witnesses()} Пациент'
             for i in self.__disguises.get_all():
@@ -571,7 +574,7 @@ class HokkaidoLocator():
                     result_string += f'\n{location_disguises.count(i.get_name())} {i.get_name()}'
             return result_string
         else:
-            result_string += '\nНа локации нет свидетелей'
+            result_string += '\nНа локации никого нет'
             return result_string
 
     def get_location_by_name(self, location_name):

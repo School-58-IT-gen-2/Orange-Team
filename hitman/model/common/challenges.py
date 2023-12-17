@@ -1,3 +1,6 @@
+from model.player.player_info import player_lvl
+
+
 class Challenge:
 
     def __init__(self, name, description, completed):
@@ -9,7 +12,7 @@ class Challenge:
         global player_lvl
         if self.completed == False:
             self.completed = True
-            player_lvl += 5
+            player_lvl[0] += 5
             return f'Испытание выполнено: {self.name}'
         return ''
     

@@ -3,13 +3,13 @@ from model.hokkaido.hokkaido_locator import HokkaidoLocator
 class Player:
 
     def __init__(self,
-                 location,
+                 location=None,
                  inventory=None,
                  health=None,
                  found_disguises=None,
                  item=None,
                  compromised_disguises=None,
-                 disguise=None,
+                 disguise=None
                  ):
 
         self.current_location = location
