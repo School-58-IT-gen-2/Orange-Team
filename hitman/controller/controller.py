@@ -699,15 +699,12 @@ class PlayerController():
         current_kills = 0
         current_bodies = 0
         enemies = []
-        weapons = [self.__locator.get_items().get_by_name('Нет предмета')]
+
         for i in self.__locator.find_location_npcs(self.player.current_location.get_name()):
             if i.guard == True:
                 enemies.append(i)
         if enemies == []:
             return True
-        for i in self.player.inventory:
-            if i.weapon == True:
-                weapons.append(i)
         combat_count[0] += 1
         self.player_view.response(f'Начался бой\n\n1. Прятаться (5/10)\n2. Напасть')
         request = self.player_view.request()
@@ -728,6 +725,10 @@ class PlayerController():
         elif request == 2:
             for enemy in enemies:
                 while enemy.alive == True:
+                    weapons = [self.__locator.get_items().get_by_name('Нет предмета')]
+                    for i in self.player.inventory:
+                        if i.weapon == True:
+                            weapons.append(i)
                     result_string = 'Выберите оружие:\n\n'
                     for i in range(len(weapons)):
                         result_string += f'{i + 1}. {weapons[i].name}\n'
@@ -763,6 +764,9 @@ class PlayerController():
                         self.player_view.response('Введите номер ответа')
                         request = self.player_view.request()
                     request = int(request)
+                    if actions[request - 1][:7] == 'Бросить':
+                        self.player.inventory.remove(current_weapon)
+                        self.player.current_location.set_items(self.player.current_location.get_items() + [self.player.item])
                     if random.randrange(11) <= int(actions[request - 1][-6]):
                         enemy.alive = False
                         if self.__locator.location_witnesses(self.player.current_location.get_name()) > 0:
