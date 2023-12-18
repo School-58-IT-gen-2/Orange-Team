@@ -1,6 +1,7 @@
 import sys
 import pickle
 import os
+
 from controller.controller import PlayerController
 from model.hokkaido.hokkaido_events import HokkaidoEvents
 from model.player.player import Player
@@ -8,39 +9,6 @@ from model.player.player_info import *
 from model.hokkaido.hokkaido_locator import HokkaidoLocator
 from model.hokkaido.hokkaido_challenges import HokkaidoChallenges
 
-
-def rating(controller, locator=HokkaidoLocator()):
-    global player_lvl
-    result_string = f'Тел найдено: {bodies[0]}\n'
-    result_string += f'Убито невинных: {kills[0]}\n'
-    result_string += f'Вы начали бой {combat_count[0]} раз\n'
-    result_string += f'Вы были замечены {suspicion_count[0]} раз'
-    rating = int(5-(bodies[0]*0.5)-(kills[0]*0.7)-(combat_count[0]*0.1)-(suspicion_count[0]*0.2))
-    if rating < 0:
-        rating = 0
-    result_string += f'Ваш рейтинг: {rating}/5'
-    controller.player_view.response(result_string)
-    if rating == 5 and so[0] == 1:
-        result_string = f'{locator.get_challenges().get_by_name('Бесшумный убийца').achieved()}\n\n'
-        result_string += 'Бесшумный убийца.'
-        controller.player_view.response(result_string)
-    elif rating == 5 and so[0] == 0:
-        result_string = f'{locator.get_challenges().get_by_name('Бесшумный убийца. Только костюм.').achieved()}\n\n'
-        result_string += 'Бесшумный убийца.'
-        controller.player_view.response(result_string)
-    elif so[0] == 0:
-        controller.player_view.response(locator.get_challenges().get_by_name('Только костюм').achieved())
-    if bodies[0] == 0:
-        controller.player_view.response(locator.get_challenges().get_by_name('Без улик').achieved())
-    if locator.get_challenges().get_by_name('Точный выстрел').completed == True and locator.get_challenges().get_by_name('Подержи волосы').completed == True and locator.get_challenges().get_by_name('Пианист').completed == True and locator.get_challenges().get_by_name('Так можно и пораниться').completed == True and locator.get_challenges().get_by_name('Без вкуса, без следа').completed == True:
-        controller.player_view.response(locator.get_challenges().get_by_name('Без улик').achieved())
-    player_lvl += rating
-    result_string = ''
-    for i in locator.get_challenges().get_all():
-        if i.completed == True:
-            result_string += f'{i.name}\n'
-    controller.player_view.response(result_string)
-    return sys.exit()
 
 os.chdir('hitman')
 if os.stat('save_file.dat').st_size != 0:
@@ -51,16 +19,17 @@ else:
 
 events = HokkaidoEvents()
 locator = HokkaidoLocator(challenges)
-player = Player(location=locator.get_location_by_name('Операционная'),
-                inventory=[locator.get_items().get_by_name('Пистолет с глушителем')],
+player = Player(location=locator.get_location_by_name('Номер 47-го'),
+                inventory=[],
                 health=100,
-                item=locator.get_items().get_by_name('Пистолет с глушителем'),
+                item=locator.get_items().get_by_name('Нет предмета'),
                 compromised_disguises=[],
-                disguise='Телохранитель',
-                found_disguises=['VIP - пациент', 'Телохранитель'])
+                disguise='VIP - пациент',
+                found_disguises=['VIP - пациент'])
 controller = PlayerController(player=player, locator=locator)
+
+controller.start()
 while True:
-    print(player_lvl)
     request = controller.player_view.request()
     if request.upper() == 'W':
         controller.move()
@@ -117,7 +86,7 @@ while True:
         controller.player_view.response('1. Завершить миссию')
         controller.player_view.request()
         controller.player_view.response('Диана: Миссия выполнена, хорошая работа, 47-ой.')
-        controller.player_view.response(rating(controller, locator))
+        controller.rating()
     
     if (locator.get_items().get_by_name('Яд рыбы Фугу') in player.inventory or locator.get_items().get_by_name('Крысиный яд') in player.inventory or locator.get_items().get_by_name('Смертельный яд') in player.inventory or locator.get_items().get_by_name('Рвотный яд') in player.inventory) and player.disguise == 'Шеф' and player.current_location.get_name() == 'Ресторан' and events.get_by_name('Убийство ядом').completed == False:
         controller.player_view.response('1. Отравить роллы\n2. Не отравлять роллы')

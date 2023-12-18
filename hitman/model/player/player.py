@@ -1,5 +1,3 @@
-from model.hokkaido.hokkaido_locator import HokkaidoLocator
-
 class Player:
 
     def __init__(self,

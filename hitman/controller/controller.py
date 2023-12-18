@@ -571,134 +571,215 @@ class PlayerController():
                 else:
                     return self.player_view.response(self.__locator.location_status(self.player.current_location))
 
-    def combat(self):
+    
         pass
 
-def combat():
-    global kills
-    global bodies
-    global player_lvl
-    global combat_count
-    current_kills = 0
-    current_bodies = 0
-    enemies = []
-    for i in find_location_npcs(player.current_location):
-        if i.guard == True:
-            enemies.append(i)
-    if enemies == []:
-        return location_status(player.current_location)
-    combat_count[0] += 1
-    buttons = ['A', 'D', 'W', 'X', 'S', 'Q', 'E', 'Z']
-    print(f'\n\nНачался бой\n1. Прятаться (5/10)\n2. Напасть')
-    t = input()
-    while t.isdigit() == False:
-        t = input()
-    t = int(t)
-    if t == 1:
-        if random.randrange(1, 11) <= 5:
-            print('\n\nВаша маскировка раскрыта, при перемещении в любую локацию вас будут узнавать.')
-            player.compromised_disguises.append(player.__disguise)
-            return player.__disguise
-        else:
-            with open('save_file.dat', 'wb') as f:
-                pickle.dump([smoking_kills, stretch, personal_goodbye, no_smoking, human_error, suit_only, silent_assasin, sauna_assasination, sushi, heartless, silent_assasin_suit_only, no_evidence, ghost_machine, straight_shot, hold_hair, piano_man, hurt_oneself, tasteless, master_assasin, player_lvl], f, protocol=2)
-            print('\n\nВы умерли. Миссия провалена.')
-            sys.exit()
-    elif t == 2:
-        for i in enemies:
-            enemy_health = 100
-            while enemy_health > 0:
-                current_button = random.choice(buttons)
-                crit = random.randint(1,11)
-                if pistol in player.inventory or silenced_pistol in player.inventory:
-                    print('\n\n1. Использовать пистолет\n2. Не использовать')
-                    t = input()
-                    while t.isdigit() == False:
-                        t = input()
-                    t = int(t)
-                    if t == 2:
-                        print(f'\n\nНажимайте как можно быстрее: {current_button}')
-                        s_time = tm.time()
-                        t = input()
-                        e_time = tm.time()
-                        if e_time - s_time <= 2 and t.upper() == current_button:
-                            if crit <= 5:
-                                enemy_health -= 50 
-                            else:
-                                enemy_health -= 25
-                        else:
-                            player.health -= 25
-                            if player.health != 0:
-                                print('\n\nПромах. Вы пропустили удар.')
-                            else:
-                                with open('save_file.dat', 'wb') as f:
-                                    pickle.dump([smoking_kills, stretch, personal_goodbye, no_smoking, human_error, suit_only, silent_assasin, sauna_assasination, sushi, heartless, silent_assasin_suit_only, no_evidence, ghost_machine, straight_shot, hold_hair, piano_man, hurt_oneself, tasteless, master_assasin, player_lvl], f, protocol=2)
-                                print('\n\nВы умерли. Миссия провалена.')
-                                sys.exit()
-                    if t == 1:
-                        current_kills += 1
-                        print(f'\n\nНажимайте как можно быстрее: {current_button}')
-                        s_time = tm.time()
-                        t = input()
-                        e_time = tm.time()
-                        if e_time - s_time <= 2 and t.upper() == current_button:
-                            if crit <= 5:
-                                enemy_health -= 100 
-                            else:
-                                enemy_health -= 50
-                        else:
-                            player.health -= 25
-                            if player.health != 0:
-                                print('\n\nПромах. Вы пропустили удар.')
-                            else:
-                                with open('save_file.dat', 'wb') as f:
-                                    pickle.dump([smoking_kills, stretch, personal_goodbye, no_smoking, human_error, suit_only, silent_assasin, sauna_assasination, sushi, heartless, silent_assasin_suit_only, no_evidence, ghost_machine, straight_shot, hold_hair, piano_man, hurt_oneself, tasteless, master_assasin, player_lvl], f, protocol=2)
-                                print('\n\nВы умерли. Миссия провалена.')
-                                sys.exit()
+    def start(self):
+
+        lvl_unlocks = {
+            1: ['Номер 47-го', self.__locator.get_location_by_name('Номер 47-го'), 'VIP - пациент'],
+            2: ['Зона спа', self.__locator.get_location_by_name('Зона спа'), 'VIP - пациент'],
+            3: ['Горная тропа (в маскировке ниндзя)', self.__locator.get_location_by_name('Горная тропа'), 'Ниндзя'],
+            4: ['Ресторан', self.__locator.get_location_by_name('Ресторан'), 'VIP - пациент'],
+            5: ['Спальня персонала (в маскировке работника "ГАМА")', self.__locator.get_location_by_name('Спальня персонала'), 'Работник "ГАМА"'],
+            6: ['Кухня (в маскировке шефа)', self.__locator.get_location_by_name('Кухня'), 'Шеф'],
+            7: ['Внутренний сад (в маскировке работника "ГАМА")', self.__locator.get_location_by_name('Внутренний сад'), 'Работник "ГАМА"'],
+            8: ['Морг', self.__locator.get_location_by_name('Морг'), 'VIP - пациент'],
+            9: ['Оперционная (в маскировке хирурга)', self.__locator.get_location_by_name('Операционная'), 'Хирург']
+        }
+
+        carry_on_items = [self.__locator.get_items().get_by_name('Удавка'), self.__locator.get_items().get_by_name('Смертельный яд'), self.__locator.get_items().get_by_name('Рвотный яд'), self.__locator.get_items().get_by_name('Электронный дешифровщик'), self.__locator.get_items().get_by_name('Боевой нож'), self.__locator.get_items().get_by_name('Монета')]
+
+        self.player_view.response('Брифинг:\nДиана: Доброе утро, 47-й. Совет директоров одобрил ликвидацию Эриха Содерса. После Колорадо мы решили пристально изучить личные дела Содерса и выяснили, что его недавно доставили в частную клинику «Гама» на японском острове Хоккайдо для срочной операции на сердце. Без «Провиденс» тут явно не обошлось. Содерс страдает от редкой врожденной патологии — транспозиции органов: его внутренние органы в теле расположены зеркально. Для трансплантации ему необходимо правостороннее сердце, и он явно предал МКА, чтобы получить его. Его приняли прошлой ночью и сейчас он готовится к трёхэтапной операции. Под видом Тобиаса Рипера, крупного бизнесмена, ты отправляешься в «Гаму» для стандартного медицинского обследования, о формальностях мы уже позаботились. В таких условиях придётся импровизировать и самостоятельно добывать снаряжение. Кроме того, тебе нужно ликвидировать Юки Ямадзаки — она адвокат из Токио, работает на «Провиденс». Содерс уже передал Ямадзаки доступ к нашей базе клиентов и согласился предоставить полный список оперативных сотрудников МКА после завершения операции. Этого допустить никак нельзя. Содерс должен заплатить за своё предательство — это послужит хорошим уроком его нанимателям. На кону будущее и репутация МКА. Какой бы властью и могуществом ни обладала «Провиденс», пора поставить их на место. Я оставлю тебя подготавливаться.\n\nВведите любой символ, чтобы начать задание.')
+        self.player_view.request()
+        result_string = 'Выберите начальную локацию:\n\n'
+        for i in range(1, 10):
+            if i <= player_lvl[0] // 10:
+                result_string += f'{i}. {lvl_unlocks[i][0]}\n'
+        self.player_view.response(result_string)
+        request = self.player_view.request()
+        while request.isdigit() == False:
+            self.player_view.response('Введите номер ответа')
+            request = self.player_view.request()
+        request = int(request)
+        start_location = lvl_unlocks[request]
+        start_inventory = []
+        if player_lvl[0] // 10 > 9:
+            self.player_view.response('Выберите пистолет:\n\n1. Пистолет с глушителем\n2. Пистолет без глушителя')
+            request = self.player_view.request()
+            while request.isdigit() == False:
+                self.player_view.response('Введите номер ответа')
+                request = self.player_view.request()
+            request = int(request)
+            if request == 1:
+                start_inventory.append(self.__locator.get_items().get_by_name('Пистолет с глушителем'))
+            elif request == 2:
+                start_inventory.append(self.__locator.get_items().get_by_name('Пистолет без глушителя'))
+            result_string = 'Выберите первый предмет сняряжения:\n\n'
+            for i in range(len(carry_on_items)):
+                if carry_on_items[i].name == 'Монета':
+                    result_string += f'{i+1}. Монета (3)\n'
                 else:
-                    print(f'\n\nНажимайте как можно быстрее: {current_button}')
-                    s_time = tm.time()
-                    t = input()
-                    e_time = tm.time()
-                    if e_time - s_time <= 2 and t.upper() == current_button:
-                        if crit <= 5:
-                            enemy_health -= 50 
-                        else:
-                            enemy_health -= 25
+                    result_string += f'{i+1}. {carry_on_items[i].name} (1)\n'
+            self.player_view.response(result_string)
+            request = self.player_view.request()
+            while request.isdigit() == False:
+                self.player_view.response('Введите номер ответа')
+                request = self.player_view.request()
+            request = int(request)
+            if carry_on_items[request - 1].name == 'Монета':
+                start_inventory += [carry_on_items[request - 1], carry_on_items[request - 1]]
+            start_inventory.append(carry_on_items[request - 1])
+            carry_on_items.remove(carry_on_items[request - 1])
+            result_string = 'Выберите второй предмет сняряжения:\n\n'
+            for i in range(len(carry_on_items)):
+                if carry_on_items[i].name == 'Монета':
+                    result_string += f'{i+1}. Монета (3)\n'
+                else:
+                    result_string += f'{i+1}. {carry_on_items[i].name} (1)\n'
+            self.player_view.response(result_string)
+            request = self.player_view.request()
+            while request.isdigit() == False:
+                self.player_view.response('Введите номер ответа')
+                request = self.player_view.request()
+            request = int(request)
+            if carry_on_items[request - 1].name == 'Монета':
+                start_inventory += [carry_on_items[request - 1], carry_on_items[request - 1]]
+            start_inventory.append(carry_on_items[request - 1])
+        self.player_view.response('Диана: Удачи, агент.')
+        if start_location[1].get_name() == 'Номер 47-го':
+            self.player_view.response('Диана: Добро пожаловать на Хоккайдо, 47-й. Частная клиника «Гама» оказывает медицинские услуги высочайшего уровня представителям мировой элиты, выходя при необходимости за рамки закона. Частично здание находится под управлением искусственного интеллекта — KAI. Система контролирует доступ пациентов в разные части клиники и даже принимает участие в ряде медицинских процедур. Эрих Содерс уже находится в операционной, где он проходит предварительную подготовку с применением стволовых клеток. Это крайне противоречивая процедура ещё не одобрена властями Японии. Юки Ямадзаки уже прибыла. Она находится либо в своём номере, либо в ресторане, либо в спа-зоне клиники. Содерсу скоро введут наркоз. Сделай так, чтобы он больше никогда не проснулся. Удачи, 47-й.')
+        self.player.current_location = start_location[1]
+        self.player.inventory = start_inventory
+        self.player.health = 100
+        self.player.found_disguises = [start_location[2]]
+        self.player.item = self.__locator.get_items().get_by_name('Нет предмета')
+        self.player.compromised_disguises = []
+        self.player.disguise = start_location[2]
+        return True
+
+    def rating(self):
+        global player_lvl
+        result_string = f'Тел найдено: {bodies[0]}\n'
+        result_string += f'Убито невинных: {kills[0]}\n'
+        result_string += f'Вы начали бой {combat_count[0]} раз\n'
+        result_string += f'Вы были замечены {suspicion_count[0]} раз'
+        rating = int(5-(bodies[0]*0.5)-(kills[0]*0.7)-(combat_count[0]*0.1)-(suspicion_count[0]*0.2))
+        if rating < 0:
+            rating = 0
+        result_string += f'Ваш рейтинг: {rating}/5'
+        self.player_view.response(result_string)
+        if rating == 5 and so[0] == 1:
+            result_string = f'{self.__locator.get_challenges().get_by_name('Бесшумный убийца').achieved()}\n\n'
+            result_string += 'Бесшумный убийца.'
+            self.player_view.response(result_string)
+        elif rating == 5 and so[0] == 0:
+            result_string = f'{self.__locator.get_challenges().get_by_name('Бесшумный убийца. Только костюм.').achieved()}\n\n'
+            result_string += 'Бесшумный убийца.'
+            self.player_view.response(result_string)
+        elif so[0] == 0:
+            self.player_view.response(self.__locator.get_challenges().get_by_name('Только костюм').achieved())
+        if bodies[0] == 0:
+            self.player_view.response(self.__locator.get_challenges().get_by_name('Без улик').achieved())
+        if self.__locator.get_challenges().get_by_name('Точный выстрел').completed == True and self.__locator.get_challenges().get_by_name('Подержи волосы').completed == True and self.__locator.get_challenges().get_by_name('Пианист').completed == True and self.__locator.get_challenges().get_by_name('Так можно и пораниться').completed == True and self.__locator.get_challenges().get_by_name('Без вкуса, без следа').completed == True:
+            self.player_view.response(self.__locator.get_challenges().get_by_name('Без улик').achieved())
+        player_lvl += rating
+        result_string = ''
+        for i in self.__locator.get_challenges().get_all():
+            if i.completed == True:
+                result_string += f'{i.name}\n'
+        self.player_view.response(result_string)
+        return sys.exit()
+
+    def combat(self):
+        global kills
+        global bodies
+        global player_lvl
+        global combat_count
+        current_kills = 0
+        current_bodies = 0
+        enemies = []
+        weapons = [self.__locator.get_items().get_by_name('Нет предмета')]
+        for i in self.__locator.find_location_npcs(self.player.current_location.get_name()):
+            if i.guard == True:
+                enemies.append(i)
+        if enemies == []:
+            return True
+        for i in self.player.inventory:
+            if i.weapon == True:
+                weapons.append(i)
+        combat_count[0] += 1
+        self.player_view.response(f'Начался бой\n\n1. Прятаться (5/10)\n2. Напасть')
+        request = self.player_view.request()
+        while request.isdigit() == False:
+            self.player_view.response('Введите номер ответа')
+            request = self.player_view.request()
+        request = int(request)
+        if request == 1:
+            if random.randrange(1, 11) <= 5:
+                self.player_view.response('Ваша маскировка раскрыта, при перемещении в любую локацию вас будут узнавать.')
+                self.player.compromised_disguises.append(self.player.disguise)
+                return True
+            else:
+                with open('save_file.dat', 'wb') as f:
+                    pickle.dump([self.__locator.get_challenges(), player_lvl], f, protocol=2)
+                self.player_view.response('Вы умерли. Миссия провалена.')
+                return sys.exit()
+        elif request == 2:
+            for enemy in enemies:
+                while enemy.alive == True:
+                    result_string = 'Выберите оружие:\n\n'
+                    for i in range(len(weapons)):
+                        result_string += f'{i + 1}. {weapons[i].name}\n'
+                    self.player_view.response(result_string)
+                    request = self.player_view.request()
+                    while request.isdigit() == False:
+                        self.player_view.response('Введите номер ответа')
+                        request = self.player_view.request()
+                    request = int(request)
+                    current_weapon = weapons[request - 1]
+                    actions = []
+                    result_string = ''
+                    for i in range(len(current_weapon.usage) - 1):
+                        if current_weapon.usage[i] == 'Выстрелить':
+                            actions.append('Выстрелить (9/10)\n')
+                        elif current_weapon.usage[i] == 'Ударить':
+                            actions.append('Ударить (5/10)\n')
+                        elif current_weapon.usage[i] == 'Бросить':
+                            actions.append('Бросить (7/10)\n')
+                        elif current_weapon.usage[i] == 'Ударить (летально)':
+                            actions.append('Ударить (летально) (6/10)\n')
+                        elif current_weapon.usage[i] == 'Бросить (летально)':
+                            actions.append('Бросить (летально) (8/10)\n')
+                        elif current_weapon.usage[i] == 'Усмирить':
+                            actions.append('Усмирить (3/10)\n')
+                        elif current_weapon.usage[i] == 'Задушить':
+                            actions.append('Задушить (4/10)\n')
+                    for i in range(len(actions)):
+                        result_string += f'{i + 1}. {actions[i]}'
+                    self.player_view.response(result_string)
+                    request = self.player_view.request()
+                    while request.isdigit() == False:
+                        self.player_view.response('Введите номер ответа')
+                        request = self.player_view.request()
+                    request = int(request)
+                    if random.randrange(11) <= int(actions[request - 1][-6]):
+                        enemy.alive = False
+                        if self.__locator.location_witnesses(self.player.current_location.get_name()) > 0:
+                            current_bodies += 1
+                        if current_weapon.deadly == True:
+                            current_kills += 1
                     else:
-                        player.health -= 25
-                        if player.health != 0:
-                            print('\n\nПромах. Вы пропустили удар.')
+                        self.player.health -= 25
+                        if self.player.health != 0:
+                            self.player_view.response(f'{enemy.get_name()} нанес вам удар.')
                         else:
                             with open('save_file.dat', 'wb') as f:
-                                    pickle.dump([player_lvl], f, protocol=2)
-                            print('\n\nВы умерли. Миссия провалена.')
-                            sys.exit()
-                enemy_attack = random.randint(1,10)
-                if enemy_attack > 7 :
-                    current_button = random.choice(buttons)
-                    print(f'\n\n{i.print_name()} атакует, нажимайте как можно быстрее: {current_button}')
-                    s_time = tm.time()
-                    t = input()
-                    e_time = tm.time()
-                    if e_time - s_time <= 2 and t.upper() == current_button:
-                        print('\n\nВы увернулись')
-                    else:
-                        player.health -= 25
-                        if player.health != 0:
-                            print('\n\nВы пропустили удар')
-                        else:
-                            with open('save_file.dat', 'wb') as f:
-                                    pickle.dump([player_lvl], f, protocol=2)
-                            print('\n\nВы умерли. Миссия провалена.')
-                            sys.exit()
-            print(f'\n\n{i.print_name()} обезврежен')
-            tm.sleep(2)
-            i.alive = False
-            player.found_disguises.append(i.__disguise)
-            if location_witnesses(player.current_location) > 0:
-                current_bodies += 1
-        bodies[0] += current_bodies
-        kills[0] += current_kills
-        print('\n\nУбийств невинных:', current_kills)
-        return f'Тел найдено: {current_bodies}'
+                                pickle.dump([self.__locator.get_challenges(), player_lvl], f, protocol=2)
+                            self.player_view.response('Вы умерли. Миссия провалена.')
+                            return sys.exit()
+                self.player_view.response(f'{enemy.get_name()} обезврежен.')
+            bodies[0] += current_bodies
+            kills[0] += current_kills
+            self.player_view.response(f'Убийств невинных: {current_kills}\nТел найдено: {current_bodies}')
+            return True
