@@ -16,8 +16,9 @@ class TelegramView():
         self.dispatcher = self.updater.dispatcher
         start_handler =CommandHandler('start', self.start)
         request_handler = CommandHandler('request',self.request)
+        request_handler = CommandHandler('response',self.response)
         response_handler=CallbackQueryHandler(self.response)
-        self.dispatcher.add_handler(start_handler)
+        self.dispatcher.add_handler(start_handler)  
         self.dispatcher.add_handler(request_handler)
         self.dispatcher.add_handler(response_handler)
         self.y=y
@@ -25,7 +26,7 @@ class TelegramView():
         
     def start(self,update, _):
         update.message.reply_text(
-            'Введите `/request` для участия в бою,' 
+            'Введите `/request`,`/response` для участия в бою,' 
         )   
     def request(self,update: Update, context: CallbackContext) -> None:
         user_id = update.effective_chat.id                
@@ -47,5 +48,5 @@ class TelegramView():
                                 
         if query.data=='3':
             print('You killed with a laptop')
-bot = TelegramView(text="авававававав") 
+bot = TelegramView(y=6,text='PEpe') 
 bot.updater.start_polling()
