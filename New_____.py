@@ -1,28 +1,40 @@
-import logging
-
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
+from controller import request,response
 
+class   PlayerView:
+    def __init__(self,token):
+        self.updater = Updater(token=token)
+        self.dispatcher = self.updater.dispatcher
+        
+        self.dispatcher.add_handler(CommandHandler("start", self.start))
+        
+        self.dispatcher.add_handler(CallbackQueryHandler(self.button_pressed))
+        
+    def request(self,request, update, context):
+        self.request=request
+        update.message.reply_text(text=request)
+        
+    def response(self,response, update, context):
+        self.response=response
+        keyboard = []
+        for i in range(1,self.y+1):
+            keyboard.append([InlineKeyboardButton(f"Option {i}", callback_data=f"{i}")])
+        reply_markup=InlineKeyboardMarkup(keyboard)
+        update.message.reply_text(response, reply_markup=reply_markup)
+        
+    def button_pressed(self, update, context):
+        query = update.callback_query
+        query.answer()
+        query.edit_message_text(text=f'Нажата кнопка: {query.data}, вы выбрали тототото')
+        
+    def start(self, update, context):
+        update.message.reply_text('проверка звука')
+        
+    def run(self):
+        self.updater.start_polling()
+        self.updater.idle()
+        
+console_view = ConsoleView("6357433531:AAHzxBRRtQpni7aFLcjRcbh2FFRxyFSIr0o")
 
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
-)
-
-logger = logging.getLogger(__name__)
-class Pepe():
-    def __init__(self,x='ddd'):
-        self.x=x
-    def dey(self):
-        if True:
-            return self.x
-class TelegramView(Pepe):
-    def __init__(self):
-        self.updater = Updater("6357433531:AAHzxBRRtQpni7aFLcjRcbh2FFRxyFSIr0o", use_context=True)
-        self.dispatcher = self.updater.dispatcher  
-    def request(self,update: Update, context: CallbackContext) -> None:
-        user_id = update.effective_chat.id                
-        context.bot.send_message(chat_id=user_id, text=self.x)
-result = Pepe(x='dsdsd') 
-bot = result.request()
-bot.updater.start_polling()
-
+console_view.run()
