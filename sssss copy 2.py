@@ -55,11 +55,11 @@ class TelegramView():
                         
         if query.data=='3':
             print('You killed with a laptop')
-bot = TelegramView(y=5 ) 
+bot = TelegramView(y=5)
 bot.updater.start_polling()
                             
-        if query.data=='3':
-            print('You killed with a laptop')
-bot = TelegramView(text="dddd",y=6) 
-bot.updater.start_polling()
+# if query.data=='3':
+#     print('You killed with a laptop')
+# bot = TelegramView(text="dddd",y=6)
+# bot.updater.start_polling()
 #Если честно я зодолбался у меня то одна функция не работает то другая , краткое пояснение if проверяет чтобы не отправлялось пустое сообщение или пустой список выбора , в конце каждого ифа присваиваем переменной с которой работали нуевое значение 
