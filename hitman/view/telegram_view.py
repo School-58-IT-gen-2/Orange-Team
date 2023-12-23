@@ -1,17 +1,21 @@
+from telegram import InlineKeyboardButton, update, InlineKeyboardMarkup, Update
 from view.player_view import PlayerView
 
 
 class TelegramView(PlayerView):
-    
-    updater = ''
-    context = 1
 
-    def response(self, response, updater: updater, context: context):
-        #Отправляет response (строку) пользователю
-        pass
+    def __init__(self, update: Update=None, bot=None):
+        self.__update = update
+        self.__bot = bot
 
-    def request(self, button_num, updater: updater, context: context):
-        for i in range(button_num):
-            #Создает button_num кнопок, на которых номера от 1 до button_num + 1
-            #Кнопки возвращают 1 значение -- их номер (пятая кнопка возвращает 5)
-            pass
+    def request(self, num=10):
+        keyboard = []
+        for i in range(1, num):
+            keyboard.append([InlineKeyboardButton(f"{i}", callback_data=f"{i}")])
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        self.__update.message.reply_text('Выберите номер ответа:', reply_markup=reply_markup)
+        query = self.__update.callback_query
+        return query
+
+    def response(self, text):
+        self.__update.message.reply_text(text)

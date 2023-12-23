@@ -6,6 +6,7 @@ from view.player_view import PlayerView
 from model.player.player_info import *
 from model.player.player import Player
 from view.console_view import ConsoleView
+from view.telegram_view import TelegramView
 from model.hokkaido.hokkaido_locator import HokkaidoLocator
 from model.common.npcs import Target
 
@@ -15,15 +16,17 @@ class PlayerController():
     def __init__(self,
                  player=Player(),
                  player_view:PlayerView=None,
-                 locator=HokkaidoLocator()):
-        
+                 locator=HokkaidoLocator(),
+                 update = None,
+                 bot = None
+                 ):
+        self.player = player
         if player_view:
-            self.player_view = player_view
+            self.player_view = TelegramView(update=update, bot=bot)
         else:
             self.player_view = ConsoleView()
         if locator:
             self.__locator = locator
-        self.player = player
     
     def search(self):
         self.player.inventory += self.player.current_location.get_items()
