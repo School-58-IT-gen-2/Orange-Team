@@ -13,8 +13,7 @@ from view.telegram_view import TelegramView
 import logging
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, MessageHandler, \
-    PollAnswerHandler, PollHandler
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, MessageHandler, PollAnswerHandler, PollHandler
 
 
 os.chdir('hitman')
@@ -34,7 +33,7 @@ player = Player(location=locator.get_location_by_name('Номер 47-го'),
                 disguise='VIP - пациент',
                 found_disguises=['VIP - пациент'])
 
-controller = PlayerController(player=player, locator=locator)
+controller = PlayerController(player=player, locator=locator, player_view=TelegramView())
 
 def main(controller: PlayerController):
     controller.start()
@@ -381,12 +380,19 @@ def start(update: Update, context: CallbackContext):
     update.message.reply_text(
         'Добро пожаловать в игру!'
     )
-    controller = PlayerController(player=player, locator=locator, update=Update, bot=CallbackContext, player_view=TelegramView(Update, CallbackContext))
+    controller = PlayerController(player=player, locator=locator, update=update, bot=context.bot, player_view=TelegramView(update, context.bot))
     users[update.effective_chat.id] = controller
     main(controller)
 
-def answer(update: Update, context: CallbackContext) -> None:
+def get_request(update: Update, context: CallbackContext):
     query = update.callback_query
+    users[update.effective_chat.id].get_request(query.data)
+    print(update.callback_query['data'])
+
+def help(update: Update, context: CallbackContext):
+    update.message.reply_text(
+        'Обучение:\n\nИнвентарь можно открыть при вводе «і» или «І», там будут сохранятся подобранные вами предметы, которые можно использовать для выполнения миссии. Чтобы пополнять инвентарь, необходимо обыскивать комнаты, это можно сделать нажав "е" или "Е" при нахождении в комнате, предметы автоматически добавятся в ваш инвентарь, если комната уже пустая, вы лишь пропустите небольшой промежуток времени. При вводе «w» или «W» откроется меню выбора локации, в которую вы хотите переместиться. "S" или "S" показывает статус локации, а также вашей цели. При нахождении новых маскировок можно будет попасть в локации, в которых ранее была запретная зона. Несмотря на это, вы может проникнуть в них и без маскировки, но тогда велик шанс обнаружения. Некоторые действия в игре выполняются с неким шансом от 1 до 10, который будет писаться рядом с ним, неудача может привести к непредсказуемым результатам и даже к провалу операции. Используя "f" или "F" вы можете взаимодействовать с локацией. После завершения операции вы увидите свой рейтинг (от 0 до 5). Чтобы получить максимальный рейтинг необходимо выполнить задание так, чтобы не было убито невиновных, не было найдено тел, а также вы не были замечены в запретной зоне или с нелегальным предметом в руках. Помимо этого, за прохождение миссии вы получаете уровень, который может открывать различные награды. Чтобы быстрее повышать уровень, выполняйте испытания, "c" или "C" открывает меню с испытаниями. Выбор вариантов осуществляется вводом его номера. "q" или "Q" завершает игру.'
+    )
 
 def run_bot() -> None:
 
@@ -394,8 +400,10 @@ def run_bot() -> None:
     dispatcher = updater.dispatcher
 
     dispatcher.add_handler(CommandHandler('start', start))
-    dispatcher.add_handler(CallbackQueryHandler(answer))
+    dispatcher.add_handler(CommandHandler('help', help))
+    dispatcher.add_handler(CallbackQueryHandler(get_request))
 
     updater.start_polling()
-
     updater.idle()
+
+run_bot()
