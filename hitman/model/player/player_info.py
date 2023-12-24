@@ -1,4 +1,4 @@
-player_lvl = [100]
+player_lvl = [10]
 suspicion_count = [0]
 kills = [0]
 bodies = [0]

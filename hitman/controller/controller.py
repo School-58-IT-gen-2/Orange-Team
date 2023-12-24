@@ -692,7 +692,7 @@ class PlayerController():
             self.player_view.response(self.__locator.get_challenges().get_by_name('Без улик').achieved())
         if self.__locator.get_challenges().get_by_name('Точный выстрел').completed == True and self.__locator.get_challenges().get_by_name('Подержи волосы').completed == True and self.__locator.get_challenges().get_by_name('Пианист').completed == True and self.__locator.get_challenges().get_by_name('Так можно и пораниться').completed == True and self.__locator.get_challenges().get_by_name('Без вкуса, без следа').completed == True:
             self.player_view.response(self.__locator.get_challenges().get_by_name('Без улик').achieved())
-        player_lvl += rating
+        player_lvl[0] += rating
         result_string = ''
         for i in self.__locator.get_challenges().get_all():
             if i.completed == True:

@@ -374,16 +374,6 @@ users = {}
 
 logger = logging.getLogger(__name__)
 
-#keyboard = []
-#keyboard.append([KeyboardButton(f"Сохранить и выйти", callback_data=f"q")])
-#keyboard.append([KeyboardButton("Взаимодействие", callback_data=f"f")])
-#keyboard.append([KeyboardButton("Передвижение", callback_data=f"w")])
-#keyboard.append([KeyboardButton("Статус", callback_data=f"s")])
-#keyboard.append([KeyboardButton("Инвентарь", callback_data=f"i")])
-#keyboard.append([KeyboardButton("Испытания", callback_data=f"c")])
-#keyboard.append([KeyboardButton("Обыскать локацию", callback_data=f"e")])
-#reply_markup = ReplyKeyboardMarkup(keyboard)
-#update.message.reply_text('', reply_markup=reply_markup)
 
 def telegram_bot():
     def start(update: Update, context: CallbackContext):
@@ -393,6 +383,16 @@ def telegram_bot():
         )
         controller = PlayerController(player=player, locator=locator, update=update, bot=context.bot, player_view=TelegramView(update, context.bot))
         users[update.effective_chat.id] = controller
+        keyboard = []
+        keyboard.append([KeyboardButton(f"Сохранить и выйти", callback_data=f"q")])
+        keyboard.append([KeyboardButton("Взаимодействие", callback_data=f"f")])
+        keyboard.append([KeyboardButton("Передвижение", callback_data=f"w")])
+        keyboard.append([KeyboardButton("Статус", callback_data=f"s")])
+        keyboard.append([KeyboardButton("Инвентарь", callback_data=f"i")])
+        keyboard.append([KeyboardButton("Испытания", callback_data=f"c")])
+        keyboard.append([KeyboardButton("Обыскать локацию", callback_data=f"e")])
+        reply_markup = ReplyKeyboardMarkup(keyboard)
+        update.message.reply_text('', reply_markup=reply_markup)
 
     def get_request(update: Update, context: CallbackContext):
         query = update.callback_query
