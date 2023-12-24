@@ -17,8 +17,9 @@ class PlayerController():
                  player=Player(),
                  player_view:PlayerView=None,
                  locator=HokkaidoLocator(),
-                 update = None,
-                 bot = None
+                 update=None,
+                 bot=None,
+                 messege='' 
                  ):
         self.player = player
         if player_view:
@@ -29,11 +30,7 @@ class PlayerController():
             self.__locator = locator
         self.__bot = bot
         self.__update = update
-        self.message = ''
-
-    def get_request(self, text):
-        self.message = text
-
+        self.message = messege
     
     def search(self):
         self.player.inventory += self.player.current_location.get_items()
@@ -601,15 +598,15 @@ class PlayerController():
         carry_on_items = [self.__locator.get_items().get_by_name('Удавка'), self.__locator.get_items().get_by_name('Смертельный яд'), self.__locator.get_items().get_by_name('Рвотный яд'), self.__locator.get_items().get_by_name('Электронный дешифровщик'), self.__locator.get_items().get_by_name('Боевой нож'), self.__locator.get_items().get_by_name('Монета')]
 
         self.player_view.response('Брифинг:\nДиана: Доброе утро, 47-й. Совет директоров одобрил ликвидацию Эриха Содерса. После Колорадо мы решили пристально изучить личные дела Содерса и выяснили, что его недавно доставили в частную клинику «Гама» на японском острове Хоккайдо для срочной операции на сердце. Без «Провиденс» тут явно не обошлось. Содерс страдает от редкой врожденной патологии — транспозиции органов: его внутренние органы в теле расположены зеркально. Для трансплантации ему необходимо правостороннее сердце, и он явно предал МКА, чтобы получить его. Его приняли прошлой ночью и сейчас он готовится к трёхэтапной операции. Под видом Тобиаса Рипера, крупного бизнесмена, ты отправляешься в «Гаму» для стандартного медицинского обследования, о формальностях мы уже позаботились. В таких условиях придётся импровизировать и самостоятельно добывать снаряжение. Кроме того, тебе нужно ликвидировать Юки Ямадзаки — она адвокат из Токио, работает на «Провиденс». Содерс уже передал Ямадзаки доступ к нашей базе клиентов и согласился предоставить полный список оперативных сотрудников МКА после завершения операции. Этого допустить никак нельзя. Содерс должен заплатить за своё предательство — это послужит хорошим уроком его нанимателям. На кону будущее и репутация МКА. Какой бы властью и могуществом ни обладала «Провиденс», пора поставить их на место. Я оставлю тебя подготавливаться.\n\nВведите любой символ, чтобы начать задание.')
-        self.player_view.request()
-        request = self.message
-        result_string = 'Выберите начальную локацию:\n\n'
+        request = self.player_view.request()
+        print(request)
+        result_string = ''
         for i in range(1, 10):
             if i <= player_lvl[0] // 10:
                 result_string += f'{i}. {lvl_unlocks[i][0]}\n'
         self.player_view.response(result_string)
-        self.player_view.request()
-        request = self.message
+        request = self.player_view.request()
+        print(request)
         while request.isdigit() == False:
             self.player_view.response('Введите номер ответа')
             request = self.player_view.request()
