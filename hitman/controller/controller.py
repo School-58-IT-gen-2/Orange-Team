@@ -11,6 +11,7 @@ from model.hokkaido.hokkaido_locator import HokkaidoLocator
 from model.common.npcs import Target
 
 
+#Класс, описывающий контроллер
 class PlayerController:
 
     def __init__(self,
