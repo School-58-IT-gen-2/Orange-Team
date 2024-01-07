@@ -1,3 +1,4 @@
+#Класс, описывающий предметы на локации
 class Item:
     
     def __init__(self, name, usage, illegal, deadly, weapon):

@@ -1,3 +1,4 @@
+#Класс, описывающий событие на локации
 class Event:
 
     def __init__(self, name, completed=False):

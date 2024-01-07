@@ -1,6 +1,7 @@
 from model.common.npcs import NPC, Target
 
 
+#Класс, описывающий NPC в Хоккаидо
 class HokkaidoNPCs:
     def __init__(self):
         self.__npcs = {

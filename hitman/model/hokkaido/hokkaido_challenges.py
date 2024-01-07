@@ -1,6 +1,8 @@
 from model.common.challenges import Challenge
 
-class HokkaidoChallenges():
+
+#Класс, описывающий испытания в Хоккаидо
+class HokkaidoChallenges:
     def __init__(self):
         self.__challenges = {
             'Курение убивает':

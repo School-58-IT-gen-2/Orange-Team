@@ -1,3 +1,4 @@
+#Класс, описывающий игрока
 class Player:
 
     def __init__(self,

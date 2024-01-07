@@ -3,6 +3,7 @@ from telegram.ext import CallbackContext
 from view.player_view import PlayerView
 
 
+#Класс, описывающий выввод и ввод в ТГ боте
 class TelegramView(PlayerView):
 
     def __init__(self, update: Update=None, bot=None):
@@ -17,4 +18,6 @@ class TelegramView(PlayerView):
         self.__update.message.reply_text('Выберите номер ответа:', reply_markup=reply_markup)
 
     def response(self, text):
-        self.__update.message.reply_text(text)
+        if text != '':
+            self.__update.message.reply_text(text)
+            print(text)

@@ -1,6 +1,7 @@
 from model.player.player_info import player_lvl
 
 
+#Класс, описывающий испытания на локации
 class Challenge:
 
     def __init__(self, name, description, completed):
@@ -8,6 +9,7 @@ class Challenge:
         self.description = description
         self.completed = completed
 
+    #Уведомление о выполнении условий испытания
     def achieved(self):
         global player_lvl
         if self.completed == False:
@@ -16,6 +18,7 @@ class Challenge:
             return f'Испытание выполнено: {self.name}'
         return ''
     
+    #Вывод описания испытания
     def challenge_info(self):
         result_string = f'{self.name}\n\n{self.description}\n\n1. Назад'
         return(result_string)

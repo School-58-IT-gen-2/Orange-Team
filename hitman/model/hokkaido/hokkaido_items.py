@@ -1,5 +1,7 @@
 from model.common.item import Item
 
+
+#Класс, описывающий предметы в Хоккаидо
 class HokkaidoItems:
     def __init__(self):
         self.__items = {

@@ -5,6 +5,8 @@ from model.hokkaido.hokkaido_npcs import HokkaidoNPCs, HokkaidoTargets
 from model.hokkaido.hokkaido_disguises import HokkaidoDisguises
 from model.hokkaido.hokkaido_challenges import HokkaidoChallenges
 
+
+#Класс, описывающий локатор в Хоккаидо
 class HokkaidoLocator:
     def __init__(self, challenges=HokkaidoChallenges()):
         self.__items = HokkaidoItems()
@@ -12,6 +14,8 @@ class HokkaidoLocator:
         self.__npcs = HokkaidoNPCs()
         self.__challenges = challenges
         self.__targets = HokkaidoTargets()
+
+        #Определение всех локаций на миссии (включая предметы, NPC и тд.)
         self.__locations = {
             'Номер 47-го':
                 Location(
@@ -540,7 +544,8 @@ class HokkaidoLocator:
                     ]
                 )
         }
-                
+    
+    #Находит всех NPC на локации
     def find_location_npcs(self, location_name):
         location_npcs = []
         for i in self.__npcs.get_all():
@@ -548,6 +553,7 @@ class HokkaidoLocator:
                 location_npcs.append(i)
         return location_npcs
 
+    #Находит всех свидетелей на локации
     def location_witnesses(self, location_name):
         location_npcs = self.find_location_npcs(location_name)
         location_witnesses = self.get_location_by_name(location_name).get_witnesses()
@@ -555,7 +561,8 @@ class HokkaidoLocator:
             if random.randrange(11) <= i.witness_chance and i.alive == True:
                 location_witnesses += 1
         return location_witnesses
-
+    
+    #Выводит статус локации
     def location_status(self, location):
         result_string = f'{location.get_name()}\n'
         location_npcs = self.find_location_npcs(location.get_name())

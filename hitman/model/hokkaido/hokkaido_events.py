@@ -1,6 +1,7 @@
 from model.common.events import Event
 
 
+#Класс, описывающий события в Хоккаидо
 class HokkaidoEvents:
     def __init__(self):
         self.__events = {

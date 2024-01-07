@@ -1,7 +1,8 @@
 from model.common.disguise import Disguise
 
 
-class HokkaidoDisguises():
+#Класс, описывающий маскировки в Хоккаидо
+class HokkaidoDisguises:
     def __init__(self):
         self.__disguises = {
                 'VIP - пациент': Disguise('VIP - пациент'),

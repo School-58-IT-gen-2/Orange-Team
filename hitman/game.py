@@ -15,14 +15,15 @@ import logging
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, InlineKeyboardButton, InlineKeyboardMarkup,ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, MessageHandler, PollAnswerHandler, PollHandler
 
-
+#Загрузка испытаний из файла сохранения
 os.chdir('hitman')
 if os.stat('save_file.dat').st_size != 0:
     with open('save_file.dat', 'rb') as f:
-        challenges, player_lvl = pickle.load(f)
+        challenges = pickle.load(f)
 else:
     challenges = HokkaidoChallenges()
 
+#Определение стандартных значений для старта игры
 events = HokkaidoEvents()
 locator = HokkaidoLocator(challenges)
 player = Player(location=locator.get_location_by_name('Номер 47-го'),
@@ -35,6 +36,7 @@ player = Player(location=locator.get_location_by_name('Номер 47-го'),
 
 controller = PlayerController(player=player, locator=locator)
 
+#Основной код, который выполняет контроллер
 def main(controller: PlayerController):
     controller.start()
     while True:
@@ -122,9 +124,9 @@ def main(controller: PlayerController):
                 if poisons[request - 1].deadly == True:
                     result_string = ''
                     if poisons[request - 1] == locator.get_items().get_by_name('Яд рыбы Фугу'):
-                        result_string += f'{locator.get_challenges().get_by_name('Приятного аппетита').achieved()}\n\n'
+                        controller.player_view.response(f'{locator.get_challenges().get_by_name('Приятного аппетита').achieved()}')
                     locator.get_targets().get_by_name('Юки Ямадзаки').alive = False
-                    result_string += locator.get_challenges().get_by_name('Без вкуса, без следа').achieved()
+                    controller.player_view.response(locator.get_challenges().get_by_name('Без вкуса, без следа').achieved())
                     result_string += '\n\nДиана: Грамотный ход 47-ой. С Юки Ямадзаки покончено.'
                     controller.player_view.response(result_string)
                 else:
@@ -144,9 +146,9 @@ def main(controller: PlayerController):
                         if request == 2:
                             controller.player_view.response(locator.location_status(player.current_location))
                         elif request == 1:
-                            result_string = f'{locator.get_challenges().get_by_name('Подержи волосы').achieved()}\n\n'
-                            result_string += f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}\n\n'
-                            result_string += 'Диана: Цель убита. Хорошая работа.'
+                            controller.player_view.response(f'{locator.get_challenges().get_by_name('Подержи волосы').achieved()}')
+                            controller.player_view.response(f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}')
+                            result_string = 'Диана: Цель убита. Хорошая работа.'
                             locator.get_targets().get_by_name('Юки Ямадзаки').alive = False
                             controller.player_view.response(result_string)
                     elif request == 2:
@@ -171,9 +173,9 @@ def main(controller: PlayerController):
                     request = int(request)
                     if request == 1:
                         locator.get_targets().get_by_name('Юки Ямадзаки').alive = False
-                        result_string = f'{locator.get_challenges().get_by_name('Убийство в парилке').achieved()}\n\n'
-                        result_string += f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}\n\n'
-                        result_string += 'Диана: С Юки Ямадзаки покончено. Отличная работа, агент.'
+                        controller.player_view.response(f'{locator.get_challenges().get_by_name('Убийство в парилке').achieved()}')
+                        controller.player_view.response(f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}')
+                        result_string = 'Диана: С Юки Ямадзаки покончено. Отличная работа, агент.'
                         controller.player_view.response(result_string)
                     elif request == 2:
                         controller.player_view.response(locator.location_status(player.current_location))
@@ -199,9 +201,9 @@ def main(controller: PlayerController):
                 request = int(request)
                 if request == 1:
                     locator.get_targets().get_by_name('Юки Ямадзаки').alive = False
-                    result_string = f'{locator.get_challenges().get_by_name('Хорошая растяжка').achieved()}\n\n'
-                    result_string += f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}\n\n'
-                    result_string += 'Диана: Отлично сработано. Юки Ямадзаки нас больше не побеспокоит.'
+                    controller.player_view.response(f'{locator.get_challenges().get_by_name('Хорошая растяжка').achieved()}')
+                    controller.player_view.response(f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}')
+                    result_string = 'Диана: Отлично сработано. Юки Ямадзаки нас больше не побеспокоит.'
                     controller.player_view.response(result_string)
                 if request == 2:
                     controller.player_view.response(locator.location_status(player.current_location))
@@ -215,8 +217,8 @@ def main(controller: PlayerController):
             request = int(request)
             if request == 1:
                 player.inventory.remove(locator.get_items().get_by_name('Пачка сигарет'))
-                result_string = f'{locator.get_challenges().get_by_name('Не курить!').achieved()}\n\n'
-                result_string += '1. Выйти из номера\n2. Пойти на балкон'
+                controller.player_view.response(f'{locator.get_challenges().get_by_name('Не курить!').achieved()}')
+                result_string = '1. Выйти из номера\n2. Пойти на балкон'
                 controller.player_view.response(result_string)
                 events.get_by_name('Сигареты на столе').completed = True
                 request = controller.player_view.request()
@@ -241,9 +243,9 @@ def main(controller: PlayerController):
                             player.current_location = locator.get_location_by_name('Холл')
                             if locator.get_targets().get_by_name('Юки Ямадзаки').alive == True:
                                 locator.get_targets().get_by_name('Юки Ямадзаки').alive = False
-                                result_string = f'{locator.get_challenges().get_by_name('Курение убивает').achieved()}\n\n'
-                                result_string += f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}\n\n'
-                                result_string += 'Юки Ямадзаки: Пачка сиграрет? Как я могла ее не заметить!\nЮки Ямадзаки вышла на балкон и воспользовалась зажигалкой, что привело к взрыву.\n\nДиана: Это было умно, 47-й. Юки Ямадзаки больше нас не побеспокоит.'
+                                controller.player_view.response(f'{locator.get_challenges().get_by_name('Курение убивает').achieved()}')
+                                controller.player_view.response(f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}')
+                                result_string = 'Юки Ямадзаки: Пачка сиграрет? Как я могла ее не заметить!\nЮки Ямадзаки вышла на балкон и воспользовалась зажигалкой, что привело к взрыву.\n\nДиана: Это было умно, 47-й. Юки Ямадзаки больше нас не побеспокоит.'
                                 controller.player_view.response(result_string)
                         else:
                             controller.player_view.response('У вас нет гаечного ключа')
@@ -277,9 +279,9 @@ def main(controller: PlayerController):
                             player.current_location = locator.get_location_by_name('Холл')
                             if locator.get_targets().get_by_name('Юки Ямадзаки').alive == True:
                                 locator.get_targets().get_by_name('Юки Ямадзаки').alive = False
-                                result_string = f'{locator.get_challenges().get_by_name('Курение убивает').achieved()}\n\n'
-                                result_string += f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}\n\n'
-                                result_string += 'Юки Ямадзаки: Пачка сиграрет? Как я могла ее не заметить!\nЮки Ямадзаки вышла на балкон и воспользовалась зажигалкой, что привело к взрыву.\n\nДиана: Это было умно, 47-й. Юки Ямадзаки больше нас не побеспокоит.'
+                                controller.player_view.response(f'{locator.get_challenges().get_by_name('Курение убивает').achieved()}')
+                                controller.player_view.response(f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}')
+                                result_string = 'Юки Ямадзаки: Пачка сиграрет? Как я могла ее не заметить!\nЮки Ямадзаки вышла на балкон и воспользовалась зажигалкой, что привело к взрыву.\n\nДиана: Это было умно, 47-й. Юки Ямадзаки больше нас не побеспокоит.'
                                 controller.player_view.response(result_string)
                     else:
                         controller.player_view.response('У вас нет гаечного ключа')
@@ -332,9 +334,9 @@ def main(controller: PlayerController):
                 request = int(request)
                 if request == 1:
                     locator.get_targets().get_by_name('Эрих Содерс').alive = False
-                    result_string = f'{locator.get_challenges().get_by_name('(Не) врачебная ошибка').achieved()}\n\n'
-                    result_string += f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}\n\n'
-                    result_string += 'Диана: Умно, 47-й. С Содерсом покончено.'
+                    controller.player_view.response(f'{locator.get_challenges().get_by_name('(Не) врачебная ошибка').achieved()}')
+                    controller.player_view.response(f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}')
+                    result_string = 'Диана: Умно, 47-й. С Содерсом покончено.'
                     controller.player_view.response(result_string)
                     events.get_by_name('Убийство в операционной').completed = True
                 if request == 2:
@@ -354,9 +356,9 @@ def main(controller: PlayerController):
             request = int(request)
             if request == 1:
                 locator.get_targets().get_by_name('Эрих Содерс').alive = False
-                result_string = f'{locator.get_challenges().get_by_name('Призрак в машине').achieved()}\n\n'
-                result_string += f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}\n\n'
-                result_string += 'Хирург: Что происходит с роботом?! Как его отключить?! Пациент сейчас умрет!\n\nДиана: Это было впечатляюще, агент. Эрих Содерс мертв.'
+                controller.player_view.response(f'{locator.get_challenges().get_by_name('Призрак в машине').achieved()}')
+                controller.player_view.response(f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}')
+                result_string = 'Хирург: Что происходит с роботом?! Как его отключить?! Пациент сейчас умрет!\n\nДиана: Это было впечатляюще, агент. Эрих Содерс мертв.'
                 controller.player_view.response(result_string)
             if request == 2:
                 controller.player_view.response(locator.location_status(player.current_location))
@@ -365,7 +367,7 @@ def main(controller: PlayerController):
             events.get_by_name('Информация об ИИ').completed = True
             controller.player_view.response('Интересно. Руководство для KAI, искусственного интеллекта клиники «Гама». Значит, местный искусственный интеллект по имени KAI не только поддерживает работу систем здания, но и управляет роботом в операционной. Именно там сейчас находится Содерс. В руководстве говорится, что после остановки сердца пациента искусственный интеллект автоматически начинает его реанимацию, что очень некстати. Однако... У директора клиники есть доступ к главному компьютеру. Справишься с управлением целой клиникой, 47-й?')
 
-
+#Начало создания ТГ бота
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
 )
@@ -374,7 +376,7 @@ users = {}
 
 logger = logging.getLogger(__name__)
 
-
+#Функция, которая запускает сервер с ТГ ботом
 def telegram_bot():
     def start(update: Update, context: CallbackContext):
         global controller
@@ -383,6 +385,13 @@ def telegram_bot():
         )
         controller = PlayerController(player=player, locator=locator, update=update, bot=context.bot, player_view=TelegramView(update, context.bot))
         users[update.effective_chat.id] = controller
+
+    def get_request(update: Update, context: CallbackContext):
+        query = update.callback_query
+        users[update.effective_chat.id].message = query.data
+        print(users[update.effective_chat.id].message)
+
+    def begin(update: Update, context: CallbackContext):
         keyboard = []
         keyboard.append([KeyboardButton(f"Сохранить и выйти", callback_data=f"q")])
         keyboard.append([KeyboardButton("Взаимодействие", callback_data=f"f")])
@@ -392,14 +401,7 @@ def telegram_bot():
         keyboard.append([KeyboardButton("Испытания", callback_data=f"c")])
         keyboard.append([KeyboardButton("Обыскать локацию", callback_data=f"e")])
         reply_markup = ReplyKeyboardMarkup(keyboard)
-        update.message.reply_text('', reply_markup=reply_markup)
-
-    def get_request(update: Update, context: CallbackContext):
-        query = update.callback_query
-        users[update.effective_chat.id].message = query.data
-        print(users[update.effective_chat.id].message)
-
-    def begin(update: Update, context: CallbackContext):
+        update.message.reply_text('Выберите номер ответа:', reply_markup=reply_markup)
         main(users[update.effective_chat.id])
 
     def help(update: Update, context: CallbackContext):
@@ -407,7 +409,7 @@ def telegram_bot():
             'Обучение:\n\nИнвентарь можно открыть при вводе «і» или «І», там будут сохранятся подобранные вами предметы, которые можно использовать для выполнения миссии. Чтобы пополнять инвентарь, необходимо обыскивать комнаты, это можно сделать нажав "е" или "Е" при нахождении в комнате, предметы автоматически добавятся в ваш инвентарь, если комната уже пустая, вы лишь пропустите небольшой промежуток времени. При вводе «w» или «W» откроется меню выбора локации, в которую вы хотите переместиться. "S" или "S" показывает статус локации, а также вашей цели. При нахождении новых маскировок можно будет попасть в локации, в которых ранее была запретная зона. Несмотря на это, вы может проникнуть в них и без маскировки, но тогда велик шанс обнаружения. Некоторые действия в игре выполняются с неким шансом от 1 до 10, который будет писаться рядом с ним, неудача может привести к непредсказуемым результатам и даже к провалу операции. Используя "f" или "F" вы можете взаимодействовать с локацией. После завершения операции вы увидите свой рейтинг (от 0 до 5). Чтобы получить максимальный рейтинг необходимо выполнить задание так, чтобы не было убито невиновных, не было найдено тел, а также вы не были замечены в запретной зоне или с нелегальным предметом в руках. Помимо этого, за прохождение миссии вы получаете уровень, который может открывать различные награды. Чтобы быстрее повышать уровень, выполняйте испытания, "c" или "C" открывает меню с испытаниями. Выбор вариантов осуществляется вводом его номера. "q" или "Q" завершает игру.'
         )
 
-    def run_bot() -> None:
+    def run_bot():
 
         updater = Updater("6930836802:AAEBOokIV7Xo3WOHdtrsP5KrvV5oYM_3dxY")
         dispatcher = updater.dispatcher
