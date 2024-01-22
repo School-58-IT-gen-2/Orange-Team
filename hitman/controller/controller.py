@@ -365,7 +365,7 @@ class PlayerController:
                 if isinstance(location_npcs[request - 1], Target):
                     self.player_view.response(self.__locator.get_challenges().get_by_name('Точный выстрел').achieved())
                     if location_npcs[request - 1].get_name() == 'Эрих Содерс':
-                        self.player_view.response(f'\n\n{self.__locator.get_challenges().get_by_name('Личное прощание').achieved()}')
+                        self.player_view.response(f'\n\n{self.__locator.get_challenges().get_by_name("Личное прощание").achieved()}')
                     result_string += f'\n\nДиана: С {location_npcs[request - 1].get_name()} покончено, отличная работа.'
                     self.player_view.response(result_string)
                 else:
@@ -586,7 +586,7 @@ class PlayerController:
                                 return self.player_view.response(self.__locator.location_status(self.player.current_location))
                             elif request == 2:
                                 self.__locator.get_targets().get_by_name('Эрих Содерс').alive = False
-                                self.player_view.response(f'{self.__locator.get_challenges().get_by_name('Бессердечный').achieved()}')
+                                self.player_view.response(f'{self.__locator.get_challenges().get_by_name("Бессердечный").achieved()}')
                                 result_string = 'Диана: 47-й, без сердца для пересадки Содерс не выживет. Ты смог от него избавиться даже не прикасаясь, изящный ход.'
                                 self.player_view.response(result_string)
                                 return self.player_view.response(self.__locator.location_status(self.player.current_location))
@@ -724,11 +724,11 @@ class PlayerController:
         result_string += f'Ваш рейтинг: {rating}/5'
         self.player_view.response(result_string)
         if rating == 5 and so[0] == 1:
-            self.player_view.response(f'{self.__locator.get_challenges().get_by_name('Бесшумный убийца').achieved()}')
+            self.player_view.response(f'{self.__locator.get_challenges().get_by_name("Бесшумный убийца").achieved()}')
             result_string = 'Бесшумный убийца.'
             self.player_view.response(result_string)
         elif rating == 5 and so[0] == 0:
-            self.player_view.response(f'{self.__locator.get_challenges().get_by_name('Бесшумный убийца. Только костюм.').achieved()}')
+            self.player_view.response(f'{self.__locator.get_challenges().get_by_name("Бесшумный убийца. Только костюм.").achieved()}')
             result_string = 'Бесшумный убийца.'
             self.player_view.response(result_string)
         elif so[0] == 0:

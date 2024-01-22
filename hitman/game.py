@@ -124,7 +124,7 @@ def main(controller: PlayerController):
                 if poisons[request - 1].deadly == True:
                     result_string = ''
                     if poisons[request - 1] == locator.get_items().get_by_name('Яд рыбы Фугу'):
-                        controller.player_view.response(f'{locator.get_challenges().get_by_name('Приятного аппетита').achieved()}')
+                        controller.player_view.response(f'{locator.get_challenges().get_by_name("Приятного аппетита").achieved()}')
                     locator.get_targets().get_by_name('Юки Ямадзаки').alive = False
                     controller.player_view.response(locator.get_challenges().get_by_name('Без вкуса, без следа').achieved())
                     result_string += '\n\nДиана: Грамотный ход 47-ой. С Юки Ямадзаки покончено.'
@@ -146,8 +146,8 @@ def main(controller: PlayerController):
                         if request == 2:
                             controller.player_view.response(locator.location_status(player.current_location))
                         elif request == 1:
-                            controller.player_view.response(f'{locator.get_challenges().get_by_name('Подержи волосы').achieved()}')
-                            controller.player_view.response(f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}')
+                            controller.player_view.response(f'{locator.get_challenges().get_by_name("Подержи волосы").achieved()}')
+                            controller.player_view.response(f'{locator.get_challenges().get_by_name("Так можно и пораниться").achieved()}')
                             result_string = 'Диана: Цель убита. Хорошая работа.'
                             locator.get_targets().get_by_name('Юки Ямадзаки').alive = False
                             controller.player_view.response(result_string)
@@ -173,8 +173,8 @@ def main(controller: PlayerController):
                     request = int(request)
                     if request == 1:
                         locator.get_targets().get_by_name('Юки Ямадзаки').alive = False
-                        controller.player_view.response(f'{locator.get_challenges().get_by_name('Убийство в парилке').achieved()}')
-                        controller.player_view.response(f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}')
+                        controller.player_view.response(f'{locator.get_challenges().get_by_name("Убийство в парилке").achieved()}')
+                        controller.player_view.response(f'{locator.get_challenges().get_by_name("Так можно и пораниться").achieved()}')
                         result_string = 'Диана: С Юки Ямадзаки покончено. Отличная работа, агент.'
                         controller.player_view.response(result_string)
                     elif request == 2:
@@ -201,8 +201,8 @@ def main(controller: PlayerController):
                 request = int(request)
                 if request == 1:
                     locator.get_targets().get_by_name('Юки Ямадзаки').alive = False
-                    controller.player_view.response(f'{locator.get_challenges().get_by_name('Хорошая растяжка').achieved()}')
-                    controller.player_view.response(f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}')
+                    controller.player_view.response(f'{locator.get_challenges().get_by_name("Хорошая растяжка").achieved()}')
+                    controller.player_view.response(f'{locator.get_challenges().get_by_name("Так можно и пораниться").achieved()}')
                     result_string = 'Диана: Отлично сработано. Юки Ямадзаки нас больше не побеспокоит.'
                     controller.player_view.response(result_string)
                 if request == 2:
@@ -217,7 +217,7 @@ def main(controller: PlayerController):
             request = int(request)
             if request == 1:
                 player.inventory.remove(locator.get_items().get_by_name('Пачка сигарет'))
-                controller.player_view.response(f'{locator.get_challenges().get_by_name('Не курить!').achieved()}')
+                controller.player_view.response(f'{locator.get_challenges().get_by_name("Не курить!").achieved()}')
                 result_string = '1. Выйти из номера\n2. Пойти на балкон'
                 controller.player_view.response(result_string)
                 events.get_by_name('Сигареты на столе').completed = True
@@ -243,8 +243,8 @@ def main(controller: PlayerController):
                             player.current_location = locator.get_location_by_name('Холл')
                             if locator.get_targets().get_by_name('Юки Ямадзаки').alive == True:
                                 locator.get_targets().get_by_name('Юки Ямадзаки').alive = False
-                                controller.player_view.response(f'{locator.get_challenges().get_by_name('Курение убивает').achieved()}')
-                                controller.player_view.response(f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}')
+                                controller.player_view.response(f'{locator.get_challenges().get_by_name("Курение убивает").achieved()}')
+                                controller.player_view.response(f'{locator.get_challenges().get_by_name("Так можно и пораниться").achieved()}')
                                 result_string = 'Юки Ямадзаки: Пачка сиграрет? Как я могла ее не заметить!\nЮки Ямадзаки вышла на балкон и воспользовалась зажигалкой, что привело к взрыву.\n\nДиана: Это было умно, 47-й. Юки Ямадзаки больше нас не побеспокоит.'
                                 controller.player_view.response(result_string)
                         else:
@@ -279,8 +279,8 @@ def main(controller: PlayerController):
                             player.current_location = locator.get_location_by_name('Холл')
                             if locator.get_targets().get_by_name('Юки Ямадзаки').alive == True:
                                 locator.get_targets().get_by_name('Юки Ямадзаки').alive = False
-                                controller.player_view.response(f'{locator.get_challenges().get_by_name('Курение убивает').achieved()}')
-                                controller.player_view.response(f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}')
+                                controller.player_view.response(f'{locator.get_challenges().get_by_name("Курение убивает").achieved()}')
+                                controller.player_view.response(f'{locator.get_challenges().get_by_name("Так можно и пораниться").achieved()}')
                                 result_string = 'Юки Ямадзаки: Пачка сиграрет? Как я могла ее не заметить!\nЮки Ямадзаки вышла на балкон и воспользовалась зажигалкой, что привело к взрыву.\n\nДиана: Это было умно, 47-й. Юки Ямадзаки больше нас не побеспокоит.'
                                 controller.player_view.response(result_string)
                     else:
@@ -334,8 +334,8 @@ def main(controller: PlayerController):
                 request = int(request)
                 if request == 1:
                     locator.get_targets().get_by_name('Эрих Содерс').alive = False
-                    controller.player_view.response(f'{locator.get_challenges().get_by_name('(Не) врачебная ошибка').achieved()}')
-                    controller.player_view.response(f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}')
+                    controller.player_view.response(f'{locator.get_challenges().get_by_name("(Не) врачебная ошибка").achieved()}')
+                    controller.player_view.response(f'{locator.get_challenges().get_by_name("Так можно и пораниться").achieved()}')
                     result_string = 'Диана: Умно, 47-й. С Содерсом покончено.'
                     controller.player_view.response(result_string)
                     events.get_by_name('Убийство в операционной').completed = True
@@ -356,8 +356,8 @@ def main(controller: PlayerController):
             request = int(request)
             if request == 1:
                 locator.get_targets().get_by_name('Эрих Содерс').alive = False
-                controller.player_view.response(f'{locator.get_challenges().get_by_name('Призрак в машине').achieved()}')
-                controller.player_view.response(f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}')
+                controller.player_view.response(f'{locator.get_challenges().get_by_name("Призрак в машине").achieved()}')
+                controller.player_view.response(f'{locator.get_challenges().get_by_name("Так можно и пораниться").achieved()}')
                 result_string = 'Хирург: Что происходит с роботом?! Как его отключить?! Пациент сейчас умрет!\n\nДиана: Это было впечатляюще, агент. Эрих Содерс мертв.'
                 controller.player_view.response(result_string)
             if request == 2:
