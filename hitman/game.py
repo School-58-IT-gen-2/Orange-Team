@@ -9,6 +9,7 @@ from model.player.player_info import *
 from model.hokkaido.hokkaido_locator import HokkaidoLocator
 from model.hokkaido.hokkaido_challenges import HokkaidoChallenges
 from view.telegram_view import TelegramView
+from config.net_config import NetConfig
 
 import logging
 
@@ -411,7 +412,8 @@ def telegram_bot():
 
     def run_bot():
 
-        updater = Updater("6930836802:AAEBOokIV7Xo3WOHdtrsP5KrvV5oYM_3dxY")
+        net_config = NetConfig()
+        updater = Updater(net_config.get_token())
         dispatcher = updater.dispatcher
 
         dispatcher.add_handler(CommandHandler('start', start))
