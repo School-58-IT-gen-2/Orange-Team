@@ -10,28 +10,24 @@ from view.telegram_view import TelegramView
 from model.hokkaido.hokkaido_locator import HokkaidoLocator
 from model.common.npcs import Target
 
+import logging
+
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, InlineKeyboardButton, InlineKeyboardMarkup,ReplyKeyboardMarkup, KeyboardButton
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, MessageHandler, PollAnswerHandler, PollHandler
+
 
 #Класс, описывающий контроллер
 class PlayerController:
 
     def __init__(self,
                  player=Player(),
-                 player_view:PlayerView=None,
-                 locator=HokkaidoLocator(),
-                 update=None,
-                 bot=None,
-                 messege='' 
+                 player_view: PlayerView=None,
+                 locator=HokkaidoLocator()
                  ):
         self.player = player
-        if player_view:
-            self.player_view = TelegramView(update=update, bot=bot)
-        else:
-            self.player_view = ConsoleView()
+        self.player_view = player_view
         if locator:
-            self.__locator = locator
-        self.__bot = bot
-        self.__update = update
-        self.message = messege
+            self.locator = locator
     
     #Удаляет все предметы с локации и добавляяет их в инвентарь игрока, выводит добавленные предметы
     def search(self):
@@ -40,7 +36,7 @@ class PlayerController:
         if self.player.current_location.get_items() == []:
             return self.player_view.response('На локации нет предметов')
         else:
-            for i in self.__locator.get_items().get_all():
+            for i in self.locator.get_items().get_all():
                 if i in self.player.current_location.get_items():
                     result_string += f'{i.name} ({self.player.current_location.get_items().count(i)})\n'
         self.player.current_location.set_items([])
@@ -56,7 +52,7 @@ class PlayerController:
         request = int(request)
         if request == 2:
             result_string = ''
-            for i in self.__locator.get_targets().get_all():
+            for i in self.locator.get_targets().get_all():
                 if i.alive == True:
                     result_string += f'{i.name}: {i.move()}\n'
                 else:
@@ -67,13 +63,13 @@ class PlayerController:
                 result_string += f'\n\nБесшумный убийца'
             return self.player_view.response(result_string)
         else:
-            return self.player_view.response(self.__locator.location_status(self.player.current_location))
+            return self.player_view.response(self.locator.location_status(self.player.current_location))
     
     #Выводит инвентарь игрока
     def inventory(self):
         inventory = []
         if self.player.inventory.count(self.player.item) == 0:
-            self.player.item = self.__locator.get_items().get_by_name('Нет предмета')
+            self.player.item = self.locator.get_items().get_by_name('Нет предмета')
         result_string = ''
         for i in self.player.inventory:
             if i.name == 'Пистолет без глушителя' or i.name == 'Пистолет с глушителем':
@@ -115,17 +111,17 @@ class PlayerController:
         
         #Заменяет текущий предмет на "Нет предмета"
         elif inventory[request - 1] == 'Убрать предмет из рук':
-            self.player.item = self.__locator.get_items().get_by_name('Нет предмета')
+            self.player.item = self.locator.get_items().get_by_name('Нет предмета')
             return self.player_view.response(f'Сейчас в руках: {self.player.item.name}')
         
         #Закрывает инвентарь и возвращает статус локации
         elif inventory[request - 1] == 'Выйти из инвентаря':
-            return self.player_view.response(self.__locator.location_status(self.player.current_location))
+            return self.player_view.response(self.locator.location_status(self.player.current_location))
         
         #Заменяет текущий предмет на выбранный игроком (предмет нелегален)
-        elif self.__locator.get_items().get_by_name(inventory[request - 1][:-4]).illegal:
+        elif self.locator.get_items().get_by_name(inventory[request - 1][:-4]).illegal:
             if self.player.disguise == 'Охранник' or self.player.disguise == 'Телохранитель':
-                self.player.item = self.__locator.get_items().get_by_name(inventory[request - 1][:-4])
+                self.player.item = self.locator.get_items().get_by_name(inventory[request - 1][:-4])
                 return self.player_view.response(f'Сейчас в руках: {self.player.item.name}')
             else:
                 self.player_view.response(f'{inventory[request - 1][:-4]} -- это нелегальный предмет. Достать предмет?\n\n1. Да\n2. Нет')
@@ -135,35 +131,35 @@ class PlayerController:
                     second_request = self.player_view.request()
                 second_request = int(second_request)
                 if second_request == 1:
-                    self.player.item = self.__locator.get_items().get_by_name(inventory[request - 1][:-4])
+                    self.player.item = self.locator.get_items().get_by_name(inventory[request - 1][:-4])
                     return self.player_view.response(f'Сейчас в руках: {self.player.item.name}')
                 else:
                     return self.inventory()
         
         #Заменяет текущий предмет на выбранный игроком (предмет легален)
         else:
-            self.player.item = self.__locator.get_items().get_by_name(inventory[request - 1][:-4])
+            self.player.item = self.locator.get_items().get_by_name(inventory[request - 1][:-4])
             return self.player_view.response(f'Сейчас в руках: {self.player.item.name}')
     
     #Выводит меню с испытаниями
     def see_challenges(self):
         result_string = ''
-        for i in range(len(self.__locator.get_challenges().get_all())):
-            if self.__locator.get_challenges().get_all()[i].completed == True:
-                result_string += f"{i+1}. {self.__locator.get_challenges().get_all()[i].name + ' (выполнено)'}\n"
+        for i in range(len(self.locator.get_challenges().get_all())):
+            if self.locator.get_challenges().get_all()[i].completed == True:
+                result_string += f"{i+1}. {self.locator.get_challenges().get_all()[i].name + ' (выполнено)'}\n"
             else:
-                result_string += f'{i+1}. {self.__locator.get_challenges().get_all()[i].name}\n'
-        result_string += f'\n\n{len(self.__locator.get_challenges().get_all()) + 1}. Выйти'
+                result_string += f'{i+1}. {self.locator.get_challenges().get_all()[i].name}\n'
+        result_string += f'\n\n{len(self.locator.get_challenges().get_all()) + 1}. Выйти'
         self.player_view.response(result_string)
         request = self.player_view.request()
         while request.isdigit() == False:
             self.player_view.response('Введите номер ответа')
             request = self.player_view.request()
         request = int(request)
-        if request > len(self.__locator.get_challenges().get_all()):
-            return self.player_view.response(self.__locator.location_status(self.player.current_location))
+        if request > len(self.locator.get_challenges().get_all()):
+            return self.player_view.response(self.locator.location_status(self.player.current_location))
         else:
-            self.player_view.response(self.__locator.get_challenges().get_all()[request-1].challenge_info())
+            self.player_view.response(self.locator.get_challenges().get_all()[request-1].challenge_info())
             self.player_view.request()
             return(self.see_challenges())
     
@@ -184,23 +180,23 @@ class PlayerController:
 
         #Закрывает меню если игрок отменил действие и возвращает статус локации
         if request == len(self.player.current_location.get_connected_locations()) + 1:
-            return self.player_view.response(self.__locator.location_status(self.player.current_location))
-        for i in self.__locator.get_locations():
+            return self.player_view.response(self.locator.location_status(self.player.current_location))
+        for i in self.locator.get_locations():
             if i == self.player.current_location.get_connected_locations()[request]:
-                move_to_location = self.__locator.get_location_by_name(i)
+                move_to_location = self.locator.get_location_by_name(i)
 
         #Проверяет, чтобы у локации для перемещения не было особых условий для входа (например необходима особая маскировка или ключ-карта)
         if move_to_location.get_name() == 'Комната с серверами':
-            if self.player.disguise == 'Директор клиники' or self.__locator.get_items().get_by_name('Ключ-карта') in self.player.inventory or self.__locator.get_items().get_by_name('Электронный дешифровщик') in self.player.inventory:
+            if self.player.disguise == 'Директор клиники' or self.locator.get_items().get_by_name('Ключ-карта') in self.player.inventory or self.locator.get_items().get_by_name('Электронный дешифровщик') in self.player.inventory:
                 self.player.current_location = move_to_location
-                return self.player_view.response(f'{self.__locator.location_status(self.player.current_location)}')
+                return self.player_view.response(f'{self.locator.location_status(self.player.current_location)}')
             else:
                 return self.player_view.response('Для входа необходима маскировка директора клиники или ключ-карта')
         else:
             #Случай, когда маскировка игрока раскрыта
             if self.player.disguise in self.player.compromised_disguises:
-                if self.__locator.find_location_npcs(self.player.current_location.get_name()) != []:
-                    location_npc = self.__locator.find_location_npcs(self.player.current_location.get_name())[random.randrange(len(self.__locator.find_location_npcs(self.player.current_location.get_name())))]
+                if self.locator.find_location_npcs(self.player.current_location.get_name()) != []:
+                    location_npc = self.locator.find_location_npcs(self.player.current_location.get_name())[random.randrange(len(self.locator.find_location_npcs(self.player.current_location.get_name())))]
                     result_string = location_npc.suspicion()
                     result_string += '\n\n1. Напасть (3/10)\n2. Уйти'
                     self.player_view.response(result_string)
@@ -210,26 +206,26 @@ class PlayerController:
                         request = self.player_view.request()
                     request = int(request)
                     if request == 2:
-                        return self.player_view.response(f'{self.__locator.location_status(self.player.current_location)}')
+                        return self.player_view.response(f'{self.locator.location_status(self.player.current_location)}')
                     else:
                         if random.randrange(1, 11) <= 3:
                             location_npc.alive = False
                             self.player.found_disguises.append(location_npc.get_disguise())
                             self.player.current_location = move_to_location
                             result_string = f'Вам удалось тихо устранить {location_npc.get_name()}'
-                            result_string += f'\n\n\n{self.__locator.location_status(self.player.current_location)}'
+                            result_string += f'\n\n\n{self.locator.location_status(self.player.current_location)}'
                             return self.player_view.response(result_string)
                         else:
                             return self.combat()
                 else:
                     self.player.current_location = move_to_location
-                    return self.player_view.response(f'{self.__locator.location_status(self.player.current_location.get_name())}')
+                    return self.player_view.response(f'{self.locator.location_status(self.player.current_location.get_name())}')
             else:
                 #Случай, когда в руках игрока нелегальный предмет
-                if (self.player.item.illegal == True and self.__locator.get_disguise_by_name(self.player.disguise) != 'Охранник' and self.__locator.get_disguise_by_name(self.player.disguise) != 'Телохранитель'):
+                if (self.player.item.illegal == True and self.locator.get_disguise_by_name(self.player.disguise) != 'Охранник' and self.locator.get_disguise_by_name(self.player.disguise) != 'Телохранитель'):
                     self.player.current_location = move_to_location
-                    if self.__locator.find_location_npcs(self.player.current_location.get_name()) != []:
-                        location_npc = self.__locator.find_location_npcs(self.player.current_location.get_name())[random.randrange(len(self.__locator.find_location_npcs(self.player.current_location.get_name())))]
+                    if self.locator.find_location_npcs(self.player.current_location.get_name()) != []:
+                        location_npc = self.locator.find_location_npcs(self.player.current_location.get_name())[random.randrange(len(self.locator.find_location_npcs(self.player.current_location.get_name())))]
                         suspicion_count[0] += 1
                         result_string = f'{location_npc.get_name()}: Он вооружен!\n\n'
                         result_string += '1. Напасть (3/10)\n2. Скрыться (7/10)'
@@ -249,21 +245,21 @@ class PlayerController:
                             if random.randrange(1, 11) <= 7:
                                 self.player.compromised_disguises.append(self.player.disguise)
                                 result_string = 'Ваша маскировка раскрыта, при перемещении в любую локацию вас будут узнавать.\n'
-                                result_string += f'\n\n{self.__locator.location_status(self.player.current_location)}'
+                                result_string += f'\n\n{self.locator.location_status(self.player.current_location)}'
                                 return self.player_view.response(result_string)
                             else:
                                 return self.combat()
                 else:
                     #Случай, когда маскировка игрока позволяет пройти на локацию
-                    if self.__locator.get_disguise_by_name(self.player.disguise) in move_to_location.get_disguise():
+                    if self.locator.get_disguise_by_name(self.player.disguise) in move_to_location.get_disguise():
                         self.player.current_location = move_to_location
-                        return self.player_view.response(f'{self.__locator.location_status(self.player.current_location)}')
+                        return self.player_view.response(f'{self.locator.location_status(self.player.current_location)}')
                     else:
                         #Случай, когда маскировка игрока не позволяет пройти на локацию
-                        if self.__locator.location_witnesses(self.player.current_location.get_name()) > 10:
+                        if self.locator.location_witnesses(self.player.current_location.get_name()) > 10:
                             chance = 10
                         else:
-                            chance = self.__locator.location_witnesses(self.player.current_location.get_name())
+                            chance = self.locator.location_witnesses(self.player.current_location.get_name())
                         result_string = f'\n\nУ вас нет подходящей маскировки. Переместиться на локацию? ({10-chance}/10)\n\n1. Да\n2. Нет'
                         self.player_view.response(result_string)
                         request = self.player_view.request()
@@ -272,14 +268,14 @@ class PlayerController:
                             request = self.player_view.request()
                         request = int(request)
                         if request == 2:
-                            return self.player_view.response(f'{self.__locator.location_status(self.player.current_location)}')
+                            return self.player_view.response(f'{self.locator.location_status(self.player.current_location)}')
                         else:
                             if random.randrange(1,11) <= 10-chance:
                                 self.player.current_location = move_to_location
-                                return self.player_view.response(f'{self.__locator.location_status(self.player.current_location)}')
+                                return self.player_view.response(f'{self.locator.location_status(self.player.current_location)}')
                             else:
-                                if self.__locator.find_location_npcs(self.player.current_location.get_name()) != []:
-                                    location_npc = self.__locator.find_location_npcs(move_to_location.get_name())[random.randrange(len(self.__locator.find_location_npcs(move_to_location.get_name())))]
+                                if self.locator.find_location_npcs(self.player.current_location.get_name()) != []:
+                                    location_npc = self.locator.find_location_npcs(move_to_location.get_name())[random.randrange(len(self.locator.find_location_npcs(move_to_location.get_name())))]
                                     result_string = location_npc.suspicion()
                                     result_string += '\n\n1. Напасть (3/10)\n2. Уйти'
                                     self.player_view.response(result_string)
@@ -289,22 +285,22 @@ class PlayerController:
                                         request = self.player_view.request()
                                     request = int(request)
                                     if request == 2:
-                                        return self.player_view.response(f'{self.__locator.location_status(self.player.current_location)}')
+                                        return self.player_view.response(f'{self.locator.location_status(self.player.current_location)}')
                                     else:
                                         if random.randrange(1, 11) <= 3:
-                                            if self.__locator.location_witnesses(move_to_location.get_name()) > 0:
+                                            if self.locator.location_witnesses(move_to_location.get_name()) > 0:
                                                 bodies[0] += 1
                                             location_npc.alive = False
                                             self.player.found_disguises.append(location_npc.get_disguise())
                                             self.player.current_location = move_to_location
                                             result_string = f'Вам удалось тихо устранить {location_npc.get_name()}'
-                                            result_string += f'\n\n\n{self.__locator.location_status(self.player.current_location)}'
+                                            result_string += f'\n\n\n{self.locator.location_status(self.player.current_location)}'
                                             return self.player_view.response(result_string)
                                         else:
                                             return self.combat()
                                 else:
                                     self.player.current_location = move_to_location
-                                    return self.player_view.response(f'{self.__locator.location_status(self.player.current_location)}')
+                                    return self.player_view.response(f'{self.locator.location_status(self.player.current_location)}')
     
     #Перемещение по локациям, не зависящие от маскировки или предмета в руках
     def safe_move(self):
@@ -318,17 +314,17 @@ class PlayerController:
             self.player_view.response('Введите номер ответа')
             request = self.player_view.request()
         request = int(request)
-        self.player.current_location = self.__locator.get_location_by_name(self.player.current_location.get_connected_locations()[request])
-        return self.player_view.response(self.__locator.location_status(self.player.current_location))
+        self.player.current_location = self.locator.get_location_by_name(self.player.current_location.get_connected_locations()[request])
+        return self.player_view.response(self.locator.location_status(self.player.current_location))
 
     #Использование предметов                      
     def interact(self):
         global bodies
         global kills
-        witnesses = self.__locator.location_witnesses(self.player.current_location.get_name())
-        location_npcs = self.__locator.find_location_npcs(self.player.current_location.get_name())
+        witnesses = self.locator.location_witnesses(self.player.current_location.get_name())
+        location_npcs = self.locator.find_location_npcs(self.player.current_location.get_name())
         if self.player.inventory.count(self.player.item) == 0:
-            self.player.item = self.__locator.get_items().get_by_name('Нет предмета')
+            self.player.item = self.locator.get_items().get_by_name('Нет предмета')
         result_string = f'Действия видят {witnesses} человек\n\n'
         
         #Проверяет, есть ли действия с предметом
@@ -346,7 +342,7 @@ class PlayerController:
 
             #Выстрел из огнестрельного оружия (смертельно)
             if self.player.item.usage[request - 1] == 'Выстрелить':
-                for i in self.__locator.get_targets().get_all():
+                for i in self.locator.get_targets().get_all():
                     if i.move() == self.player.current_location.get_name():
                         location_npcs = [i] + location_npcs
                 if location_npcs == []:
@@ -363,9 +359,9 @@ class PlayerController:
                 location_npcs[request - 1].alive = False
                 result_string = ''
                 if isinstance(location_npcs[request - 1], Target):
-                    self.player_view.response(self.__locator.get_challenges().get_by_name('Точный выстрел').achieved())
+                    self.player_view.response(self.locator.get_challenges().get_by_name('Точный выстрел').achieved())
                     if location_npcs[request - 1].get_name() == 'Эрих Содерс':
-                        self.player_view.response(f'\n\n{self.__locator.get_challenges().get_by_name('Личное прощание').achieved()}')
+                        self.player_view.response(f'\n\n{self.locator.get_challenges().get_by_name('Личное прощание').achieved()}')
                     result_string += f'\n\nДиана: С {location_npcs[request - 1].get_name()} покончено, отличная работа.'
                     self.player_view.response(result_string)
                 else:
@@ -375,11 +371,11 @@ class PlayerController:
                     bodies[0] += 1
                     return self.combat()
                 else:
-                    return self.player_view.response(self.__locator.location_status(self.player.current_location))
+                    return self.player_view.response(self.locator.location_status(self.player.current_location))
             
             #Отмена действия и вывод статуса
             elif self.player.item.usage[request - 1] == 'Отменить действие':
-                return self.player_view.response(self.__locator.location_status(self.player.current_location))
+                return self.player_view.response(self.locator.location_status(self.player.current_location))
             
             #Удар тупым предметом (несмертельно)
             elif self.player.item.usage[request - 1] == 'Ударить':
@@ -400,7 +396,7 @@ class PlayerController:
                     bodies[0] += 1
                     return self.combat()
                 else:
-                    return self.player_view.response(self.__locator.location_status(self.player.current_location))
+                    return self.player_view.response(self.locator.location_status(self.player.current_location))
                 
             #Бросок тупого предмета (несмертельно)
             elif self.player.item.usage[request - 1] == 'Бросить':
@@ -423,11 +419,11 @@ class PlayerController:
                     bodies[0] += 1
                     return self.combat()
                 else:
-                    return self.player_view.response(self.__locator.location_status(self.player.current_location))
+                    return self.player_view.response(self.locator.location_status(self.player.current_location))
                 
             #Удар острым предметом (смертельно)
             elif self.player.item.usage[request - 1] == 'Ударить (летально)':
-                for i in self.__locator.get_targets().get_all():
+                for i in self.locator.get_targets().get_all():
                     if i.move() == self.player.current_location.get_name():
                         if i.get_name() == 'Эрих Содерс':
                             pass
@@ -456,13 +452,13 @@ class PlayerController:
                     bodies[0] += 1
                     return self.combat()
                 else:
-                    return self.player_view.response(self.__locator.location_status(self.player.current_location))
+                    return self.player_view.response(self.locator.location_status(self.player.current_location))
                 
             #Бросок острого предмета (смертельно)
             elif self.player.item.usage[request - 1] == 'Бросить (летально)':
                 self.player.current_location.set_items(self.player.current_location.get_items() + [self.player.item])
                 self.player.inventory.remove(self.player.item)
-                for i in self.__locator.get_targets().get_all():
+                for i in self.locator.get_targets().get_all():
                     if i.move() == self.player.current_location.get_name():
                         if i.get_name() == 'Эрих Содерс':
                             pass
@@ -491,7 +487,7 @@ class PlayerController:
                     bodies[0] += 1
                     return self.combat()
                 else:
-                    return self.player_view.response(self.__locator.location_status(self.player.current_location))
+                    return self.player_view.response(self.locator.location_status(self.player.current_location))
             
             #Бросок предмета, отвлекающего NPC
             elif self.player.item.usage[request - 1] == 'Бросить для отвлечения':
@@ -506,12 +502,12 @@ class PlayerController:
                     request = int(request)
                     if request == 1:
                         self.player.inventory.remove(self.player.item)
-                        if self.player.item == self.__locator.get_items().get_by_name('Монета'):
+                        if self.player.item == self.locator.get_items().get_by_name('Монета'):
                             self.player.current_location.set_items(self.player.current_location.get_items() + [self.player.item])
                         return self.safe_move()
                     else:
-                        return self.player_view.response(self.__locator.location_status(self.player.current_location))
-                if self.player.item == self.__locator.get_items().get_by_name('Монета'):
+                        return self.player_view.response(self.locator.location_status(self.player.current_location))
+                if self.player.item == self.locator.get_items().get_by_name('Монета'):
                     self.player.current_location.set_items(self.player.current_location.get_items() + [self.player.item])
                 self.player.inventory.remove(self.player.item)
                 result_string = ''
@@ -536,10 +532,10 @@ class PlayerController:
                     self.player.found_disguises.append(location_npcs[request - 1].get_disguise())
                     location_npcs[request - 1].alive = False
                     if second_request == 1:
-                        return self.player_view.response(self.__locator.location_status(self.player.current_location))
+                        return self.player_view.response(self.locator.location_status(self.player.current_location))
                     elif second_request == 2:
                         kills[0] += 1
-                        return self.player_view.response(self.__locator.location_status(self.player.current_location))
+                        return self.player_view.response(self.locator.location_status(self.player.current_location))
             
             #Удушение при отстутствии предмета (несмертельно)
             elif self.player.item.usage[request - 1] == 'Усмирить':
@@ -560,7 +556,7 @@ class PlayerController:
                     bodies[0] += 1
                     return self.combat()
                 else:
-                    return self.player_view.response(self.__locator.location_status(self.player.current_location))
+                    return self.player_view.response(self.locator.location_status(self.player.current_location))
                 
             #Использование особых предметов
             elif self.player.item.usage[request - 1] == 'Использовать':
@@ -574,7 +570,7 @@ class PlayerController:
                             request = self.player_view.request()
                         request = int(request)
                         if request == 2:
-                            return self.player_view.response(self.__locator.location_status(self.player.current_location))
+                            return self.player_view.response(self.locator.location_status(self.player.current_location))
                         elif request == 1:
                             self.player_view.response('\n\n1. Выйти\n2. Повредить сердце')
                             request = self.player_view.request()
@@ -583,19 +579,19 @@ class PlayerController:
                                 request = self.player_view.request()
                             request = int(request)
                             if request == 1:
-                                return self.player_view.response(self.__locator.location_status(self.player.current_location))
+                                return self.player_view.response(self.locator.location_status(self.player.current_location))
                             elif request == 2:
-                                self.__locator.get_targets().get_by_name('Эрих Содерс').alive = False
-                                self.player_view.response(f'{self.__locator.get_challenges().get_by_name('Бессердечный').achieved()}')
+                                self.locator.get_targets().get_by_name('Эрих Содерс').alive = False
+                                self.player_view.response(f'{self.locator.get_challenges().get_by_name('Бессердечный').achieved()}')
                                 result_string = 'Диана: 47-й, без сердца для пересадки Содерс не выживет. Ты смог от него избавиться даже не прикасаясь, изящный ход.'
                                 self.player_view.response(result_string)
-                                return self.player_view.response(self.__locator.location_status(self.player.current_location))
+                                return self.player_view.response(self.locator.location_status(self.player.current_location))
                     else:
                         return self.player_view.response('Вне зоны действия')
                     
             #Удушение удавкой (смертельно)
             elif self.player.item.usage[request - 1] == 'Задушить':
-                for i in self.__locator.get_targets().get_all():
+                for i in self.locator.get_targets().get_all():
                     if i.move() == self.player.current_location.get_name():
                         if i.get_name() == 'Эрих Содерс':
                             pass
@@ -624,24 +620,24 @@ class PlayerController:
                     bodies[0] += 1
                     return self.combat()
                 else:
-                    return self.player_view.response(self.__locator.location_status(self.player.current_location))
+                    return self.player_view.response(self.locator.location_status(self.player.current_location))
 
     #Определяет начальный инвентарь игрока и его маскировку, а также стартовую локацию
     def start(self):
 
         lvl_unlocks = {
-            1: ['Номер 47-го', self.__locator.get_location_by_name('Номер 47-го'), 'VIP - пациент'],
-            2: ['Зона спа', self.__locator.get_location_by_name('Зона спа'), 'VIP - пациент'],
-            3: ['Горная тропа (в маскировке ниндзя)', self.__locator.get_location_by_name('Горная тропа'), 'Ниндзя'],
-            4: ['Ресторан', self.__locator.get_location_by_name('Ресторан'), 'VIP - пациент'],
-            5: ['Спальня персонала (в маскировке работника "ГАМА")', self.__locator.get_location_by_name('Спальня персонала'), 'Работник "ГАМА"'],
-            6: ['Кухня (в маскировке шефа)', self.__locator.get_location_by_name('Кухня'), 'Шеф'],
-            7: ['Внутренний сад (в маскировке работника "ГАМА")', self.__locator.get_location_by_name('Внутренний сад'), 'Работник "ГАМА"'],
-            8: ['Морг', self.__locator.get_location_by_name('Морг'), 'VIP - пациент'],
-            9: ['Оперционная (в маскировке хирурга)', self.__locator.get_location_by_name('Операционная'), 'Хирург']
+            1: ['Номер 47-го', self.locator.get_location_by_name('Номер 47-го'), 'VIP - пациент'],
+            2: ['Зона спа', self.locator.get_location_by_name('Зона спа'), 'VIP - пациент'],
+            3: ['Горная тропа (в маскировке ниндзя)', self.locator.get_location_by_name('Горная тропа'), 'Ниндзя'],
+            4: ['Ресторан', self.locator.get_location_by_name('Ресторан'), 'VIP - пациент'],
+            5: ['Спальня персонала (в маскировке работника "ГАМА")', self.locator.get_location_by_name('Спальня персонала'), 'Работник "ГАМА"'],
+            6: ['Кухня (в маскировке шефа)', self.locator.get_location_by_name('Кухня'), 'Шеф'],
+            7: ['Внутренний сад (в маскировке работника "ГАМА")', self.locator.get_location_by_name('Внутренний сад'), 'Работник "ГАМА"'],
+            8: ['Морг', self.locator.get_location_by_name('Морг'), 'VIP - пациент'],
+            9: ['Оперционная (в маскировке хирурга)', self.locator.get_location_by_name('Операционная'), 'Хирург']
         }
 
-        carry_on_items = [self.__locator.get_items().get_by_name('Удавка'), self.__locator.get_items().get_by_name('Смертельный яд'), self.__locator.get_items().get_by_name('Рвотный яд'), self.__locator.get_items().get_by_name('Электронный дешифровщик'), self.__locator.get_items().get_by_name('Боевой нож'), self.__locator.get_items().get_by_name('Монета')]
+        carry_on_items = [self.locator.get_items().get_by_name('Удавка'), self.locator.get_items().get_by_name('Смертельный яд'), self.locator.get_items().get_by_name('Рвотный яд'), self.locator.get_items().get_by_name('Электронный дешифровщик'), self.locator.get_items().get_by_name('Боевой нож'), self.locator.get_items().get_by_name('Монета')]
 
         self.player_view.response('Брифинг:\nДиана: Доброе утро, 47-й. Совет директоров одобрил ликвидацию Эриха Содерса. После Колорадо мы решили пристально изучить личные дела Содерса и выяснили, что его недавно доставили в частную клинику «Гама» на японском острове Хоккайдо для срочной операции на сердце. Без «Провиденс» тут явно не обошлось. Содерс страдает от редкой врожденной патологии — транспозиции органов: его внутренние органы в теле расположены зеркально. Для трансплантации ему необходимо правостороннее сердце, и он явно предал МКА, чтобы получить его. Его приняли прошлой ночью и сейчас он готовится к трёхэтапной операции. Под видом Тобиаса Рипера, крупного бизнесмена, ты отправляешься в «Гаму» для стандартного медицинского обследования, о формальностях мы уже позаботились. В таких условиях придётся импровизировать и самостоятельно добывать снаряжение. Кроме того, тебе нужно ликвидировать Юки Ямадзаки — она адвокат из Токио, работает на «Провиденс». Содерс уже передал Ямадзаки доступ к нашей базе клиентов и согласился предоставить полный список оперативных сотрудников МКА после завершения операции. Этого допустить никак нельзя. Содерс должен заплатить за своё предательство — это послужит хорошим уроком его нанимателям. На кону будущее и репутация МКА. Какой бы властью и могуществом ни обладала «Провиденс», пора поставить их на место. Я оставлю тебя подготавливаться.\n\nВведите любой символ, чтобы начать задание.')
         request = self.player_view.request()
@@ -665,9 +661,9 @@ class PlayerController:
                 request = self.player_view.request()
             request = int(request)
             if request == 1:
-                start_inventory.append(self.__locator.get_items().get_by_name('Пистолет с глушителем'))
+                start_inventory.append(self.locator.get_items().get_by_name('Пистолет с глушителем'))
             elif request == 2:
-                start_inventory.append(self.__locator.get_items().get_by_name('Пистолет без глушителя'))
+                start_inventory.append(self.locator.get_items().get_by_name('Пистолет без глушителя'))
             result_string = 'Выберите первый предмет сняряжения:\n\n'
             for i in range(len(carry_on_items)):
                 if carry_on_items[i].name == 'Монета':
@@ -706,7 +702,7 @@ class PlayerController:
         self.player.inventory = start_inventory
         self.player.health = 100
         self.player.found_disguises = [start_location[2]]
-        self.player.item = self.__locator.get_items().get_by_name('Нет предмета')
+        self.player.item = self.locator.get_items().get_by_name('Нет предмета')
         self.player.compromised_disguises = []
         self.player.disguise = start_location[2]
         return True
@@ -724,27 +720,27 @@ class PlayerController:
         result_string += f'Ваш рейтинг: {rating}/5'
         self.player_view.response(result_string)
         if rating == 5 and so[0] == 1:
-            self.player_view.response(f'{self.__locator.get_challenges().get_by_name('Бесшумный убийца').achieved()}')
+            self.player_view.response(f'{self.locator.get_challenges().get_by_name('Бесшумный убийца').achieved()}')
             result_string = 'Бесшумный убийца.'
             self.player_view.response(result_string)
         elif rating == 5 and so[0] == 0:
-            self.player_view.response(f'{self.__locator.get_challenges().get_by_name('Бесшумный убийца. Только костюм.').achieved()}')
+            self.player_view.response(f'{self.locator.get_challenges().get_by_name('Бесшумный убийца. Только костюм.').achieved()}')
             result_string = 'Бесшумный убийца.'
             self.player_view.response(result_string)
         elif so[0] == 0:
-            self.player_view.response(self.__locator.get_challenges().get_by_name('Только костюм').achieved())
+            self.player_view.response(self.locator.get_challenges().get_by_name('Только костюм').achieved())
         if bodies[0] == 0:
-            self.player_view.response(self.__locator.get_challenges().get_by_name('Без улик').achieved())
-        if self.__locator.get_challenges().get_by_name('Точный выстрел').completed == True and self.__locator.get_challenges().get_by_name('Подержи волосы').completed == True and self.__locator.get_challenges().get_by_name('Пианист').completed == True and self.__locator.get_challenges().get_by_name('Так можно и пораниться').completed == True and self.__locator.get_challenges().get_by_name('Без вкуса, без следа').completed == True:
-            self.player_view.response(self.__locator.get_challenges().get_by_name('Без улик').achieved())
+            self.player_view.response(self.locator.get_challenges().get_by_name('Без улик').achieved())
+        if self.locator.get_challenges().get_by_name('Точный выстрел').completed == True and self.locator.get_challenges().get_by_name('Подержи волосы').completed == True and self.locator.get_challenges().get_by_name('Пианист').completed == True and self.locator.get_challenges().get_by_name('Так можно и пораниться').completed == True and self.locator.get_challenges().get_by_name('Без вкуса, без следа').completed == True:
+            self.player_view.response(self.locator.get_challenges().get_by_name('Без улик').achieved())
         player_lvl[0] += rating
         result_string = ''
-        for i in self.__locator.get_challenges().get_all():
+        for i in self.locator.get_challenges().get_all():
             if i.completed == True:
                 result_string += f'{i.name}\n'
         self.player_view.response(result_string)
         with open('save_file.dat', 'wb') as f:
-            pickle.dump([self.__locator.get_challenges(), player_lvl], f, protocol=2)
+            pickle.dump([self.locator.get_challenges(), player_lvl], f, protocol=2)
         sys.exit()
 
     #Бой на локации
@@ -757,7 +753,7 @@ class PlayerController:
         current_bodies = 0
         enemies = []
 
-        for i in self.__locator.find_location_npcs(self.player.current_location.get_name()):
+        for i in self.locator.find_location_npcs(self.player.current_location.get_name()):
             if i.guard == True:
                 enemies.append(i)
         
@@ -780,7 +776,7 @@ class PlayerController:
                 return True
             else:
                 with open('save_file.dat', 'wb') as f:
-                    pickle.dump([self.__locator.get_challenges(), player_lvl], f, protocol=2)
+                    pickle.dump([self.locator.get_challenges(), player_lvl], f, protocol=2)
                 self.player_view.response('Вы умерли. Миссия провалена.')
                 return sys.exit()
         
@@ -788,7 +784,7 @@ class PlayerController:
         elif request == 2:
             for enemy in enemies:
                 while enemy.alive == True:
-                    weapons = [self.__locator.get_items().get_by_name('Нет предмета')]
+                    weapons = [self.locator.get_items().get_by_name('Нет предмета')]
 
                     #Определяет, какие предметы игрока являются оружием
                     for i in self.player.inventory:
@@ -840,7 +836,7 @@ class PlayerController:
                     #Случай, когда игроку повезло
                     if random.randrange(11) <= int(actions[request - 1][-6]):
                         enemy.alive = False
-                        if self.__locator.location_witnesses(self.player.current_location.get_name()) > 0:
+                        if self.locator.location_witnesses(self.player.current_location.get_name()) > 0:
                             current_bodies += 1
                         if current_weapon.deadly == True:
                             current_kills += 1
@@ -852,7 +848,7 @@ class PlayerController:
                             self.player_view.response(f'{enemy.get_name()} нанес вам удар.')
                         else:
                             with open('save_file.dat', 'wb') as f:
-                                pickle.dump([self.__locator.get_challenges(), player_lvl], f, protocol=2)
+                                pickle.dump([self.locator.get_challenges(), player_lvl], f, protocol=2)
                             self.player_view.response('Вы умерли. Миссия провалена.')
                             return sys.exit()
                 self.player_view.response(f'{enemy.get_name()} обезврежен.')

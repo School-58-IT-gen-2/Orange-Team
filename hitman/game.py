@@ -8,7 +8,7 @@ from model.player.player import Player
 from model.player.player_info import *
 from model.hokkaido.hokkaido_locator import HokkaidoLocator
 from model.hokkaido.hokkaido_challenges import HokkaidoChallenges
-from view.telegram_view import TelegramView
+from view.console_view import ConsoleView
 from config.net_config import NetConfig
 
 import logging
@@ -35,7 +35,7 @@ player = Player(location=locator.get_location_by_name('Номер 47-го'),
                 disguise='VIP - пациент',
                 found_disguises=['VIP - пациент'])
 
-controller = PlayerController(player=player, locator=locator)
+controller = PlayerController(player=player, locator=locator, player_view=ConsoleView())
 
 #Основной код, который выполняет контроллер
 def main(controller: PlayerController):
@@ -367,63 +367,5 @@ def main(controller: PlayerController):
         if player.current_location.get_name() == 'Комната охраны' and events.get_by_name('Информация об ИИ').completed == False:
             events.get_by_name('Информация об ИИ').completed = True
             controller.player_view.response('Интересно. Руководство для KAI, искусственного интеллекта клиники «Гама». Значит, местный искусственный интеллект по имени KAI не только поддерживает работу систем здания, но и управляет роботом в операционной. Именно там сейчас находится Содерс. В руководстве говорится, что после остановки сердца пациента искусственный интеллект автоматически начинает его реанимацию, что очень некстати. Однако... У директора клиники есть доступ к главному компьютеру. Справишься с управлением целой клиникой, 47-й?')
-
-#Начало создания ТГ бота
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
-)
-
-users = {}
-
-logger = logging.getLogger(__name__)
-
-#Функция, которая запускает сервер с ТГ ботом
-def telegram_bot():
-    def start(update: Update, context: CallbackContext):
-        global controller
-        update.message.reply_text(
-            'Добро пожаловать в игру!\n\nКоманда /help покажет вам управление. Команда /begin начнет игру.'
-        )
-        controller = PlayerController(player=player, locator=locator, update=update, bot=context.bot, player_view=TelegramView(update, context.bot))
-        users[update.effective_chat.id] = controller
-
-    def get_request(update: Update, context: CallbackContext):
-        query = update.callback_query
-        users[update.effective_chat.id].message = query.data
-        print(users[update.effective_chat.id].message)
-
-    def begin(update: Update, context: CallbackContext):
-        keyboard = []
-        keyboard.append([KeyboardButton(f"Сохранить и выйти", callback_data=f"q")])
-        keyboard.append([KeyboardButton("Взаимодействие", callback_data=f"f")])
-        keyboard.append([KeyboardButton("Передвижение", callback_data=f"w")])
-        keyboard.append([KeyboardButton("Статус", callback_data=f"s")])
-        keyboard.append([KeyboardButton("Инвентарь", callback_data=f"i")])
-        keyboard.append([KeyboardButton("Испытания", callback_data=f"c")])
-        keyboard.append([KeyboardButton("Обыскать локацию", callback_data=f"e")])
-        reply_markup = ReplyKeyboardMarkup(keyboard)
-        update.message.reply_text('Выберите номер ответа:', reply_markup=reply_markup)
-        main(users[update.effective_chat.id])
-
-    def help(update: Update, context: CallbackContext):
-        update.message.reply_text(
-            'Обучение:\n\nИнвентарь можно открыть при вводе «і» или «І», там будут сохранятся подобранные вами предметы, которые можно использовать для выполнения миссии. Чтобы пополнять инвентарь, необходимо обыскивать комнаты, это можно сделать нажав "е" или "Е" при нахождении в комнате, предметы автоматически добавятся в ваш инвентарь, если комната уже пустая, вы лишь пропустите небольшой промежуток времени. При вводе «w» или «W» откроется меню выбора локации, в которую вы хотите переместиться. "S" или "S" показывает статус локации, а также вашей цели. При нахождении новых маскировок можно будет попасть в локации, в которых ранее была запретная зона. Несмотря на это, вы может проникнуть в них и без маскировки, но тогда велик шанс обнаружения. Некоторые действия в игре выполняются с неким шансом от 1 до 10, который будет писаться рядом с ним, неудача может привести к непредсказуемым результатам и даже к провалу операции. Используя "f" или "F" вы можете взаимодействовать с локацией. После завершения операции вы увидите свой рейтинг (от 0 до 5). Чтобы получить максимальный рейтинг необходимо выполнить задание так, чтобы не было убито невиновных, не было найдено тел, а также вы не были замечены в запретной зоне или с нелегальным предметом в руках. Помимо этого, за прохождение миссии вы получаете уровень, который может открывать различные награды. Чтобы быстрее повышать уровень, выполняйте испытания, "c" или "C" открывает меню с испытаниями. Выбор вариантов осуществляется вводом его номера. "q" или "Q" завершает игру.'
-        )
-
-    def run_bot():
-
-        net_config = NetConfig()
-        updater = Updater(net_config.get_token())
-        dispatcher = updater.dispatcher
-
-        dispatcher.add_handler(CommandHandler('start', start))
-        dispatcher.add_handler(CommandHandler('help', help))
-        dispatcher.add_handler(CommandHandler('begin', begin))
-        dispatcher.add_handler(CallbackQueryHandler(get_request))
-
-        updater.start_polling()
-        updater.idle()
-
-    run_bot()
 
 main(controller)
