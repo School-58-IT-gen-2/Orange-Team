@@ -13,7 +13,7 @@ conn = psycopg2.connect("""
 """)
 
 # посылаем запрос на подключение к конкретной таблице
-request = 'SELECT * FROM "Orange Galactic Empire"."Planets"'
+request = 'SELECT * FROM "Orange Galactic Empire "."Planets"'
 
 # уснанавливаем связь с базой для выполнения запросов
 cursor = conn.cursor()
@@ -25,7 +25,7 @@ cursor.execute(request)
 data = cursor.fetchall()
 print(data)
 
-request_update = 'UPDATE "Orange Galactic Empire"."Planets" SET "Name"=\'Earth\', "System"=2, "Population"=10000000, "Leader"=\'John Wick\', "Type"=2 WHERE id=2'
+request_update = 'UPDATE "Orange Galactic Empire "."Planets" SET "Name"=\'Earth\', "System"=2, "Population"=10000000, "Leader"=1, "Type"=2 WHERE id=2'
 
 # выполняем запрос
 cursor.execute(request_update)
@@ -36,7 +36,7 @@ conn.commit()
 data = cursor.fetchall()
 print(data)
 
-request_insert = 'INSERT INTO "Orange Galactic Empire"."Planets" ("Name", "Leader", "Type", "System", "Population", "id") VALUES (\'Orange_planet\', \'Iron Man\', 2, 1, 7, DEFAULT)'
+request_insert = 'INSERT INTO "Orange Galactic Empire "."Planets" ("Name", "Leader", "Type", "System", "Population", "id") VALUES (\'Orange_planet\', 1, 2, 1, 7, DEFAULT)'
 
 # выполняем запрос
 cursor.execute(request_insert)
@@ -47,7 +47,7 @@ print(data)
 
 planet_name = input("Введите название планеты, на которой произойдет рагнарек ")
 
-request_update = f'UPDATE "Orange Galactic Empire"."Planets" SET "Name"=\'{planet_name}\', "System"=2, "Population"= 1, "Leader"=\'John Wick\', "Type"=2 WHERE "Name"= \'{planet_name}\' '
+request_update = f'UPDATE "Orange Galactic Empire "."Planets" SET "Name"=\'{planet_name}\', "System"=2, "Population"= 1, "Leader"=1, "Type"=2 WHERE "Name"= \'{planet_name}\' '
 
 cursor.execute(request_update)
 cursor.execute(request)
