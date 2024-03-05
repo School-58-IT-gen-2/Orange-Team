@@ -29,5 +29,5 @@ class PlanetInDB:
         self.name = planet[0][0]
 
 
-planet = PlanetInDB(id=14)
-print(planet.name) 
+planet = PlanetInDB.get_all('Cruisers')
+print(planet) 
