@@ -1,4 +1,5 @@
 import psycopg2
+import csv
 
 class AdapterDB:
     def __init__(self) -> None:
@@ -73,8 +74,10 @@ class AdapterDB:
         columns = ''
         values = ''
         for i in insert_data:
-            columns += f'"{i.split('=')[0]}", '
-            values += f"'{i.split('=')[1]}', "
+            z = i.split('=')[0]
+            y = i.split('=')[1]
+            columns += f'"{z}", '
+            values += f'\'{y}\', '
         columns = columns[:-2]
         values = values[:-2]
         request = f'INSERT INTO "Galactic Empire"."{table_name}" ({columns}) VALUES ({values})'
@@ -87,6 +90,32 @@ class AdapterDB:
         data = cursor.fetchall()
         return data
     
-a = AdapterDB()
+class CSV_read():
+    def __init__(self) -> None:
+        pass
 
-print(a.insert('Systems', ['Name=John', 'Star Type=black hole', 'Allegiance=Empire']))
+    def reading(self, file_root: str):
+        indata = []
+        with open(file_root, 'r') as file:
+            csv_reader = csv.reader(file)
+            data_list = []
+            for row in csv_reader:
+                data_list.append(row)
+
+        row_list = []
+        for row in data_list:
+            for i in range(6):
+                a = data_list[0][i] + '=' + row[i]
+                indata.append(a)
+            row_list.append(indata)
+            indata = []
+        row_list.pop(0)
+        print(row_list)
+        return row_list
+                
+
+a = AdapterDB()
+l = CSV_read()
+
+for j in l.reading('/Users/violettailinichna/Downloads/cruisers-2.csv'):
+    print(a.insert('Cruisers', j))

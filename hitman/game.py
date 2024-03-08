@@ -2,6 +2,9 @@ import sys
 import pickle
 import os
 
+
+аааарпаашгаонагн
+
 from controller.controller import PlayerController
 from model.hokkaido.hokkaido_events import HokkaidoEvents
 from model.player.player import Player
@@ -125,7 +128,7 @@ def main(controller: PlayerController):
                 if poisons[request - 1].deadly == True:
                     result_string = ''
                     if poisons[request - 1] == locator.get_items().get_by_name('Яд рыбы Фугу'):
-                        controller.player_view.response(f'{locator.get_challenges().get_by_name('Приятного аппетита').achieved()}')
+                        controller.player_view.response(f'{locator.get_challenges().get_by_name("Приятного аппетита").achieved()}')
                     locator.get_targets().get_by_name('Юки Ямадзаки').alive = False
                     controller.player_view.response(locator.get_challenges().get_by_name('Без вкуса, без следа').achieved())
                     result_string += '\n\nДиана: Грамотный ход 47-ой. С Юки Ямадзаки покончено.'
@@ -147,7 +150,7 @@ def main(controller: PlayerController):
                         if request == 2:
                             controller.player_view.response(locator.location_status(player.current_location))
                         elif request == 1:
-                            controller.player_view.response(f'{locator.get_challenges().get_by_name('Подержи волосы').achieved()}')
+                            controller.player_view.response(f'{locator.get_challenges().get_by_name("Подержи волосы").achieved()}')
                             controller.player_view.response(f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}')
                             result_string = 'Диана: Цель убита. Хорошая работа.'
                             locator.get_targets().get_by_name('Юки Ямадзаки').alive = False
