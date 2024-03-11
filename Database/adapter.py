@@ -26,14 +26,14 @@ class AdapterDB:
 
     def get_all(self, table_name: str):
         """посылаем запрос на подключение к конкретной таблице"""
-        request = f'SELECT * FROM "Galactic Empire"."{table_name}"'
+        request = f'SELECT * FROM "{table_name.split('.')[0]}"."{table_name.split('.')[1]}"'
         cursor = self.conn.cursor()
         cursor.execute(request)
         data = cursor.fetchall()
         return data
 
     def get_by_id(self, table_name: str, id: int):
-        request = f'SELECT * FROM "Galactic Empire"."{table_name}" WHERE id = {id}'
+        request = f'SELECT * FROM "{table_name.split('.')[0]}"."{table_name.split('.')[1]}" WHERE id = {id}'
         cursor = self.conn.cursor()
         cursor.execute(request)
         data = cursor.fetchall()
@@ -49,22 +49,22 @@ class AdapterDB:
     def update_by_id(self, table_name: str, update: str, id: int):
         update_param = update.split('=')[0]
         update_value = update.split('=')[1]
-        request = f'UPDATE "Galactic Empire"."{table_name}" SET "{update_param}"=\'{update_value}\' WHERE id = {id}'
+        request = f'UPDATE "{table_name.split('.')[0]}"."{table_name.split('.')[1]}" SET "{update_param}"=\'{update_value}\' WHERE id = {id}'
         cursor = self.conn.cursor()
         cursor.execute(request)
         self.conn.commit()
-        request = f'SELECT * FROM "Galactic Empire"."{table_name}"'
+        request = f'SELECT * FROM "{table_name.split('.')[0]}"."{table_name.split('.')[1]}"'
         cursor = self.conn.cursor()
         cursor.execute(request)
         data = cursor.fetchall()
         return data
     
     def delete_by_id(self, table_name: str, id: int):
-        request = f'DELETE FROM "Galactic Empire"."{table_name}" WHERE id = {id}'
+        request = f'DELETE FROM "{table_name.split('.')[0]}"."{table_name.split('.')[1]}" WHERE id = {id}'
         cursor = self.conn.cursor()
         cursor.execute(request)
         self.conn.commit()
-        request = f'SELECT * FROM "Galactic Empire"."{table_name}" '
+        request = f'SELECT * FROM "{table_name.split('.')[0]}"."{table_name.split('.')[1]}"'
         cursor = self.conn.cursor()
         cursor.execute(request)
         data = cursor.fetchall()
@@ -80,11 +80,11 @@ class AdapterDB:
             values += f'\'{y}\', '
         columns = columns[:-2]
         values = values[:-2]
-        request = f'INSERT INTO "Galactic Empire"."{table_name}" ({columns}) VALUES ({values})'
+        request = f'INSERT INTO "{table_name.split('.')[0]}"."{table_name.split('.')[1]}" ({columns}) VALUES ({values})'
         cursor = self.conn.cursor()
         cursor.execute(request)
         self.conn.commit()
-        request = f'SELECT * FROM "Galactic Empire"."{table_name}" '
+        request = f'SELECT * FROM "{table_name.split('.')[0]}"."{table_name.split('.')[1]}" '
         cursor = self.conn.cursor()
         cursor.execute(request)
         data = cursor.fetchall()
@@ -94,28 +94,27 @@ class CSV_read():
     def __init__(self) -> None:
         pass
 
-    def reading(self, file_root: str):
-        indata = []
-        with open(file_root, 'r') as file:
-            csv_reader = csv.reader(file)
-            data_list = []
-            for row in csv_reader:
-                data_list.append(row)
-
-        row_list = []
-        for row in data_list:
-            for i in range(6):
-                a = data_list[0][i] + '=' + row[i]
-                indata.append(a)
-            row_list.append(indata)
-            indata = []
-        row_list.pop(0)
-        print(row_list)
-        return row_list
-                
+    def read(self, file_root: str):
+        result = []
+        with open(file_root, newline='') as csvfile:
+            reader = csv.reader(csvfile, delimiter=';', quotechar='|')
+            for row in reader:
+                if len(row) > 1:
+                    result.append(row)
+        return result
+    
+    def insert(self, file_root: str, table_name: str, adapter: AdapterDB):
+        array = self.read(file_root)
+        request = []
+        for i in array[1:]:
+            for j in range(len(array[0])):
+                request.append(f'{array[0][j]}={i[j]}')
+            adapter.insert(table_name, request)
+            request = []
+            
 
 a = AdapterDB()
 l = CSV_read()
 
-for j in l.reading('/Users/violettailinichna/Downloads/cruisers-2.csv'):
-    print(a.insert('Cruisers', j))
+l.insert('/Users/alexey/Documents/Systems.csv', 'Orange Galactic Empire .Systems', a)
+print(a.get_all('Orange Galactic Empire .Systems'))
