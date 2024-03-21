@@ -49,7 +49,7 @@ class AdapterDB:
     def update_by_id(self, table_name: str, update: str, id: int):
         update_param = update.split('=')[0]
         update_value = update.split('=')[1]
-        request = f'UPDATE "{table_name.split('.')[0]}"."{table_name.split('.')[1]}" SET "{update_param}"=\'{update_value}\' WHERE id = {id}'
+        request = f'UPDATE "{table_name.split('.')[0]}"."{table_name.split('.')[1]}" SET "{update_param}"=\'{update_value}\' WHERE "user_id" = {id}'
         cursor = self.conn.cursor()
         cursor.execute(request)
         self.conn.commit()
@@ -115,6 +115,3 @@ class CSV_read():
 
 a = AdapterDB()
 l = CSV_read()
-
-l.insert('/Users/alexey/Documents/Systems.csv', 'Orange Galactic Empire .Systems', a)
-print(a.get_all('Orange Galactic Empire .Systems'))
