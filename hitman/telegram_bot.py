@@ -62,7 +62,7 @@ logging.basicConfig(
 users = {}
 
 logger = logging.getLogger(__name__)
-message = 0
+message = -1
 
 #Функция, которая запускает сервер с ТГ ботом
 def telegram_bot():
@@ -75,21 +75,22 @@ def telegram_bot():
         user_nickname = str(update.message.from_user['username'])
         chat_id = int(update.effective_chat.id)
         created = int(tm.time())
-        adapter.insert('Orange_team.Users', [
-            f'user_id={user_id}',
-            f'chat_id={chat_id}',
-            f'created={created}',
-            f'user_nickname={user_nickname}',
-            f'updated={created}'
-        ])
-        message = update.message['message_id']
-
+        if adapter.search('Orange_team.Users', f'user_id={user_id}') == 0:
+            adapter.insert('Orange_team.Users', [
+                f'user_id={user_id}',
+                f'chat_id={chat_id}',
+                f'created={created}',
+                f'user_nickname={user_nickname}',
+                f'updated={created}'
+            ])
         if update.message['message_id'] != message:
             message = update.message['message_id']
             updated = int(tm.time())
 
         adapter.update_by_id("Orange_team.Users", f'updated={updated}', user_id)
-        
+
+        message = update.message['message_id']
+
         update.message.reply_text(
             'Добро пожаловать в игру!\n\nКоманда /help покажет вам управление. Команда /begin начнет игру.'
         )

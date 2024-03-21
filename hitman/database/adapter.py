@@ -46,6 +46,13 @@ class AdapterDB:
         data = cursor.fetchall()
         return data
     
+    def search(self, table_name: str, selection: str):
+        request = f'SELECT COUNT(1) FROM "{table_name.split('.')[0]}"."{table_name.split('.')[1]}" WHERE {selection.split('=')[0]} = {selection.split('=')[1]}'
+        cursor = self.conn.cursor()
+        cursor.execute(request)
+        data = cursor.fetchall()
+        return data[0][0]
+    
     def update_by_id(self, table_name: str, update: str, id: int):
         update_param = update.split('=')[0]
         update_value = update.split('=')[1]
