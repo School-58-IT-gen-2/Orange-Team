@@ -3,8 +3,6 @@ import pickle
 import os
 
 
-аааарпаашгаонагн
-
 from controller.controller import PlayerController
 from model.hokkaido.hokkaido_events import HokkaidoEvents
 from model.player.player import Player

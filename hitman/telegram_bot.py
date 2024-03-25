@@ -20,7 +20,7 @@ from view.telegram_view import TelegramView
 from model.hokkaido.hokkaido_locator import HokkaidoLocator
 from model.common.npcs import Target
 
-from database.adapter import AdapterDB
+from adapter.hitman_adapter import HitmanAdapter
 
 import logging
 
@@ -52,7 +52,7 @@ player = Player(location=locator.get_location_by_name('Номер 47-го'),
                 found_disguises=['VIP - пациент'])
 
 controller = PlayerController(player=player, locator=locator)
-adapter = AdapterDB()
+adapter = HitmanAdapter()
 
 #Начало создания ТГ бота
 logging.basicConfig(
@@ -75,8 +75,8 @@ def telegram_bot():
         user_nickname = str(update.message.from_user['username'])
         chat_id = int(update.effective_chat.id)
         created = int(tm.time())
-        if adapter.search('Orange_team.Users', f'user_id={user_id}') == 0:
-            adapter.insert('Orange_team.Users', [
+        if adapter.search('Users', f'user_id={user_id}') == 0:
+            adapter.insert('Users', [
                 f'user_id={user_id}',
                 f'chat_id={chat_id}',
                 f'created={created}',
@@ -87,7 +87,7 @@ def telegram_bot():
             message = update.message['message_id']
             updated = int(tm.time())
 
-        adapter.update_by_id("Orange_team.Users", f'updated={updated}', user_id)
+        adapter.update_by_id("Users", f'updated={updated}', user_id)
 
         message = update.message['message_id']
 
@@ -104,7 +104,8 @@ def telegram_bot():
             message = update.message['message_id']
             updated = int(tm.time())
             
-        adapter.update_by_id("Orange_team.Users", f'updated={updated}', user_id)
+        adapter.update_by_id("Users", f'updated={updated}', user_id)
+        
         query = update.callback_query
         users[update.effective_chat.id].answer_text(query.data)
         users[update.effective_chat.id].answer_choice()
@@ -119,7 +120,7 @@ def telegram_bot():
             message = update.message['message_id']
             updated = int(tm.time())
             
-        adapter.update_by_id("Orange_team.Users", f'updated={updated}', user_id)
+        adapter.update_by_id("Users", f'updated={updated}', user_id)
         
         
         lvl_unlocks = {
@@ -220,7 +221,7 @@ def telegram_bot():
             message = update.message['message_id']
             updated = int(tm.time())
             
-        adapter.update_by_id("Orange_team.Users", f'updated={updated}', user_id)
+        adapter.update_by_id("Users", f'updated={updated}', user_id)
         
         keyboard = []
         keyboard.append([KeyboardButton(f"Сохранить и выйти", callback_data=f"q")])
@@ -242,7 +243,7 @@ def telegram_bot():
             message = update.message['message_id']
             updated = int(tm.time())
             
-        adapter.update_by_id("Orange_team.Users", f'updated={updated}', user_id)
+        adapter.update_by_id("Users", f'updated={updated}', user_id)
         
         update.message.reply_text(
             'Обучение:\n\nИнвентарь можно открыть при вводе «і» или «І», там будут сохранятся подобранные вами предметы, которые можно использовать для выполнения миссии. Чтобы пополнять инвентарь, необходимо обыскивать комнаты, это можно сделать нажав "е" или "Е" при нахождении в комнате, предметы автоматически добавятся в ваш инвентарь, если комната уже пустая, вы лишь пропустите небольшой промежуток времени. При вводе «w» или «W» откроется меню выбора локации, в которую вы хотите переместиться. "S" или "S" показывает статус локации, а также вашей цели. При нахождении новых маскировок можно будет попасть в локации, в которых ранее была запретная зона. Несмотря на это, вы может проникнуть в них и без маскировки, но тогда велик шанс обнаружения. Некоторые действия в игре выполняются с неким шансом от 1 до 10, который будет писаться рядом с ним, неудача может привести к непредсказуемым результатам и даже к провалу операции. Используя "f" или "F" вы можете взаимодействовать с локацией. После завершения операции вы увидите свой рейтинг (от 0 до 5). Чтобы получить максимальный рейтинг необходимо выполнить задание так, чтобы не было убито невиновных, не было найдено тел, а также вы не были замечены в запретной зоне или с нелегальным предметом в руках. Помимо этого, за прохождение миссии вы получаете уровень, который может открывать различные награды. Чтобы быстрее повышать уровень, выполняйте испытания, "c" или "C" открывает меню с испытаниями. Выбор вариантов осуществляется вводом его номера. "q" или "Q" завершает игру.'
