@@ -1,8 +1,5 @@
-from view.player_view import PlayerView
-
-
 #Класс, описывающий вывод и ввод в консоль
-class ConsoleView(PlayerView):
+class ConsoleView():
 
     def response(self, response):
         if response != '':

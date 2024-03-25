@@ -1,6 +1,7 @@
 import psycopg2
 import csv
 
+
 class HitmanAdapter:
     def __init__(self) -> None:
         self.conn = self.__get_connect()

@@ -9,13 +9,6 @@ from model.player.player import Player
 from model.player.player_info import *
 from model.hokkaido.hokkaido_locator import HokkaidoLocator
 from model.hokkaido.hokkaido_challenges import HokkaidoChallenges
-from view.console_view import ConsoleView
-from config.net_config import NetConfig
-
-import logging
-
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, InlineKeyboardButton, InlineKeyboardMarkup,ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, MessageHandler, PollAnswerHandler, PollHandler
 
 #Загрузка испытаний из файла сохранения
 os.chdir('hitman')
@@ -36,7 +29,7 @@ player = Player(location=locator.get_location_by_name('Номер 47-го'),
                 disguise='VIP - пациент',
                 found_disguises=['VIP - пациент'])
 
-controller = PlayerController(player=player, locator=locator, player_view=ConsoleView())
+controller = PlayerController(player=player, locator=locator)
 
 #Основной код, который выполняет контроллер
 def main(controller: PlayerController):

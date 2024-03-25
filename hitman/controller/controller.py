@@ -2,18 +2,11 @@ import pickle
 import sys
 import random
 
-from view.player_view import PlayerView
 from model.player.player_info import *
 from model.player.player import Player
 from view.console_view import ConsoleView
-from view.telegram_view import TelegramView
 from model.hokkaido.hokkaido_locator import HokkaidoLocator
 from model.common.npcs import Target
-
-import logging
-
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, InlineKeyboardButton, InlineKeyboardMarkup,ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, MessageHandler, PollAnswerHandler, PollHandler
 
 
 #Класс, описывающий контроллер
@@ -21,11 +14,11 @@ class PlayerController:
 
     def __init__(self,
                  player=Player(),
-                 player_view: PlayerView=None,
+                 player_view=ConsoleView(),
                  locator=HokkaidoLocator()
                  ):
         self.player = player
-        self.player_view = player_view
+        self.player_view = ConsoleView()
         if locator:
             self.locator = locator
     
