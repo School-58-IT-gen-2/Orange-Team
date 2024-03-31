@@ -4,7 +4,7 @@ class Player:
     def __init__(self,
                  location=None,
                  inventory=None,
-                 health=None,
+                 health=100,
                  found_disguises=None,
                  item=None,
                  compromised_disguises=None,

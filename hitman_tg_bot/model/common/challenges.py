@@ -1,4 +1,4 @@
-from player.player_info import player_lvl
+from model.player.player_info import player_lvl
 
 
 #Класс, описывающий испытания на локации
@@ -17,8 +17,3 @@ class Challenge:
             player_lvl[0] += 5
             return f'Испытание выполнено: {self.name}'
         return ''
-    
-    #Вывод описания испытания
-    def challenge_info(self):
-        result_string = f'{self.name}\n\n{self.description}\n\n1. Назад'
-        return(result_string)
