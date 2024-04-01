@@ -35,7 +35,3 @@ carry_on_items = [
     'Электронный дешифровщик', 
     'Боевой нож', 
     'Монета']
-
-start_location = ''
-start_disguise = ''
-start_items = []

@@ -29,8 +29,6 @@ users = {}
 logger = logging.getLogger(__name__)
 message = -1
 player = Player()
-illegal_item = ''
-thrown_weapon = False
 
 def telegram_bot():
     """Запуск ТГ бота"""
