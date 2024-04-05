@@ -111,7 +111,7 @@ def telegram_bot():
             if i.completed == False:
                 text += i.name + '\n' + i.description + '\n\n'
             else:
-                text += i.name + '(выполнено)' +'\n\n'
+                text += i.name + ' (выполнено)' +'\n\n'
         text = text[:-1]
         query.answer()
         query.edit_message_text(text=text, reply_markup=challenges_keyboard())
@@ -238,11 +238,55 @@ def telegram_bot():
         query.answer()
         query.edit_message_text(text='Выберите цель', reply_markup=(knock_out_keyboard()))
 
+    def distract_menu(update: Update, context: CallbackContext):
+        query = update.callback_query
+        query.answer()
+        text = 'Выберите, кого вы хотите отвлечь'
+        if find_location_npcs(player.current_location) == []:
+            text = 'На локации никого нет'
+        if location_witnesses(player.current_location) > 3:
+            text = 'На локации слишком много свидетелей'
+        query.edit_message_text(text=text, reply_markup=(distract_keyboard()))
+
+    def confirm_kill_menu(update: Update, context: CallbackContext):
+        query = update.callback_query
+        npc_name = query.data.replace('KILL', '')
+        if npc_name in list(npcs.keys()):
+            npc = npcs[npc_name]
+            query.answer()
+            query.edit_message_text(text=f'{npc.name} ({npc.disguise.name})', reply_markup=(confirm_kill_keyboard(query.data)))
+        else:
+            npc = targets[npc_name]
+            query.answer()
+            query.edit_message_text(text=f'{npc.name}', reply_markup=(confirm_kill_keyboard(query.data)))
+
+    def confirm_knock_menu(update: Update, context: CallbackContext):
+        query = update.callback_query
+        npc = npcs[query.data.replace('KNOCK', '')]
+        query.answer()
+        query.edit_message_text(text=f'{npc.name} ({npc.disguise.name})', reply_markup=(confirm_knock_keyboard(query.data)))
+
+    def confirm_distract_menu(update: Update, context: CallbackContext):
+        query = update.callback_query
+        npc = npcs[query.data.replace('DIS', '')]
+        query.answer()
+        query.edit_message_text(text=f'{npc.name} ({npc.disguise.name})', reply_markup=(confirm_distract_keyboard(query.data)))
+
+    def destroy_heart_menu_1(update: Update, context: CallbackContext):
+        query = update.callback_query
+        query.answer()
+        query.edit_message_text(text='Нейрочип подействовал на одного из работников морга и тот отправился в комнату, где хранится сердце, которое должны пересадить Эриху Содерсу.\n\nПоследовать за ним?', reply_markup=(destroy_heart_keyboard_1()))
+
+    def destroy_heart_menu_2(update: Update, context: CallbackContext):
+        query = update.callback_query
+        query.answer()
+        query.edit_message_text(text='Выберите действие', reply_markup=(destroy_heart_keyboard_2()))
+
     #Клавиатуры для меню
 
     def safe_move_keyboard():
-        keyboard = make_keyboard(player.current_location.connected_locations, 'safe_move')
-        keyboard.append([InlineKeyboardButton("Отменить действие", callback_data='Выбор действия')])
+        keyboard = make_keyboard(player.current_location.connected_locations, 'SM')
+        keyboard.append([InlineKeyboardButton("Отменить действие", callback_data='Взаимодействие')])
         return InlineKeyboardMarkup(keyboard)
     
     def move_keyboard():
@@ -359,19 +403,63 @@ def telegram_bot():
 
     def kill_keyboard():
         location_npcs = []
-        for i in find_location_everyone(player.current_location):
+        location_disguises = []
+        for i in find_location_npcs(player.current_location):
+            location_disguises.append(i.disguise.name)
             location_npcs.append(i.name)
-        keyboard = make_keyboard(location_npcs, 'KILL')
+        for i in list(targets.values()):
+            if i.move() == player.current_location.name and i.alive == True:
+                location_disguises.append(i.name)
+                location_npcs.append(i.name)
+        keyboard = []
+        for i in range(len(location_npcs)):
+            keyboard.append([InlineKeyboardButton(f"{location_disguises[i]}", callback_data=location_npcs[i] + 'KILL')])
         keyboard.append([InlineKeyboardButton(f"Отменить действие", callback_data=f"Взаимодействие")])
         return InlineKeyboardMarkup(keyboard)
 
     def knock_out_keyboard():
         location_npcs = []
+        location_disguises = []
         for i in find_location_npcs(player.current_location):
+            location_disguises.append(i.disguise.name)
             location_npcs.append(i.name)
-        keyboard = make_keyboard(location_npcs, 'KNOCK')
+        keyboard = []
+        for i in range(len(location_npcs)):
+            keyboard.append([InlineKeyboardButton(f"{location_disguises[i]}", callback_data=location_npcs[i] + 'KNOCK')])
         keyboard.append([InlineKeyboardButton(f"Отменить действие", callback_data=f"Взаимодействие")])
         return InlineKeyboardMarkup(keyboard)
+
+    def distract_keyboard():
+        if find_location_npcs(player.current_location) == []:
+                return InlineKeyboardMarkup([[InlineKeyboardButton("Выйти", callback_data='Взаимодействие')]])
+        elif location_witnesses(player.current_location) > 3:
+            return InlineKeyboardMarkup([[InlineKeyboardButton("Отвлечь для перемещения", callback_data='safe_move')], [InlineKeyboardButton("Отменить действие", callback_data='Взаимодействие')]])
+        else:
+            location_npcs = []
+            location_disguises = []
+            for i in find_location_npcs(player.current_location):
+                location_disguises.append(i.disguise.name)
+                location_npcs.append(i.name)
+            keyboard = []
+            for i in range(len(location_npcs)):
+                keyboard.append([InlineKeyboardButton(f"{location_disguises[i]}", callback_data=location_npcs[i] + 'DIS')])
+            keyboard.append([InlineKeyboardButton("Отвлечь для перемещения", callback_data='safe_move')])
+            return InlineKeyboardMarkup(keyboard)
+        
+    def confirm_kill_keyboard(npc):
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Убить', callback_data=npc.replace('KILL', 'con_kill'))], [InlineKeyboardButton('Отменить действие', callback_data=f"Взаимодействие")]])
+    
+    def confirm_knock_keyboard(npc):
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Вырубить', callback_data=npc.replace('KNOCK', 'con_knock'))], [InlineKeyboardButton('Отменить действие', callback_data=f"Взаимодействие")]])
+    
+    def confirm_distract_keyboard(npc):
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Вырубить', callback_data=npc.replace('DIS', 'CDKL'))], [InlineKeyboardButton('Убить', callback_data=npc.replace('DIS', 'CDKN'))], [InlineKeyboardButton('Отменить действие', callback_data=f"Взаимодействие")]])
+    
+    def destroy_heart_keyboard_1():
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Да', callback_data='DH1')], [InlineKeyboardButton('Нет', callback_data='Выбор действия')]])
+    
+    def destroy_heart_keyboard_2():
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Повредить сердце', callback_data='DH2')], [InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
 
     def make_keyboard(options, func_name):
         keyboard = []
@@ -434,7 +522,7 @@ def telegram_bot():
         return False
 
     def is_safe_move(query):
-        return 'safe_move' in query
+        return 'SM' in query
     
     def is_npc_attack(query):
         return "НПД" in query
@@ -462,7 +550,7 @@ def telegram_bot():
     def is_choose_illegal_item(query):
         global illegal_item
         if query[:-4] in list(items.keys()):
-            if items[query[:-4]].legal == False:
+            if items[query[:-4]].legal == False and player.disguise.name != 'Охранник' and player.disguise.name != 'Телохранитель':
                 illegal_item = query[:-4]
                 return True
         return False
@@ -492,7 +580,10 @@ def telegram_bot():
         global thrown_weapon
         if 'Бросить' in query:
             thrown_weapon = True
-        return 'ITR' in query and ('летально' in query or 'Выстрелить' in query or 'Задушить' in query) == False
+        return 'ITR' in query and ('летально' in query or 'Выстрелить' in query or 'Задушить' in query or 'Использовать' in query or 'Бросить для отвлечения' in query) == False
+    
+    def is_distract(query):
+        return 'Бросить для отвлечения' in query
     
     def is_kill(query):
         return 'KILL' in query
@@ -500,8 +591,115 @@ def telegram_bot():
     def is_knock_out(query):
         return 'KNOCK' in query
     
+    def is_distract_npc(query):
+        return 'DIS' in query
+
+    def is_confirm_kill(query):
+        return 'con_kill' in query
+    
+    def is_confirm_knock(query):
+        return 'con_knock' in query
+    
+    def is_confirm_distract_kill(query):
+        return 'CDKL' in query
+    
+    def is_confirm_distract_knock(query):
+        return 'CDKN' in query
+
+    def is_use(query):
+        return 'Использовать' in query
+    
+    def is_destroy_heart_1(query):
+        if is_use(query) and player.item.name == 'Пульт для управления нейрочипом' and events['Уничтожить сердце'].completed == False and player.current_location.name == 'Морг':
+            events['Уничтожить сердце'].completed = True
+            player.inventory.remove(player.item)
+            player.item = items['Нет предмета']
+            return True
+        return False
+    
+    def is_use_neurochip(query):
+        return is_use(query) and player.item.name == 'Пульт для управления нейрочипом' and (events['Уничтожить сердце'].completed == True or player.current_location.name != 'Морг')
+    
+    def is_destroy_heart_2(query):
+        return 'DH1' in query
+    
+    def is_destroy_heart(query):
+        return 'DH2' in query
 
     #Механики игры
+
+    def rating(update: Update, context: CallbackContext):
+        global player_lvl
+        query = update.callback_query
+        query.answer()
+        result_string = f'Тел найдено: {bodies[0]}\n'
+        result_string += f'Убито невинных: {kills[0]}\n'
+        result_string += f'Вы начали бой {combat_count[0]} раз\n'
+        result_string += f'Вы были замечены {suspicion_count[0]} раз'
+        rating = max(int(5-(bodies[0]*0.5)-(kills[0]*0.7)-(combat_count[0]*0.1)-(suspicion_count[0]*0.2)), 0)
+        result_string += f'Ваш рейтинг: {rating}/5'
+        query.edit_message_text(text=result_string)
+        if rating == 5 and so[0] == 1:
+            if challenges['Бесшумный убийца'].completed == False:
+                context.bot.send_message(chat_id=update.effective_chat.id, text=challenges['Бесшумный убийца'].achieved())
+        elif rating == 5 and so[0] == 0:
+            if challenges['Бесшумный убийца. Только костюм.'].completed == False:
+                context.bot.send_message(chat_id=update.effective_chat.id, text=challenges['Бесшумный убийца. Только костюм.'].achieved())
+        elif so[0] == 0:
+            if challenges['Только костюм'].completed == False:
+                context.bot.send_message(chat_id=update.effective_chat.id, text=challenges['Только костюм'].achieved())
+        if bodies[0] == 0:
+            if challenges['Без улик'].completed == False:
+                context.bot.send_message(chat_id=update.effective_chat.id, text=challenges['Без улик'].achieved())
+        if challenges['Точный выстрел'].completed == True and challenges['Подержи волосы'].completed == True and challenges['Пианист'].completed == True and challenges['Так можно и пораниться'].completed == True and challenges['Без вкуса, без следа'].completed == True and challenges['Мастер-убийца'].completed == False:
+            context.bot.send_message(chat_id=update.effective_chat.id, text=challenges['Мастер-убийца'].achieved())
+        player_lvl[0] += rating
+
+    def use_neurochip(update: Update, context: CallbackContext):
+        query = update.callback_query
+        query.answer()
+        query.edit_message_text(text='Вне зоны действия', reply_markup=(choose_action_keyboard()))
+
+    def destroy_heart(update: Update, context: CallbackContext):
+        targets['Erich Soders'].alive = False
+        query = update.callback_query
+        query.answer()
+        if challenges['Бессердечный'].completed == False:
+            query.edit_message_text(text=challenges['Бессердечный'].achieved())
+            context.bot.send_message(chat_id=update.effective_chat.id, text='Диана: 47-й, без сердца для пересадки Содерс не выживет. Ты смог от него избавиться даже не прикасаясь, изящный ход.', reply_markup=(choose_action_keyboard()))
+        else:
+            query.edit_message_text(text='Диана: 47-й, без сердца для пересадки Содерс не выживет. Ты смог от него избавиться даже не прикасаясь, изящный ход.', reply_markup=(choose_action_keyboard()))
+
+    def distract_kill(update: Update, context: CallbackContext):
+        global kills
+        if player.item.name == 'Монета':
+            player.current_location.items.append(player.item)
+        player.inventory.remove(player.item)
+        query = update.callback_query
+        npc_name = query.data.replace('CDKL', '')
+        if npc_name in list(npcs.keys()):
+            kills[0] += 1
+            npc = npcs[npc_name]
+            npc.alive = False
+            player.found_disguises.append(npc.disguise)
+            query.answer()
+            query.edit_message_text(text=f'Вы устранили {npc.name}', reply_markup=(choose_action_keyboard()))
+        else:
+            npc = targets[npc_name]
+            npc.alive = False
+            query.answer()
+            query.edit_message_text(text=npc.kill(), reply_markup=(choose_action_keyboard()))
+
+    def distract_knock_out(update: Update, context: CallbackContext):
+        if player.item.name == 'Монета':
+            player.current_location.items.append(player.item)
+        player.inventory.remove(player.item)
+        query = update.callback_query
+        npc = npcs[query.data.replace('CDKN', '')]
+        npc.alive = False
+        player.found_disguises.append(npc.disguise)
+        query.answer()
+        query.edit_message_text(text=f'Вы вырубили {npc.name}', reply_markup=(confirm_knock_keyboard(query.data)))
 
     def knock_out(update: Update, context: CallbackContext):
         global bodies
@@ -509,7 +707,7 @@ def telegram_bot():
         global time
         time[0] += 1
         query = update.callback_query
-        data = query.data.replace('KNOCK', '')
+        data = query.data.replace('con_knock', '')
         target = npcs[data]
         player.found_disguises.append(target.disguise)
         if thrown_weapon:
@@ -518,7 +716,7 @@ def telegram_bot():
         target.alive = False
         if location_witnesses(player.current_location) > 0:
             bodies[0] += 1
-            combat(update=update, context=context)
+            combat(update=update, context=context, start_string=f'Цель устранена: {target.name}\n\n')
         else:
             query.answer()
             query.edit_message_text(text=f'Цель устранена: {target.name}', reply_markup=(choose_action_keyboard()))
@@ -530,22 +728,26 @@ def telegram_bot():
         global time
         time[0] += 1
         query = update.callback_query
-        data = query.data.replace('KILL', '')
+        data = query.data.replace('con_kill', '')
         if data in list(npcs.keys()):
             target = npcs[data]
             player.found_disguises.append(target.disguise)
             kills[0] += 1
         else:
             target = targets[data]
-            if data == 'Erich Soders' and (player.item.name == 'Пистолет без глушителя' or player.item.name == 'Пистолет с глушителем'):
+            if data == 'Erich Soders' and (player.item.name == 'Пистолет без глушителя' or player.item.name == 'Пистолет с глушителем') and challenges['Личное прощание'].completed == False:
                 context.bot.send_message(chat_id=update.effective_chat.id, text=challenges['Личное прощание'].achieved())
             context.bot.send_message(chat_id=update.effective_chat.id, text=target.kill())
         target.alive = False
         if location_witnesses(player.current_location) > 0:
             bodies[0] += 1
-            combat(update=update, context=context)
+            combat(update=update, context=context, start_string=f'Цель устранена: {target.name}\n\n', type='add')
         else:
-            context.bot.send_message(chat_id=update.effective_chat.id, text=f'Цель устранена: {target.name}', reply_markup=(choose_action_keyboard()))
+            if data == 'Erich Soders' and (player.item.name == 'Пистолет без глушителя' or player.item.name == 'Пистолет с глушителем'):
+                context.bot.send_message(chat_id=update.effective_chat.id, text=f'Цель устранена: {target.name}', reply_markup=(choose_action_keyboard()))
+            else:
+                query.answer()
+                query.edit_message_text(text=f'Цель устранена: {target.name}', reply_markup=(choose_action_keyboard()))
 
     def combat_chance(update: Update, context: CallbackContext):
         global kills
@@ -566,13 +768,13 @@ def telegram_bot():
             if 'Бросить' in query.data:
                 player.current_location.items.append(player.item)
                 player.inventory.remove(player.item)
-            combat(update=update, context=context)
+            combat(update=update, context=context, start_string=f'Цель устранена: {enemies[0].name}\n\n')
         else:
             if 'Бросить' in query.data:
                 player.current_location.items.append(player.item)
                 player.inventory.remove(player.item)
             player.health -= 25
-            combat(update=update, context=context)
+            combat(update=update, context=context, start_string='Промах\n\n')
 
     def hide_combat(update: Update, context: CallbackContext):
         global time
@@ -652,47 +854,68 @@ def telegram_bot():
 
     def move(update: Update, context: CallbackContext):
         query = update.callback_query
+        query.answer()
         move_to_location = locations[query.data.replace('basic_move', '')]
+        edit = True
+        if events['Компьютер в морге'].completed == False and move_to_location.name == 'Морг':
+            query.edit_message_text(text='Вы нашли файл на компьютере. Это заметки о Кураторе и его нейрочипе.\n\nВ них приводятся подробные сведения об устройстве чипа и принципе его работы, а также описание того, как изменение дозы влияет на настроение Куратора. Судя по всему, увеличение дозы приводит к улучшению его настроения, а уменьшение, напротив, возвращает его в привычное подавленное состояние.\n\nЧто любопытно, научный сотрудник, похоже, сам менял дозу Куратора без его ведома: для этого он использовал пульт управления чипом, который куратор хранит в своей спальне.')
+            events['Компьютер в морге'].completed = True
+            edit = False
         #Случай, когда для входа нужна маскировка или ключ-карта
         if move_to_location.name == 'Комната с серверами':
             if player.disguise.name == 'Директор клиники' or items['Ключ-карта'] in player.inventory or items['Электронный дешифровщик'] in player.inventory:
                 player.current_location = move_to_location
-                query.answer()
-                query.edit_message_text(text=location_status(player.current_location), reply_markup=(choose_action_keyboard()))
+                if edit:
+                    query.edit_message_text(text=location_status(player.current_location), reply_markup=(choose_action_keyboard()))
+                else:
+                    context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(player.current_location), reply_markup=(choose_action_keyboard()))
             else:
-                query.answer()
-                query.edit_message_text(text='Для входа необходима маскировка директора клиники или ключ-карта', reply_markup=move_keyboard())
+                if edit:
+                    query.edit_message_text(text='Для входа необходима маскировка директора клиники или ключ-карта', reply_markup=move_keyboard())
+                else:
+                    context.bot.send_message(chat_id=update.effective_chat.id, text='Для входа необходима маскировка директора клиники или ключ-карта', reply_markup=move_keyboard())
+
         elif player.disguise in player.compromised_disguises:
             #Случай, когда маскировка игрока раскрыта
             locations_npcs = find_location_npcs(player.current_location)
             if locations_npcs != []:
                 location_npc = locations_npcs[random.randrange(len(locations_npcs))]
-                query.answer()
-                query.edit_message_text(text=location_npc.suspicion(), reply_markup=attack_keyboard(location_npc, move_to_location))
+                if edit:
+                    query.edit_message_text(text=location_npc.suspicion(), reply_markup=attack_keyboard(location_npc, move_to_location))
+                else:
+                    context.bot.send_message(chat_id=update.effective_chat.id, text=location_npc.suspicion(), reply_markup=attack_keyboard(location_npc, move_to_location))
             else:
                 player.current_location = move_to_location
-                query.answer()
-                query.edit_message_text(text=location_status(player.current_location), reply_markup=choose_action_keyboard())
+                if edit:
+                    query.edit_message_text(text=location_status(player.current_location), reply_markup=choose_action_keyboard())
+                else:
+                    context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(player.current_location), reply_markup=choose_action_keyboard())
         elif (player.item.legal == False and player.disguise.name != 'Охранник' and player.disguise.name != 'Телохранитель'):
             #Случай, когда в руках игрока нелегальный предмет
             player.current_location = move_to_location
             if find_location_npcs(player.current_location) != []:
                 location_npc = find_location_npcs(player.current_location)[random.randrange(len(find_location_npcs(player.current_location)))]
                 suspicion_count[0] += 1
-                query.answer()
-                query.edit_message_text(text=f'{location_npc.name} ({location_npc.disguise.name}): Он вооружен!', reply_markup=hide_keyboard(location_npc, player.current_location))
+                if edit:
+                    query.edit_message_text(text=f'{location_npc.name} ({location_npc.disguise.name}): Он вооружен!', reply_markup=hide_keyboard(location_npc, player.current_location))
+                else:
+                    context.bot.send_message(chat_id=update.effective_chat.id, text=f'{location_npc.name} ({location_npc.disguise.name}): Он вооружен!', reply_markup=hide_keyboard(location_npc, player.current_location))
         elif player.disguise in move_to_location.disguise:
             #Случай, когда маскировка игрока позволяет пройти на локацию
             player.current_location = move_to_location
-            query.answer()
-            query.edit_message_text(text=location_status(player.current_location), reply_markup=choose_action_keyboard())
+            if edit:
+                query.edit_message_text(text=location_status(player.current_location), reply_markup=choose_action_keyboard())
+            else:
+                context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(player.current_location), reply_markup=choose_action_keyboard())
         else:
             #Случай, когда маскировка игрока не позволяет пройти на локацию
             chance = min(10, location_witnesses(player.current_location))
-            query.answer()
-            query.edit_message_text(text='У вас нет подходящей маскировки. Переместиться на локацию?', reply_markup=(no_disguise_move_keyboard(chance=chance, location=move_to_location)))
+            if edit:
+                query.edit_message_text(text='У вас нет подходящей маскировки. Переместиться на локацию?', reply_markup=(no_disguise_move_keyboard(chance=chance, location=move_to_location)))
+            else:
+                context.bot.send_message(chat_id=update.effective_chat.id, text='У вас нет подходящей маскировки. Переместиться на локацию?', reply_markup=(no_disguise_move_keyboard(chance=chance, location=move_to_location)))
 
-    def combat(update: Update, context: CallbackContext):
+    def combat(update: Update, context: CallbackContext, start_string='', type='edit'):
         global kills
         global bodies
         global player_lvl
@@ -706,24 +929,34 @@ def telegram_bot():
         for i in find_location_npcs(player.current_location):
             if i.guard:
                 enemies.append(i)
-            
-        if player.health == 0:
-            query.answer()
-            query.edit_message_text(text='Вы умерли. Миссия провалена.')
-            time[0] = 0
-        
-        #Проверяет то, что на локации есть охранники
-        if enemies == []:
-            player.health = 100
-            query.answer()
-            query.edit_message_text(text=f'Бой закончился.\n\nУбито невинных: {kills[0]}\nНайдено тел: {bodies[0]}', reply_markup=(choose_action_keyboard()))
-        else:
-            query.answer()
-            query.edit_message_text(text=f'Выберите оружие', reply_markup=(choose_weapon_keyboard()))
+        if type == 'edit':
+            if player.health == 0:
+                query.answer()
+                query.edit_message_text(text='Вы умерли. Миссия провалена.')
+                time[0] = 0
+            if enemies == []:
+                player.health = 100
+                query.answer()
+                query.edit_message_text(text=start_string + f'Бой закончился.\n\nУбито невинных: {kills[0]}\nНайдено тел: {bodies[0]}', reply_markup=(choose_action_keyboard()))
+            else:
+                query.answer()
+                query.edit_message_text(text=start_string + f'Выберите оружие', reply_markup=(choose_weapon_keyboard()))
+        elif type == 'add':
+            if player.health == 0:
+                context.bot.send_message(chat_id=update.effective_chat.id, text='Вы умерли. Миссия провалена.')
+                time[0] = 0
+            if enemies == []:
+                player.health = 100
+                context.bot.send_message(chat_id=update.effective_chat.id, text=start_string + f'Бой закончился.\n\nУбито невинных: {kills[0]}\nНайдено тел: {bodies[0]}', reply_markup=(choose_action_keyboard()))
+            else:
+                context.bot.send_message(chat_id=update.effective_chat.id, text=start_string + f'Выберите оружие', reply_markup=(choose_weapon_keyboard()))
 
     def safe_move(update: Update, context: CallbackContext):
         query = update.callback_query
-        player.current_location = locations[query.data.replace('safe_move', '')]
+        player.current_location = locations[query.data.replace('SM', '')]
+        if player.item.name == 'Монета':
+            player.current_location.items.append(player.item)
+        player.inventory.remove(player.item)
         query.answer()
         query.edit_message_text(text=location_status(player.current_location), reply_markup=(choose_action_keyboard()))
 
@@ -851,8 +1084,20 @@ def telegram_bot():
         dispatcher.add_handler(CallbackQueryHandler(interact_menu, pattern='Взаимодействие'))
         dispatcher.add_handler(CallbackQueryHandler(kill_menu, pattern=is_interact_lethal))
         dispatcher.add_handler(CallbackQueryHandler(knock_out_menu, pattern=is_interact_non_lethal))
-        dispatcher.add_handler(CallbackQueryHandler(kill, pattern=is_kill))
-        dispatcher.add_handler(CallbackQueryHandler(knock_out, pattern=is_knock_out))
+        dispatcher.add_handler(CallbackQueryHandler(confirm_kill_menu, pattern=is_kill))
+        dispatcher.add_handler(CallbackQueryHandler(confirm_knock_menu, pattern=is_knock_out))
+        dispatcher.add_handler(CallbackQueryHandler(kill, pattern=is_confirm_kill))
+        dispatcher.add_handler(CallbackQueryHandler(knock_out, pattern=is_confirm_knock))
+        dispatcher.add_handler(CallbackQueryHandler(safe_move_menu, pattern='safe_move'))
+        dispatcher.add_handler(CallbackQueryHandler(safe_move, pattern=is_safe_move))
+        dispatcher.add_handler(CallbackQueryHandler(distract_menu, pattern=is_distract))
+        dispatcher.add_handler(CallbackQueryHandler(confirm_distract_menu, pattern=is_distract_npc))
+        dispatcher.add_handler(CallbackQueryHandler(distract_kill, pattern=is_confirm_distract_kill))
+        dispatcher.add_handler(CallbackQueryHandler(distract_knock_out, pattern=is_confirm_distract_knock))
+        dispatcher.add_handler(CallbackQueryHandler(use_neurochip, pattern=is_use_neurochip))
+        dispatcher.add_handler(CallbackQueryHandler(destroy_heart_menu_1, pattern=is_destroy_heart_1))
+        dispatcher.add_handler(CallbackQueryHandler(destroy_heart_menu_2, pattern=is_destroy_heart_2))
+        dispatcher.add_handler(CallbackQueryHandler(destroy_heart, pattern=is_destroy_heart))
 
         updater.start_polling()
         updater.idle()
@@ -860,81 +1105,310 @@ def telegram_bot():
     run_bot()
 
 telegram_bot()
+
 def f():
-    if self.player.item.name == 'Пульт для управления нейрочипом':
-        if self.player.current_location.get_name() == 'Морг':
-            self.player.inventory.remove(self.player.item)
-            self.player_view.response('Нейрочип подействовал на одного из работников морга и тот отправился в комнату, где хранится сердце, которое должны пересадить Эриху Содерсу. Последовать за ним?\n\n1. Да\n2. Нет')
-            request = self.player_view.request()
+    if events['Компьютер в морге'].completed == False and player.current_location.get_name() == 'Морг':
+        controller.player_view.response('Вы нашли файл на компьютере. Это заметки о Кураторе и его нейрочипе. В них приводятся подробные сведения об устройстве чипа и принципе его работы, а также описание того, как изменение дозы влияет на настроение Куратора. Судя по всему, увеличение дозы приводит к улучшению его настроения, а уменьшение, напротив, возвращает его в привычное подавленное состояние. Что любопытно, научный сотрудник, похоже, сам менял дозу Куратора без его ведома: для этого он использовал пульт управления чипом, который куратор хранит в своей спальне.')
+        events.get_by_name('Компьютер в морге').completed = True
+
+    if player.disguise != 'VIP - пациент':
+        so[0] = 1
+
+    if events.get_by_name('Информация о сигаретах 1').completed == False and locator.get_items().get_by_name('Пачка сигарет') in player.inventory:
+        controller.player_view.response('Диана: Это пачка сигарет. Не территории клиники «Гама» курение строго запрещено, так что эти сигареты — явная контрабанда.')
+        events.get_by_name('Информация о сигаретах 1').completed = True
+
+    if events.get_by_name('Информация о сигаретах 2').completed == False and player.current_location.get_name() == 'Канатная дорога':
+        controller.player_view.response('Диана: Значит, Юки Ямадзаки выронила свои сигареты по пути к клинике. Интересно. Юки Ямадзаки уронила свои сигареты, когда поднималась на фуникулере по прибытии в клинику. Если верить её охране, это её ужасно взбесило. Может быть, тебе удастся утолить её «жажду», 47-й? Сигареты в «Гаме» запрещены, но не все следуют этому правилу...')
+        events.get_by_name('Информация о сигаретах 2').completed = True
+
+    if events.get_by_name('Информация о суши').completed == False and player.current_location.get_name() == 'Ресторан':
+        controller.player_view.response('Диана: Ядовитая Рыба фугу и адвокат в поисках острых ощущений — убийственная комбинация. Не так давно из-за ошибки повара один из пациентов отравился ядовитой рыбой, и с тех пор фугу здесь под строжайшим запретом. Но, судя по всему, Юки Ямадзаки пытается уговорить шеф-повара подать ей последнюю рыбу из его запасов. Разве мы вправе отказывает ей в таком удовольствии, 47-й?')
+        events.get_by_name('Информация о суши').completed = True
+
+    if events.get_by_name('Информация о чипе').completed == False and locator.get_items().get_by_name('Пульт для управления нейрочипом') in player.inventory:
+        controller.player_view.response('Диана: Нейрочип для изменения настроения. Интересно... Доктор Каташи Ито, он же Куратор, проводит сейчас какое-то медицинское испытание. Интересно. Хранилище органов находится в ведении Куратора, а значит, у него точно есть доступ к сердцу, которое должны пересадить Содерсу. 47-й, я рекомендую найти отчёт сотрудника и выяснить, для чего нужен этот нейроимплантат. Может пригодиться.')
+        events.get_by_name('Информация о чипе').completed = True
+
+    if events.get_by_name('Расписание занятий по йоге').completed == False and player.current_location.get_name() == 'Зона отдыха':
+        controller.player_view.response('Диана: Расписание занятий по йоге. Имя Юки Ямадзаки — в каждой графе. Что ж, судя по всему, Юки Ямадзаки — настоящий фанат йоги. Из расписания у горячего источника видно, что она заняла тренера на целый день. Готов размяться, 47-й?')
+        events.get_by_name('Расписание занятий по йоге').completed = True
+
+    if locator.get_targets().get_by_name('Юки Ямадзаки').alive == False and locator.get_targets().get_by_name('Эрих Содерс').alive == False and events.get_by_name('Все цели убиты').completed == False:
+        controller.player_view.response('Все цели убиты. Найдте выход с миссии.')
+        events.get_by_name('Все цели убиты').completed = True
+
+    if events.get_by_name('Все цели убиты').completed == True and (player.current_location.get_name() == 'Канатная дорога' or player.current_location.get_name() == 'Гараж' or player.current_location.get_name() == 'Вертолетная площадка' or player.current_location.get_name() == 'Горная тропа'):
+        controller.player_view.response('1. Завершить миссию')
+        controller.player_view.request()
+        controller.player_view.response('Диана: Миссия выполнена, хорошая работа, 47-ой.')
+        controller.rating()
+
+    if (locator.get_items().get_by_name('Яд рыбы Фугу') in player.inventory or locator.get_items().get_by_name('Крысиный яд') in player.inventory or locator.get_items().get_by_name('Смертельный яд') in player.inventory or locator.get_items().get_by_name('Рвотный яд') in player.inventory) and player.disguise == 'Шеф' and player.current_location.get_name() == 'Ресторан' and events.get_by_name('Убийство ядом').completed == False:
+        controller.player_view.response('1. Отравить роллы\n2. Не отравлять роллы')
+        request = controller.player_view.request()
+        while request.isdigit() == False:
+            controller.player_view.response('Введите номер ответа')
+            request = controller.player_view.request()
+        request = int(request)
+        if request == 2:
+            controller.player_view.response(locator.location_status(player.current_location))
+        elif request == 1:
+            events.get_by_name('Убийство ядом').completed = True
+            poisons = [locator.get_items().get_by_name('Яд рыбы Фугу'), locator.get_items().get_by_name('Крысиный яд'), locator.get_items().get_by_name('Смертельный яд'), locator.get_items().get_by_name('Рвотный яд')]
+            result_string = ''
+            for i in range(len(poisons)):
+                if poisons[i] in player.inventory:
+                    result_string += f'{i+1}. {poisons[i].name}\n'
+            controller.player_view.response(result_string)
+            request = controller.player_view.request()
             while request.isdigit() == False:
-                self.player_view.response('Введите номер ответа')
-                request = self.player_view.request()
+                controller.player_view.response('Введите номер ответа')
+                request = controller.player_view.request()
             request = int(request)
-            if request == 2:
-                return self.player_view.response(self.locator.location_status(self.player.current_location))
-            elif request == 1:
-                self.player_view.response('\n\n1. Выйти\n2. Повредить сердце')
-                request = self.player_view.request()
+            player.inventory.remove(poisons[request - 1])
+            if poisons[request - 1].deadly == True:
+                result_string = ''
+                if poisons[request - 1] == locator.get_items().get_by_name('Яд рыбы Фугу'):
+                    controller.player_view.response(f'{locator.get_challenges().get_by_name("Приятного аппетита").achieved()}')
+                locator.get_targets().get_by_name('Юки Ямадзаки').alive = False
+                controller.player_view.response(locator.get_challenges().get_by_name('Без вкуса, без следа').achieved())
+                result_string += '\n\nДиана: Грамотный ход 47-ой. С Юки Ямадзаки покончено.'
+                controller.player_view.response(result_string)
+            else:
+                controller.player_view.response('Цели стало плохо и она направилась в ванную. Пойти за ней?\n\n1. Да\n2. Нет')
+                request = controller.player_view.request()
                 while request.isdigit() == False:
-                    self.player_view.response('Введите номер ответа')
-                    request = self.player_view.request()
+                    controller.player_view.response('Введите номер ответа')
+                    request = controller.player_view.request()
                 request = int(request)
                 if request == 1:
-                    return self.player_view.response(self.locator.location_status(self.player.current_location))
+                    controller.player_view.response('1. Утопить цель\n2. Уйти')
+                    request = controller.player_view.request()
+                    while request.isdigit() == False:
+                        controller.player_view.response('Введите номер ответа')
+                        request = controller.player_view.request()
+                    request = int(request)
+                    if request == 2:
+                        controller.player_view.response(locator.location_status(player.current_location))
+                    elif request == 1:
+                        controller.player_view.response(f'{locator.get_challenges().get_by_name("Подержи волосы").achieved()}')
+                        controller.player_view.response(f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}')
+                        result_string = 'Диана: Цель убита. Хорошая работа.'
+                        locator.get_targets().get_by_name('Юки Ямадзаки').alive = False
+                        controller.player_view.response(result_string)
                 elif request == 2:
-                    self.locator.get_targets().get_by_name('Эрих Содерс').alive = False
-                    self.player_view.response(f'{self.locator.get_challenges().get_by_name('Бессердечный').achieved()}')
-                    result_string = 'Диана: 47-й, без сердца для пересадки Содерс не выживет. Ты смог от него избавиться даже не прикасаясь, изящный ход.'
-                    self.player_view.response(result_string)
-                    return self.player_view.response(self.locator.location_status(self.player.current_location))
-        else:
-            return self.player_view.response('Вне зоны действия')
-        
-def f():
-    #Бросок предмета, отвлекающего NPC
-    if self.player.item.usage[request - 1] == 'Бросить для отвлечения':
-        if location_npcs == []:
-                return self.player_view.response('На локации никого нет')
-        if witnesses > 3:
-            self.player_view.response('На локации слишком много свидетелей\n\n1. Отвлечь для перемещения\n2. Отменить действие')
-            request = self.player_view.request()
+                    controller.player_view.response(locator.location_status(player.current_location))
+
+    if player.current_location.get_name() == 'Комната управления системой водоснабжения спа' and events.get_by_name('Убийство в сауне').completed == False:
+        controller.player_view.response('1. Увеличить температуру в бане\n2. Уйти')
+        request = controller.player_view.request()
+        while request.isdigit() == False:
+            controller.player_view.response('Введите номер ответа')
+            request = controller.player_view.request()
+        request = int(request)
+        if request == 1:
+            events.get_by_name('Убийство в сауне').completed = True
+            controller.player_view.response('Все люди вышли из бани из-за высокой температуры.')
+            if locator.get_targets().get_by_name('Юки Ямадзаки').alive == True:
+                controller.player_view.response('Юки Ямадзаки: Наконец-то парилка свободна!\nЮки Ямадзаки вошла в баню\n\n1. Запереть дверь в парилку\n2. Уйти')
+                request = controller.player_view.request()
+                while request.isdigit() == False:
+                    controller.player_view.response('Введите номер ответа')
+                    request = controller.player_view.request()
+                request = int(request)
+                if request == 1:
+                    locator.get_targets().get_by_name('Юки Ямадзаки').alive = False
+                    controller.player_view.response(f'{locator.get_challenges().get_by_name('Убийство в парилке').achieved()}')
+                    controller.player_view.response(f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}')
+                    result_string = 'Диана: С Юки Ямадзаки покончено. Отличная работа, агент.'
+                    controller.player_view.response(result_string)
+                elif request == 2:
+                    controller.player_view.response(locator.location_status(player.current_location))
+            else:
+                controller.player_view.response(locator.location_status(player.current_location))
+        elif request == 2:
+            controller.player_view.response(locator.location_status(player.current_location))
+
+    if player.disguise == 'Инструктор по йоге' and events.get_by_name('Убийство во время йоги').completed == False and player.current_location == 'Зона отдыха' and locator.get_targets().get_by_name('Юки Ямадзаки').alive == True:
+        events.get_by_name('Убийство во время йоги').completed = True
+        controller.player_view.response('Юки Ямадзаки: Наконец-то, сколько можно вас ждать!\n\n1. Начать тренировку по йоге\n2. Уйти')
+        request = controller.player_view.request()
+        while request.isdigit() == False:
+            controller.player_view.response('Введите номер ответа')
+            request = controller.player_view.request()
+        request = int(request)
+        if request == 1:
+            controller.player_view.response('Агент 47: Приступим, эта тренировка смертельно вам понравится.\nЮки Ямадзаки отозвала всю охрану и вывела всех людей из зоны отдыха\n\n1. Толкнуть Юки Ямадзаки с горы\n2. Завершить тренировку')
+            request = controller.player_view.request()
             while request.isdigit() == False:
-                self.player_view.response('Введите номер ответа')
-                request = self.player_view.request()
+                controller.player_view.response('Введите номер ответа')
+                request = controller.player_view.request()
             request = int(request)
             if request == 1:
-                self.player.inventory.remove(self.player.item)
-                if self.player.item == self.locator.get_items().get_by_name('Монета'):
-                    self.player.current_location.set_items(self.player.current_location.get_items() + [self.player.item])
-                return self.safe_move()
-            else:
-                return self.player_view.response(self.locator.location_status(self.player.current_location))
-        if self.player.item == self.locator.get_items().get_by_name('Монета'):
-            self.player.current_location.set_items(self.player.current_location.get_items() + [self.player.item])
-        self.player.inventory.remove(self.player.item)
-        result_string = ''
-        for i in range(len(location_npcs)):
-                result_string += f'{i+1}. Отвлечь {location_npcs[i].get_name()}\n'
-        result_string += f'{len(location_npcs)+1}. Отвлечь для перемещения'
-        self.player_view.response(result_string)
-        request = self.player_view.request()
+                locator.get_targets().get_by_name('Юки Ямадзаки').alive = False
+                controller.player_view.response(f'{locator.get_challenges().get_by_name('Хорошая растяжка').achieved()}')
+                controller.player_view.response(f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}')
+                result_string = 'Диана: Отлично сработано. Юки Ямадзаки нас больше не побеспокоит.'
+                controller.player_view.response(result_string)
+            if request == 2:
+                controller.player_view.response(locator.location_status(player.current_location))
+
+    if player.current_location.get_name() == 'Номер Юки Ямадзаки' and locator.get_items().get_by_name('Пачка сигарет') in player.inventory and events.get_by_name('Сигареты на столе').completed == False:
+        controller.player_view.response('1. Положить пачку сигарет\n2. Оставить пачку сигарет')
+        request = controller.player_view.request()
         while request.isdigit() == False:
-            self.player_view.response('Введите номер ответа')
-            request = self.player_view.request()
+            controller.player_view.response('Введите номер ответа')
+            request = controller.player_view.request()
         request = int(request)
-        if request > len(location_npcs):
-            return self.safe_move()
-        else:
-            self.player_view.response(f'1. Вырубить {location_npcs[request - 1].get_name()}\n2. Убить {location_npcs[request - 1].get_name()}')
-            second_request = self.player_view.request()
-            while second_request.isdigit() == False:
-                self.player_view.response('Введите номер ответа')
-                second_request = self.player_view.request()
-            second_request = int(second_request)
-            self.player.found_disguises.append(location_npcs[request - 1].get_disguise())
-            location_npcs[request - 1].alive = False
-            if second_request == 1:
-                return self.player_view.response(self.locator.location_status(self.player.current_location))
-            elif second_request == 2:
-                kills[0] += 1
-                return self.player_view.response(self.locator.location_status(self.player.current_location))
+        if request == 1:
+            player.inventory.remove(locator.get_items().get_by_name('Пачка сигарет'))
+            controller.player_view.response(f'{locator.get_challenges().get_by_name('Не курить!').achieved()}')
+            result_string = '1. Выйти из номера\n2. Пойти на балкон'
+            controller.player_view.response(result_string)
+            events.get_by_name('Сигареты на столе').completed = True
+            request = controller.player_view.request()
+            while request.isdigit() == False:
+                controller.player_view.response('Введите номер ответа')
+                request = controller.player_view.request()
+            request = int(request)
+            if request == 1:
+                player.current_location = locator.get_location_by_name('Холл')
+                controller.player_view.response(locator.location_status(player.current_location))
+            elif request == 2:
+                controller.player_view.response('1. Создать утечку газа у обогревателя\n2. Уйти из номера')
+                request = controller.player_view.request()
+                while request.isdigit() == False:
+                    controller.player_view.response('Введите номер ответа')
+                    request = controller.player_view.request()
+                request = int(request)
+                if request == 1:
+                    if locator.get_items().get_by_name('Гаечный ключ') in player.inventory:
+                        controller.player_view.response('1. Выйти из номера')
+                        controller.player_view.request()
+                        player.current_location = locator.get_location_by_name('Холл')
+                        if locator.get_targets().get_by_name('Юки Ямадзаки').alive == True:
+                            locator.get_targets().get_by_name('Юки Ямадзаки').alive = False
+                            controller.player_view.response(f'{locator.get_challenges().get_by_name('Курение убивает').achieved()}')
+                            controller.player_view.response(f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}')
+                            result_string = 'Юки Ямадзаки: Пачка сиграрет? Как я могла ее не заметить!\nЮки Ямадзаки вышла на балкон и воспользовалась зажигалкой, что привело к взрыву.\n\nДиана: Это было умно, 47-й. Юки Ямадзаки больше нас не побеспокоит.'
+                            controller.player_view.response(result_string)
+                    else:
+                        controller.player_view.response('У вас нет гаечного ключа')
+                elif request == 2:
+                    player.current_location = locator.get_location_by_name('Холл')
+                    controller.player_view.response(locator.location_status(player.current_location))
+        elif request == 2:
+            player.current_location = locator.get_location_by_name('Холл')
+            controller.player_view.response(locator.location_status(player.current_location))
+
+    if player.current_location.get_name() == 'Номер Юки Ямадзаки' and events.get_by_name('Сигареты на столе').completed == True:
+        controller.player_view.response('1. Выйти из номера\n2. Пойти на балкон')
+        request = controller.player_view.request()
+        while request.isdigit() == False:
+            controller.player_view.response('Введите номер ответа')
+            request = controller.player_view.request()
+        request = int(request)
+        if request == 1:
+            player.current_location = locator.get_location_by_name('Холл')
+            controller.player_view.response(locator.location_status(player.current_location))
+        elif request == 2:
+            controller.player_view.response('1. Создать утечку газа у обогревателя\n2. Уйти из номера')
+            while request.isdigit() == False:
+                controller.player_view.response('Введите номер ответа')
+                request = controller.player_view.request()
+            request = int(request)
+            if request == 1:
+                if locator.get_items().get_by_name('Гаечный ключ') in player.inventory:
+                        controller.player_view.response('1. Выйти из номера')
+                        controller.player_view.request()
+                        player.current_location = locator.get_location_by_name('Холл')
+                        if locator.get_targets().get_by_name('Юки Ямадзаки').alive == True:
+                            locator.get_targets().get_by_name('Юки Ямадзаки').alive = False
+                            controller.player_view.response(f'{locator.get_challenges().get_by_name('Курение убивает').achieved()}')
+                            controller.player_view.response(f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}')
+                            result_string = 'Юки Ямадзаки: Пачка сиграрет? Как я могла ее не заметить!\nЮки Ямадзаки вышла на балкон и воспользовалась зажигалкой, что привело к взрыву.\n\nДиана: Это было умно, 47-й. Юки Ямадзаки больше нас не побеспокоит.'
+                            controller.player_view.response(result_string)
+                else:
+                    controller.player_view.response('У вас нет гаечного ключа')
+            elif request == 2:
+                player.current_location = locator.get_location_by_name('Холл')
+                controller.player_view.response(locator.location_status(player.current_location))
+
+    if (player.current_location.get_name() == 'Комната пилота' or player.current_location.get_name() == 'Вертолетная площадка') and events.get_by_name('Информация о пилоте').completed == False:
+        events.get_by_name('Информация о пилоте').completed = True
+        controller.player_view.response('Диана: 47-й, у меня есть сведения о пилоте. Мне удалось извлечь кое-какие данные из системы безопасности клиники. Главный хирург, Николя Лоран, похоже, часто встречается с пилотом вертолёта у выхода из мед-комплекса. А если верить слухам, у главного хирурга дрожат руки.')
+
+    if player.disguise == 'Пилот' and player.current_location.get_name() == 'Вертолетная площадка' and locator.get_npcs().get_by_name('Nicholas Laurent').alive == True and events.get_by_name('Устранение главного хирурга').completed == False:
+        events.get_by_name('Устранение главного хирурга').completed = True
+        controller.player_view.response('Главный хирург вышел из мед-комплекса\nГлавный хирург: У тебя еще остались те таблетки?\n47-й: Конечно, следуй за мной.\n\n1. Пойти в комнату пилота\n2. Уйти')
+        request = controller.player_view.request()
+        while request.isdigit() == False:
+            controller.player_view.response('Введите номер ответа')
+            request = controller.player_view.request()
+        request = int(request)
+        if request == 2:
+            controller.player_view.response(locator.location_status(player.current_location))
+        elif request == 1:
+            player.current_location = locator.get_location_by_name('Комната пилота')
+            controller.player_view.response('1. Усмирить главного хирурга\n2. Уйти')
+            request = controller.player_view.request()
+            while request.isdigit() == False:
+                controller.player_view.response('Введите номер ответа')
+                request = controller.player_view.request()
+            request = int(request)
+            if request == 2:
+                controller.player_view.response(locator.location_status(player.current_location))
+            if request == 1:
+                locator.get_npcs().get_by_name('Nicholas Laurent').alive = False
+                player.found_disguises.append('Главный хирург')
+                controller.player_view.response(locator.location_status(player.current_location))
+
+    if player.current_location.get_name() == 'Операционная' and player.disguise == 'Главный хирург' and events.get_by_name('Убийство в операционной').completed == False and locator.get_targets().get_by_name('Эрих Содерс').alive == True:
+        controller.player_view.response('1. Управлять операционным роботом\n2. Не управлять')
+        request = controller.player_view.request()
+        while request.isdigit() == False:
+            controller.player_view.response('Введите номер ответа')
+            request = controller.player_view.request()
+        request = int(request)
+        if request == 1:
+            controller.player_view.response('1. Убить Эриха Содерса\n2. Уйти')
+            request = controller.player_view.request()
+            while request.isdigit() == False:
+                controller.player_view.response('Введите номер ответа')
+                request = controller.player_view.request()
+            request = int(request)
+            if request == 1:
+                locator.get_targets().get_by_name('Эрих Содерс').alive = False
+                controller.player_view.response(f'{locator.get_challenges().get_by_name('(Не) врачебная ошибка').achieved()}')
+                controller.player_view.response(f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}')
+                result_string = 'Диана: Умно, 47-й. С Содерсом покончено.'
+                controller.player_view.response(result_string)
+                events.get_by_name('Убийство в операционной').completed = True
+            if request == 2:
+                controller.player_view.response(locator.location_status(player.current_location))
+        elif request == 2:
+            controller.player_view.response(locator.location_status(player.current_location))
+
+    if 'Охранник' in player.found_disguises or 'Телохранитель' in player.found_disguises:
+        player.inventory.append(locator.get_items().get_by_name('Пистолет без глушителя'))
+
+    if player.current_location.get_name() == 'Комната с серверами' and locator.get_targets().get_by_name('Эрих Содерс').alive == True:
+        controller.player_view.response('1. Повредить серверы\n2. Не повреждать')
+        request = controller.player_view.request()
+        while request.isdigit() == False:
+            controller.player_view.response('Введите номер ответа')
+            request = controller.player_view.request()
+        request = int(request)
+        if request == 1:
+            locator.get_targets().get_by_name('Эрих Содерс').alive = False
+            controller.player_view.response(f'{locator.get_challenges().get_by_name('Призрак в машине').achieved()}')
+            controller.player_view.response(f'{locator.get_challenges().get_by_name('Так можно и пораниться').achieved()}')
+            result_string = 'Хирург: Что происходит с роботом?! Как его отключить?! Пациент сейчас умрет!\n\nДиана: Это было впечатляюще, агент. Эрих Содерс мертв.'
+            controller.player_view.response(result_string)
+        if request == 2:
+            controller.player_view.response(locator.location_status(player.current_location))
+
+    if player.current_location.get_name() == 'Комната охраны' and events.get_by_name('Информация об ИИ').completed == False:
+        events.get_by_name('Информация об ИИ').completed = True
+        controller.player_view.response('Интересно. Руководство для KAI, искусственного интеллекта клиники «Гама». Значит, местный искусственный интеллект по имени KAI не только поддерживает работу систем здания, но и управляет роботом в операционной. Именно там сейчас находится Содерс. В руководстве говорится, что после остановки сердца пациента искусственный интеллект автоматически начинает его реанимацию, что очень некстати. Однако... У директора клиники есть доступ к главному компьютеру. Справишься с управлением целой клиникой, 47-й?')
