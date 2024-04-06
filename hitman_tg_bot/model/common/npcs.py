@@ -1,6 +1,3 @@
-from model.player.player_info import time, suspicion_count
-
-
 #Класс, описывающий NPC на локации
 class NPC:
 
@@ -13,13 +10,11 @@ class NPC:
         self.name = name
     
     #Определяет положение NPC в определенный момент времени
-    def move(self):
-        location = self.route[int(time[0])%len(self.route)]
+    def move(self, time):
+        location = self.route[int(time)%len(self.route)]
         return location
 
     def suspicion(self):
-        global suspicion_count
-        suspicion_count[0] += 1
         return f'{self.name} ({self.disguise.name}): Эй, подойди сюда!'
 
 #Класс, описывающий цели на локации 
@@ -31,8 +26,8 @@ class Target:
         self.alive = alive
 
     #Определяет положение цели в определенный момент времени
-    def move(self):
-        location = self.route[int(time[0])%len(self.route)]
+    def move(self, time):
+        location = self.route[int(time)%len(self.route)]
         return location
     
     def kill(self):

@@ -1,1 +1,1 @@
-print(len('\n'))
+print(bool(0))
