@@ -1,6 +1,5 @@
-#Класс, описывающий NPC на локации
 class NPC:
-
+    """Класс, описывающий NPC на локации"""
     def __init__(self, guard, disguise, route, witness_chance, name, alive=True):
         self.guard = guard
         self.disguise = disguise
@@ -9,24 +8,24 @@ class NPC:
         self.witness_chance = witness_chance
         self.name = name
     
-    #Определяет положение NPC в определенный момент времени
-    def move(self, time):
+    def move(self, time: int):
+        """Определяет положение NPC в определенный момент времени"""
         location = self.route[int(time)%len(self.route)]
         return location
 
     def suspicion(self):
         return f'{self.name} ({self.disguise.name}): Эй, подойди сюда!'
 
-#Класс, описывающий цели на локации 
-class Target:
 
+class Target:
+    """Класс, описывающий цели на локации """
     def __init__(self, route, name, alive=True):
         self.route = route
         self.name = name
         self.alive = alive
 
-    #Определяет положение цели в определенный момент времени
-    def move(self, time):
+    def move(self, time: int):
+        """Определяет положение цели в определенный момент времени"""
         location = self.route[int(time)%len(self.route)]
         return location
     

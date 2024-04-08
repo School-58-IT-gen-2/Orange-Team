@@ -2,7 +2,7 @@ from model.player.player import Player
 
 
 class PlayerInfo:
-#time 10
+    """Класс, описывающий данные пользователя"""
     def __init__(self,
                  suspicion_count=0,
                  kills=0,
@@ -22,6 +22,9 @@ class PlayerInfo:
                  npcs={},
                  targets=[],
                  events={},
+                 locations={},
+                 items={},
+                 disguises={},
                  carry_on_items=[]
                  ):
         
@@ -43,4 +46,7 @@ class PlayerInfo:
         self.npcs = npcs
         self.targets = targets
         self.events = events
+        self.locations = locations
         self.carry_on_items = carry_on_items
+        self.items = items
+        self.disguises = disguises

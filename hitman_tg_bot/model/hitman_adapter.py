@@ -3,6 +3,7 @@ import csv
 
 
 class HitmanAdapter:
+
     def __init__(self) -> None:
         self.conn = self.__get_connect()
         self.random = 0
@@ -105,6 +106,7 @@ class HitmanAdapter:
         return data
     
 class CsvAdapter():
+    
     def __init__(self) -> None:
         pass
 

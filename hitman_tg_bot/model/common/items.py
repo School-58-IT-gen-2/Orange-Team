@@ -1,6 +1,5 @@
-#Класс, описывающий предметы на локации
 class Item:
-    
+    """Класс, описывающий предметы на локации"""    
     def __init__(self, name, usage, legal, lethal, weapon):
         self.name = name
         self.usage = usage

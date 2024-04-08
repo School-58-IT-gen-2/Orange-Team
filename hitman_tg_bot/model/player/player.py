@@ -1,6 +1,5 @@
-#Класс, описывающий игрока
 class Player:
-
+    """Класс, описывающий игрока"""
     def __init__(self,
                  location=None,
                  inventory=None,
