@@ -16,6 +16,7 @@ class PlayerInfo:
                  start_items='',
                  player_lvl=10,
                  completed_challenges='',
+                 unlocked_disguises='',
                  player=Player(),
                  message=-1,
                  challenges={},

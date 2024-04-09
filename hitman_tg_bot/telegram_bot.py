@@ -16,12 +16,12 @@ from model.player.player_info import *
 adapter = HitmanAdapter()
 tg_token = os.getenv("TELEGRAM_TOKEN")
 
-def create_user(player_lvl: int, completed_challenges: str):
+def create_user(player_lvl: int, completed_challenges: str, unlocked_disguises: str):
     """Создание объекта класса информации о пользователе"""
     challenges_values = list(challenges.values())
     user_challenges = {list(challenges.keys())[i]: Challenge(name=challenges_values[i].name, description=challenges_values[i].description, url=challenges_values[i].url) for i in range(len(challenges))}
     disguises_values = list(disguises.values())
-    user_disguises = {list(disguises.keys())[i]: Disguise(name=disguises_values[i].name) for i in range(len(disguises))}
+    user_disguises = {list(disguises.keys())[i]: Disguise(name=disguises_values[i].name, url=disguises_values[i].url) for i in range(len(disguises))}
     items_values = list(items.values())
     user_items = {list(items.keys())[i]: Item(name=items_values[i].name, usage=items_values[i].usage, legal=items_values[i].legal, lethal=items_values[i].lethal, weapon=items_values[i].weapon) for i in range(len(items))}
     locations_values = list(locations.values())
@@ -32,9 +32,9 @@ def create_user(player_lvl: int, completed_challenges: str):
     user_targets = {list(targets.keys())[i]: Target(name=targets_values[i].name, route=targets_values[i].route) for i in range(len(targets))}
     events_values = list(events.values())
     user_events = {list(events.keys())[i]: Event(name=events_values[i].name) for i in range(len(events))}
-    return PlayerInfo(challenges=user_challenges, npcs=user_npcs, targets=user_targets, events=user_events, locations=user_locations, carry_on_items=['Удавка', 'Смертельный яд', 'Рвотный яд', 'Электронный дешифровщик', 'Боевой нож', 'Монета'], player_lvl=player_lvl, completed_challenges=completed_challenges, items=user_items, disguises=user_disguises, player=Player())
+    return PlayerInfo(challenges=user_challenges, npcs=user_npcs, targets=user_targets, events=user_events, locations=user_locations, carry_on_items=['Удавка', 'Смертельный яд', 'Рвотный яд', 'Электронный дешифровщик', 'Боевой нож', 'Монета'], player_lvl=player_lvl, completed_challenges=completed_challenges, unlocked_disguises=unlocked_disguises, items=user_items, disguises=user_disguises, player=Player())
 
-users = {i[0]: create_user(player_lvl=i[5], completed_challenges=i[6]) for i in adapter.get_all('Users')}
+users = {i[0]: create_user(player_lvl=i[5], completed_challenges=i[6], unlocked_disguises=i[7]) for i in adapter.get_all('Users')}
 
 #Начало создания ТГ бота
 logging.basicConfig(
@@ -145,15 +145,15 @@ def telegram_bot():
         
     def choose_start_item_menu_1(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
-        users[user_id].start_items += ',' + query.replace('choose_pistol', '')
         query = update.callback_query
         query.answer()
-        query.edit_message_text(text='Выберите первый предмет снаряжения', reply_markup=(choose_start_item_keyboard(update=update, context=context)))
+        users[user_id].start_items += ',' + query.data.replace('choose_pistol', '')
+        query.edit_message_text(text='Выберите первый предмет снаряжения', reply_markup=(choose_start_item_keyboard_1(update=update, context=context)))
         
     def choose_start_item_menu_2(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
         query = update.callback_query
-        data = query.data.replace('CSI', '')
+        data = query.data.replace('CSI1', '')
         start_items = []
         if len(users[user_id].carry_on_items) == 6:
             start_items.append(data)
@@ -161,22 +161,21 @@ def telegram_bot():
                 start_items.append(data)
                 start_items.append(data)
             users[user_id].start_items = ','.join(start_items)
-            users[user_id].carry_on_items.remove(query)
+            users[user_id].carry_on_items.remove(data)
         query.answer()
-        query.edit_message_text(text='Выберите второй предмет снаряжения', reply_markup=(choose_start_item_keyboard(update=update, context=context)))
+        query.edit_message_text(text='Выберите второй предмет снаряжения', reply_markup=(choose_start_item_keyboard_2(update=update, context=context)))
     
     def game_start_menu(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
         query = update.callback_query
-        data = query.data.replace('CSI', '')
+        data = query.data.replace('CSI2', '')
         start_items = []
         if len(users[user_id].carry_on_items) == 5:
             start_items.append(data)
             if query == 'Монета':
                 start_items.append(data)
                 start_items.append(data)
-            users[data].start_items += ',' + ','.join(start_items)
-            users[data].carry_on_items.append(start_items[0].name)
+            users[user_id].start_items += ',' + ','.join(start_items)
         query.answer()
         query.edit_message_text(text='Выберите действие', reply_markup=(game_start_keyboard()))
 
@@ -386,12 +385,40 @@ def telegram_bot():
         user_id = update.callback_query.from_user['id']
         if users[user_id].disguises['Охранник'] in users[user_id].player.found_disguises or users[user_id].disguises['Телохранитель'] in users[user_id].player.found_disguises:
             users[user_id].player.inventory.append(users[user_id].items['Пистолет без глушителя'])
-        return InlineKeyboardMarkup([
-            [InlineKeyboardButton("Передвижение", callback_data="Передвижение"), InlineKeyboardButton("Взаимодействие", callback_data="Взаимодействие")],
-            [InlineKeyboardButton("Инвентарь", callback_data="Инвентарь"), InlineKeyboardButton("Обыскать локацию", callback_data="Обыскать локацию")],
-            [InlineKeyboardButton("Статус", callback_data="Статус"), InlineKeyboardButton("Испытания", callback_data="Испытания")],
-            [InlineKeyboardButton("Сохранить и выйти", callback_data="Сохранить и выйти")]
-        ])
+        unlocked_disguises = 0
+        for i in list(users[user_id].disguises.values()):
+            if i.unlocked:
+                unlocked_disguises += 1
+        if users[user_id].challenges['Хамелеон'].completed == False and unlocked_disguises == len(disguises):
+            context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Хамелеон'].achieved(update=update, context=context))
+            users[user_id].player_lvl += 5
+        if users[user_id].events['Убийство в сауне'].completed == False and users[user_id].player.current_location.name == 'Водоснабжение спа':
+            context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=sauna_kill_keyboard_1())
+        elif users[user_id].events['Все цели убиты'].completed == True and (users[user_id].player.current_location.name == 'Канатная дорога' or users[user_id].player.current_location.name == 'Гараж' or users[user_id].player.current_location.name == 'Вертолетная площадка' or users[user_id].player.current_location.name == 'Горная тропа'):
+                context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=(exit_mission_keyboard()))
+        elif (users[user_id].items['Яд рыбы Фугу'] in users[user_id].player.inventory or users[user_id].items['Крысиный яд'] in users[user_id].player.inventory or users[user_id].items['Смертельный яд'] in users[user_id].player.inventory or users[user_id].items['Рвотный яд'] in users[user_id].player.inventory) and users[user_id].player.current_location.name == 'Ресторан' and users[user_id].events['Убийство ядом'].completed == False and users[user_id].targets['Yuki Yamazaki'].alive:
+                context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=(sushi_kill_keyboard_1(update=update, context=context)))
+        elif users[user_id].player.current_location.name == 'Номер Юки Ямадзаки':
+                if users[user_id].events['Сигареты на столе'].completed == False and users[user_id].items['Пачка сигарет'] in users[user_id].player.inventory:
+                    context.bot.send_message(chat_id=update.effective_chat.id, text='На столе находится пустая пачка сигарет.', reply_markup=(cigar_kill_keyboard_1()))
+                elif users[user_id].events['Сигареты на столе'].completed:
+                    users[user_id].player.inventory.append(users[user_id].items['Пачка сигарет'])
+                    cigar_kill_1(update=update, context=context) 
+        elif users[user_id].events['Убийство в операционной'].completed == False and users[user_id].player.current_location.name == 'Операционная' and users[user_id].player.disguise.name == 'Главный хирург' and users[user_id].targets['Erich Soders'].alive:
+            context.bot.send_message(chat_id=update.effective_chat.id, text='В операционной находится пульт управления робо-руками, проводящими операцию.', reply_markup=robot_kill_keyboard_1())
+        elif users[user_id].events['Устранение главного хирурга'].completed == False and users[user_id].player.current_location.name == 'Вертолетная площадка' and users[user_id].player.disguise.name == 'Пилот' and users[user_id].npcs['Nicholas Laurent'].alive:
+            context.bot.send_message(chat_id=update.effective_chat.id, text='Главный хирург вышел из мед-комплекса\n\nГлавный хирург: У тебя еще остались те таблетки?\n47-й: Конечно, следуй за мной.', reply_markup=surgeon_knock_out_keyboard_1())
+            users[user_id].events['Устранение главного хирурга'].completed = True
+        elif users[user_id].events['Убийство во время йоги'].completed == False and users[user_id].player.current_location.name == 'Зона отдыха' and users[user_id].player.disguise.name == 'Инструктор по йоге' and users[user_id].targets['Yuki Yamazaki'].alive:
+            context.bot.send_message(chat_id=update.effective_chat.id, text='Юки Ямадзаки: Наконец-то, сколько можно вас ждать!', reply_markup=yoga_kill_keyboard_1())
+            users[user_id].events['Убийство во время йоги'].completed = True
+        else:
+            return InlineKeyboardMarkup([
+                [InlineKeyboardButton("Передвижение", callback_data="Передвижение"), InlineKeyboardButton("Взаимодействие", callback_data="Взаимодействие")],
+                [InlineKeyboardButton("Инвентарь", callback_data="Инвентарь"), InlineKeyboardButton("Обыскать локацию", callback_data="Обыскать локацию")],
+                [InlineKeyboardButton("Статус", callback_data="Статус"), InlineKeyboardButton("Испытания", callback_data="Испытания")],
+                [InlineKeyboardButton("Сохранить и выйти", callback_data="Сохранить и выйти")]
+            ])
     
     def challenges_keyboard():
         return InlineKeyboardMarkup([[InlineKeyboardButton("Выйти", callback_data='Выбор действия')]])
@@ -408,9 +435,13 @@ def telegram_bot():
                 options.append(lvl_unlocks[i][0])
         return InlineKeyboardMarkup(make_keyboard(options, 'CSL'))
     
-    def choose_start_item_keyboard(update: Update, context: CallbackContext):
+    def choose_start_item_keyboard_1(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
-        return InlineKeyboardMarkup(make_keyboard(users[user_id].carry_on_items, 'CSI'))
+        return InlineKeyboardMarkup(make_keyboard(users[user_id].carry_on_items, 'CSI1'))
+    
+    def choose_start_item_keyboard_2(update: Update, context: CallbackContext):
+        user_id = update.callback_query.from_user['id']
+        return InlineKeyboardMarkup(make_keyboard(users[user_id].carry_on_items, 'CSI2'))
     
     def game_start_keyboard():
         return InlineKeyboardMarkup([[InlineKeyboardButton("Начать игру", callback_data="Начало игры")]])
@@ -636,10 +667,10 @@ def telegram_bot():
         return location
     
     def is_start_item_1(query):
-        return 'CSI' in query
+        return 'CSI1' in query
     
     def is_start_item_2(query):
-        return 'CSI' in query
+        return 'CSI2' in query
     
     def is_pistol(query):
         return 'choose_pistol' in query
@@ -933,7 +964,7 @@ def telegram_bot():
         users[user_id].targets['Erich Soders'].alive = False
         query = update.callback_query
         query.answer()
-        if users[user_id].challenges['Бессердечный'].completed == False:
+        if users[user_id].challenges['Призрак в машине'].completed == False:
             query.edit_message_text(text=users[user_id].challenges['Призрак в машине'].achieved(update=update, context=context))
             users[user_id].player_lvl += 5
             if users[user_id].challenges['Так можно и пораниться'].completed == False:
@@ -954,10 +985,16 @@ def telegram_bot():
         for i in list(users[user_id].challenges.values()):
             if i.completed:
                 completed_challenges.append(i.name)
+        unlocked_disguises = []
+        for i in list(users[user_id].disguises.values()):
+            if i.unlocked:
+                unlocked_disguises.append(i.name)
         completed_challenges_str = ';'.join(completed_challenges)
+        unlocked_disguises_str = ';'.join(unlocked_disguises)
         adapter.update_by_id("Users", f'completed_challenges={completed_challenges_str}', user_id)
+        adapter.update_by_id("Users", f'unlocked_disguises={unlocked_disguises_str}', user_id)
         adapter.update_by_id("Users", f'player_lvl={users[user_id].player_lvl}', user_id)
-        users[user_id] = create_user(player_lvl=users[user_id].player_lvl, completed_challenges=completed_challenges_str)
+        users[user_id] = create_user(player_lvl=users[user_id].player_lvl, completed_challenges=completed_challenges_str, unlocked_disguises=unlocked_disguises_str)
         query.edit_message_text(text='Данные сохранены.\n\nЧтобы начать новую игру используйте /begin')
 
     def use(update: Update, context: CallbackContext):
@@ -1118,10 +1155,16 @@ def telegram_bot():
         for i in list(users[user_id].challenges.values()):
             if i.completed:
                 completed_challenges.append(i.name)
+        unlocked_disguises = []
+        for i in list(users[user_id].disguises.values()):
+            if i.unlocked:
+                unlocked_disguises.append(i.name)
         completed_challenges_str = ';'.join(completed_challenges)
+        unlocked_disguises_str = ';'.join(unlocked_disguises)
         adapter.update_by_id("Users", f'completed_challenges={completed_challenges_str}', user_id)
+        adapter.update_by_id("Users", f'unlocked_disguises={unlocked_disguises_str}', user_id)
         adapter.update_by_id("Users", f'player_lvl={users[user_id].player_lvl}', user_id)
-        users[user_id] = create_user(player_lvl=users[user_id].player_lvl, completed_challenges=completed_challenges_str)
+        users[user_id] = create_user(player_lvl=users[user_id].player_lvl, completed_challenges=completed_challenges_str, unlocked_disguises=unlocked_disguises_str)
         context.bot.send_message(chat_id=update.effective_chat.id, text='Чтобы начать новую игру используйте /begin')
 
     def hide_combat(update: Update, context: CallbackContext):
@@ -1165,12 +1208,16 @@ def telegram_bot():
         """Смена маскировки"""
         user_id = update.callback_query.from_user['id']
         query = update.callback_query
+        query.answer()
         disguise_choice = query.data.replace('МСК', '')
         users[user_id].player.disguise = users[user_id].disguises[disguise_choice]
         if users[user_id].player.disguise.name != 'VIP - пациент':
             users[user_id].suit_only = False
-        query.answer()
-        query.edit_message_text(text=f'Текущая маскировка: {users[user_id].player.disguise.name}', reply_markup=(choose_action_keyboard(update=update, context=context)))
+        if users[user_id].player.disguise.unlocked == False:
+            query.edit_message_text(text=users[user_id].player.disguise.unlock(update=update, context=context))
+            context.bot.send_message(chat_id=update.effective_chat.id, text=f'Текущая маскировка: {users[user_id].player.disguise.name}', reply_markup=(choose_action_keyboard(update=update, context=context)))
+        else:
+            query.edit_message_text(text=f'Текущая маскировка: {users[user_id].player.disguise.name}', reply_markup=(choose_action_keyboard(update=update, context=context)))
 
     def hide(update: Update, context: CallbackContext):
         """Скрыться после того, как вас заметили"""
@@ -1190,7 +1237,7 @@ def telegram_bot():
         query = update.callback_query
         chance = int(query.data.replace('ПРТ', '').split(':')[0])
         move_to_location = users[user_id].locations[query.data.replace('ПРТ', '').split(':')[1]]
-        edit = users[user_id].events['Компьютер в морге'].completed == False
+        edit = True
         if users[user_id].events['Компьютер в морге'].completed == False and move_to_location.name == 'Морг':
             query.edit_message_text(text='Вы нашли файл на компьютере. Это заметки о Кураторе и его нейрочипе.\n\nВ них приводятся подробные сведения об устройстве чипа и принципе его работы, а также описание того, как изменение дозы влияет на настроение Куратора. Судя по всему, увеличение дозы приводит к улучшению его настроения, а уменьшение, напротив, возвращает его в привычное подавленное состояние.\n\nЧто любопытно, научный сотрудник, похоже, сам менял дозу Куратора без его ведома: для этого он использовал пульт управления чипом, который куратор хранит в своей спальне.')
             users[user_id].events['Компьютер в морге'].completed = True
@@ -1281,82 +1328,46 @@ def telegram_bot():
             query.edit_message_text(text='Интересно. Руководство для KAI, искусственного интеллекта клиники «Гама». Значит, местный искусственный интеллект по имени KAI не только поддерживает работу систем здания, но и управляет роботом в операционной.\n\nИменно там сейчас находится Содерс. В руководстве говорится, что после остановки сердца пациента искусственный интеллект автоматически начинает его реанимацию, что очень некстати.\n\nОднако... У директора клиники есть доступ к главному компьютеру. Справишься с управлением целой клиникой, 47-й?')
             users[user_id].events['Информация об ИИ'].completed = True
             edit = False
-        if users[user_id].events['Убийство в сауне'].completed == False and move_to_location.name == 'Водоснабжение спа':
-            users[user_id].player.current_location = move_to_location
-            query.edit_message_text(text='Выберите действие', reply_markup=sauna_kill_keyboard_1())
-            edit = False
-        elif users[user_id].events['Все цели убиты'].completed == True and (move_to_location.name == 'Канатная дорога' or move_to_location.name == 'Гараж' or move_to_location.name == 'Вертолетная площадка' or move_to_location.name == 'Горная тропа'):
+        #Случай, когда для входа нужна маскировка или ключ-карта
+        if move_to_location.name == 'Комната с серверами':
+            if users[user_id].player.disguise.name == 'Директор клиники' or users[user_id].items['Ключ-карта'] in users[user_id].player.inventory or users[user_id].items['Электронный дешифровщик'] in users[user_id].player.inventory:
                 users[user_id].player.current_location = move_to_location
-                query.edit_message_text(text='Выберите действие', reply_markup=(exit_mission_keyboard()))
-        elif (users[user_id].items['Яд рыбы Фугу'] in users[user_id].player.inventory or users[user_id].items['Крысиный яд'] in users[user_id].player.inventory or users[user_id].items['Смертельный яд'] in users[user_id].player.inventory or users[user_id].items['Рвотный яд'] in users[user_id].player.inventory) and move_to_location.name == 'Ресторан' and users[user_id].events['Убийство ядом'].completed == False and users[user_id].targets['Yuki Yamazaki'].alive:
-                users[user_id].player.current_location = move_to_location
-                query.edit_message_text(text='Выберите действие', reply_markup=(sushi_kill_keyboard_1(update=update, context=context)))
-        elif move_to_location.name == 'Номер Юки Ямадзаки' and users[user_id].player.disguise in move_to_location.disguise:
-                users[user_id].player.current_location = move_to_location
-                if users[user_id].events['Сигареты на столе'].completed == False and users[user_id].items['Пачка сигарет'] in users[user_id].player.inventory:
-                    query.edit_message_text(text='На столе находится пустая пачка сигарет.', reply_markup=(cigar_kill_keyboard_1()))
-                elif users[user_id].events['Сигареты на столе'].completed:
-                    users[user_id].player.inventory.append(users[user_id].items['Пачка сигарет'])
-                    cigar_kill_1(update=update, context=context) 
+                if edit:
+                    if users[user_id].targets['Erich Soders'].alive == True:
+                        query.edit_message_text(text='Выберите действие', reply_markup=(destroy_servers_keyboard()))
+                    else:
+                        query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(choose_action_keyboard(update=update, context=context)))
                 else:
-                    if edit:
-                        query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context))
+                    if users[user_id].targets['Erich Soders'].alive == True:
+                        context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=(destroy_servers_keyboard()))
                     else:
-                        context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context))
-        elif users[user_id].events['Убийство в операционной'].completed == False and move_to_location.name == 'Операционная' and users[user_id].player.disguise.name == 'Главный хирург' and users[user_id].targets['Erich Soders'].alive:
-            users[user_id].player.current_location = move_to_location
-            query.edit_message_text(text='В операционной находится пульт управления робо-руками, проводящими операцию.', reply_markup=robot_kill_keyboard_1())
-            edit = False
-        elif users[user_id].events['Устранение главного хирурга'].completed == False and move_to_location.name == 'Вертолетная площадка' and users[user_id].player.disguise.name == 'Пилот' and users[user_id].npcs['Nicholas Laurent'].alive:
-            users[user_id].player.current_location = move_to_location
-            query.edit_message_text(text='Главный хирург вышел из мед-комплекса\n\nГлавный хирург: У тебя еще остались те таблетки?\n47-й: Конечно, следуй за мной.', reply_markup=surgeon_knock_out_keyboard_1())
-            users[user_id].events['Устранение главного хирурга'].completed = True
-            edit = False
-        elif users[user_id].events['Убийство во время йоги'].completed == False and move_to_location.name == 'Зона отдыха' and users[user_id].player.disguise.name == 'Инструктор по йоге' and users[user_id].targets['Yuki Yamazaki'].alive:
-            users[user_id].player.current_location = move_to_location
-            query.edit_message_text(text='Юки Ямадзаки: Наконец-то, сколько можно вас ждать!', reply_markup=yoga_kill_keyboard_1())
-            users[user_id].events['Убийство во время йоги'].completed = True
-            edit = False
-        else:
-            #Случай, когда для входа нужна маскировка или ключ-карта
-            if move_to_location.name == 'Комната с серверами':
-                if users[user_id].player.disguise.name == 'Директор клиники' or users[user_id].items['Ключ-карта'] in users[user_id].player.inventory or users[user_id].items['Электронный дешифровщик'] in users[user_id].player.inventory:
-                    users[user_id].player.current_location = move_to_location
-                    if edit:
-                        if users[user_id].targets['Erich Soders'].alive == True:
-                            query.edit_message_text(text='Выберите действие', reply_markup=(destroy_servers_keyboard()))
-                        else:
-                            query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(choose_action_keyboard(update=update, context=context)))
-                    else:
-                        if users[user_id].targets['Erich Soders'].alive == True:
-                            context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=(destroy_servers_keyboard()))
-                        else:
-                            context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(choose_action_keyboard(update=update, context=context)))
+                        context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(choose_action_keyboard(update=update, context=context)))
+            else:
+                if edit:
+                    query.edit_message_text(text='Для входа необходима маскировка директора клиники или ключ-карта', reply_markup=move_keyboard(update=update, context=context))
                 else:
-                    if edit:
-                        query.edit_message_text(text='Для входа необходима маскировка директора клиники или ключ-карта', reply_markup=move_keyboard(update=update, context=context))
-                    else:
-                        context.bot.send_message(chat_id=update.effective_chat.id, text='Для входа необходима маскировка директора клиники или ключ-карта', reply_markup=move_keyboard(update=update, context=context))
-            elif users[user_id].player.disguise in users[user_id].player.compromised_disguises:
-                #Случай, когда маскировка игрока раскрыта
-                users[user_id].player.current_location = move_to_location
-                locations_npcs = find_location_npcs(update=update, context=context, location=users[user_id].player.current_location)
-                if locations_npcs != []:
-                    location_npc = locations_npcs[random.randrange(len(locations_npcs))]
-                    if edit:
-                        query.edit_message_text(text=location_npc.suspicion(), reply_markup=attack_keyboard(location_npc, move_to_location))
-                        users[user_id].suspicion_count += 1
-                    else:
-                        context.bot.send_message(chat_id=update.effective_chat.id, text=location_npc.suspicion(), reply_markup=attack_keyboard(location_npc, move_to_location))
-                        users[user_id].suspicion_count += 1
+                    context.bot.send_message(chat_id=update.effective_chat.id, text='Для входа необходима маскировка директора клиники или ключ-карта', reply_markup=move_keyboard(update=update, context=context))
+        elif users[user_id].player.disguise in users[user_id].player.compromised_disguises:
+            #Случай, когда маскировка игрока раскрыта
+            users[user_id].player.current_location = move_to_location
+            locations_npcs = find_location_npcs(update=update, context=context, location=users[user_id].player.current_location)
+            if locations_npcs != []:
+                location_npc = locations_npcs[random.randrange(len(locations_npcs))]
+                if edit:
+                    query.edit_message_text(text=location_npc.suspicion(), reply_markup=attack_keyboard(location_npc, move_to_location))
+                    users[user_id].suspicion_count += 1
                 else:
-                    if edit:
-                        query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context))
-                    else:
-                        context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context))
-            elif (users[user_id].player.item.legal == False and users[user_id].player.disguise.name != 'Охранник' and users[user_id].player.disguise.name != 'Телохранитель'):
-                #Случай, когда в руках игрока нелегальный предмет
-                users[user_id].player.current_location = move_to_location
+                    context.bot.send_message(chat_id=update.effective_chat.id, text=location_npc.suspicion(), reply_markup=attack_keyboard(location_npc, move_to_location))
+                    users[user_id].suspicion_count += 1
+            else:
+                if edit:
+                    query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context))
+                else:
+                    context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context))
+        elif users[user_id].player.item.legal == False:
+            #Случай, когда в руках игрока нелегальный предмет
+            users[user_id].player.current_location = move_to_location
+            if users[user_id].player.disguise.name != 'Охранник' and users[user_id].player.disguise.name != 'Телохранитель':
                 if find_location_npcs(update=update, context=context, location=users[user_id].player.current_location) != []:
                     location_npc = find_location_npcs(update=update, context=context, location=users[user_id].player.current_location)[random.randrange(len(find_location_npcs(update=update, context=context, location=users[user_id].player.current_location)))]
                     users[user_id].suspicion_count += 1
@@ -1369,23 +1380,28 @@ def telegram_bot():
                         query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context))
                     else:
                         context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context))
-            elif users[user_id].player.disguise in move_to_location.disguise:
-                #Случай, когда маскировка игрока позволяет пройти на локацию
-                users[user_id].player.current_location = move_to_location
+            else:
                 if edit:
                     query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context))
                 else:
                     context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context))
+        elif users[user_id].player.disguise in move_to_location.disguise:
+            #Случай, когда маскировка игрока позволяет пройти на локацию
+            users[user_id].player.current_location = move_to_location
+            if edit:
+                query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context))
             else:
-                #Случай, когда маскировка игрока не позволяет пройти на локацию
-                users[user_id].events['Компьютер в морге'].completed = False
-                users[user_id].events['Информация о сигаретах 2'].completed = False
-                users[user_id].events['Информация о суши'].completed = False
-                users[user_id].events['Расписание занятий по йоге'].completed = False
-                users[user_id].events['Информация о пилоте'].completed = False
-                users[user_id].events['Информация об ИИ'].completed = False
-                chance = min(10, location_witnesses(update=update, context=context, location=users[user_id].player.current_location))
-                query.edit_message_text(text='У вас нет подходящей маскировки. Переместиться на локацию?', reply_markup=(no_disguise_move_keyboard(chance=chance, location=move_to_location)))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context))
+        else:
+            #Случай, когда маскировка игрока не позволяет пройти на локацию
+            users[user_id].events['Компьютер в морге'].completed = False
+            users[user_id].events['Информация о сигаретах 2'].completed = False
+            users[user_id].events['Информация о суши'].completed = False
+            users[user_id].events['Расписание занятий по йоге'].completed = False
+            users[user_id].events['Информация о пилоте'].completed = False
+            users[user_id].events['Информация об ИИ'].completed = False
+            chance = min(10, location_witnesses(update=update, context=context, location=users[user_id].player.current_location))
+            query.edit_message_text(text='У вас нет подходящей маскировки. Переместиться на локацию?', reply_markup=(no_disguise_move_keyboard(chance=chance, location=move_to_location)))
 
     def combat(update: Update, context: CallbackContext, start_string='', type='edit'):
         """Бой"""
@@ -1423,10 +1439,10 @@ def telegram_bot():
         """Передвижение, не зависящее от маскировки"""
         user_id = update.callback_query.from_user['id']
         query = update.callback_query
-        users[user_id].player.current_location = users[user_id].locations[query.data.replace('SM', '')]
         if users[user_id].player.item.name == 'Монета':
             users[user_id].player.current_location.items.append(users[user_id].player.item)
         users[user_id].player.inventory.remove(users[user_id].player.item)
+        users[user_id].player.current_location = users[user_id].locations[query.data.replace('SM', '')]
         query.answer()
         query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(choose_action_keyboard(update=update, context=context)))
 
@@ -1486,7 +1502,7 @@ def telegram_bot():
                 f'user_nickname={user_nickname}',
                 f'updated={created}'
             ])
-            users[user_id] = create_user(player_lvl=10, completed_challenges='')
+            users[user_id] = create_user(player_lvl=10, completed_challenges='', unlocked_disguises='')
         if update.message['message_id'] != users[user_id].message:
             users[user_id].message = update.message['message_id']
             updated = int(tm.time())
