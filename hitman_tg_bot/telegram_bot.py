@@ -1,12 +1,10 @@
-import pickle
 import os
-import sys
 import random
 import time as tm
 
 import logging
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, InlineKeyboardButton, InlineKeyboardMarkup,ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, MessageHandler, PollAnswerHandler, PollHandler
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -21,7 +19,7 @@ tg_token = os.getenv("TELEGRAM_TOKEN")
 def create_user(player_lvl: int, completed_challenges: str):
     """Создание объекта класса информации о пользователе"""
     challenges_values = list(challenges.values())
-    user_challenges = {list(challenges.keys())[i]: Challenge(name=challenges_values[i].name, description=challenges_values[i].description) for i in range(len(challenges))}
+    user_challenges = {list(challenges.keys())[i]: Challenge(name=challenges_values[i].name, description=challenges_values[i].description, url=challenges_values[i].url) for i in range(len(challenges))}
     disguises_values = list(disguises.values())
     user_disguises = {list(disguises.keys())[i]: Disguise(name=disguises_values[i].name) for i in range(len(disguises))}
     items_values = list(items.values())
@@ -386,18 +384,14 @@ def telegram_bot():
 
     def choose_action_keyboard(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
-        actions = [
-            "Передвижение",
-            "Взаимодействие",
-            "Инвентарь",
-            "Обыскать локацию",
-            "Статус",
-            "Испытания",
-            "Сохранить и выйти"
-        ]
         if users[user_id].disguises['Охранник'] in users[user_id].player.found_disguises or users[user_id].disguises['Телохранитель'] in users[user_id].player.found_disguises:
             users[user_id].player.inventory.append(users[user_id].items['Пистолет без глушителя'])
-        return InlineKeyboardMarkup(make_keyboard(actions, ''))
+        return InlineKeyboardMarkup([
+            [InlineKeyboardButton("Передвижение", callback_data="Передвижение"), InlineKeyboardButton("Взаимодействие", callback_data="Взаимодействие")],
+            [InlineKeyboardButton("Инвентарь", callback_data="Инвентарь"), InlineKeyboardButton("Обыскать локацию", callback_data="Обыскать локацию")],
+            [InlineKeyboardButton("Статус", callback_data="Статус"), InlineKeyboardButton("Испытания", callback_data="Испытания")],
+            [InlineKeyboardButton("Сохранить и выйти", callback_data="Сохранить и выйти")]
+        ])
     
     def challenges_keyboard():
         return InlineKeyboardMarkup([[InlineKeyboardButton("Выйти", callback_data='Выбор действия')]])
@@ -422,13 +416,13 @@ def telegram_bot():
         return InlineKeyboardMarkup([[InlineKeyboardButton("Начать игру", callback_data="Начало игры")]])
 
     def attack_keyboard(npc=None, location=None):
-        return InlineKeyboardMarkup([[InlineKeyboardButton(f"Напасть (3/10)", callback_data=f"НПД{npc.name}:{location.name}")], [InlineKeyboardButton("Уйти", callback_data=f"Выбор действия")]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton(f"Напасть (3/10)", callback_data=f"НПД{npc.name}:{location.name}"), InlineKeyboardButton("Уйти", callback_data=f"Выбор действия")]])
     
     def hide_keyboard(npc=None, location=None):
-        return InlineKeyboardMarkup([[InlineKeyboardButton(f"Напасть (3/10)", callback_data=f"НПД{npc.name}:{location.name}")], [InlineKeyboardButton("Скрыться (7/10)", callback_data=f"Скрыться")]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton(f"Напасть (3/10)", callback_data=f"НПД{npc.name}:{location.name}"), InlineKeyboardButton("Скрыться (7/10)", callback_data=f"Скрыться")]])
 
     def no_disguise_move_keyboard(chance, location):
-        return InlineKeyboardMarkup([[InlineKeyboardButton(f"Да ({10-chance}/10)", callback_data=f"ПРТ{10 - chance}:{location.name}")], [InlineKeyboardButton("Нет", callback_data=f"Передвижение")]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton(f"Да ({10-chance}/10)", callback_data=f"ПРТ{10 - chance}:{location.name}"), InlineKeyboardButton("Нет", callback_data=f"Передвижение")]])
 
     def inventory_keyboard(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
@@ -444,7 +438,7 @@ def telegram_bot():
         if users[user_id].player.inventory != []:
             inventory.append('Убрать предмет из рук')
         keyboard = make_keyboard(inventory, '')
-        keyboard.append([InlineKeyboardButton(f"{users[user_id].player.disguise.name}", callback_data='МАСК')])
+        keyboard.append([InlineKeyboardButton('Сменить маскировку', callback_data='МАСК')])
         keyboard.append([InlineKeyboardButton(f"Выйти", callback_data=f"Выбор действия")])
         return InlineKeyboardMarkup(keyboard)
 
@@ -453,7 +447,7 @@ def telegram_bot():
         return InlineKeyboardMarkup(make_keyboard([i.name for i in users[user_id].player.found_disguises], 'МСК'))
 
     def choose_illegal_item_keyboard():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Да', callback_data='ВНО')], [InlineKeyboardButton(f"Нет", callback_data=f"Инвентарь")]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Да', callback_data='ВНО'), InlineKeyboardButton(f"Нет", callback_data=f"Инвентарь")]])
 
     def choose_weapon_keyboard(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
@@ -464,7 +458,7 @@ def telegram_bot():
         return InlineKeyboardMarkup(make_keyboard(weapons, 'WP'))
 
     def combat_start_keyboard():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Прятаться (5/10)', callback_data='Прятаться')], [InlineKeyboardButton(f"Напасть", callback_data=f"Напасть")]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Прятаться (5/10)', callback_data='Прятаться'), InlineKeyboardButton(f"Напасть", callback_data=f"Напасть")]])
     
     def choose_weapon_action_keyboard(update: Update, context: CallbackContext, item_name: str):
         user_id = update.callback_query.from_user['id']
@@ -546,59 +540,59 @@ def telegram_bot():
             return InlineKeyboardMarkup(keyboard)
         
     def confirm_kill_keyboard(npc, witnesses):
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Убить', callback_data=npc.replace('KILL', f'con_kill{witnesses}'))], [InlineKeyboardButton('Отменить действие', callback_data=f"Взаимодействие")]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Убить', callback_data=npc.replace('KILL', f'con_kill{witnesses}')), InlineKeyboardButton('Отменить действие', callback_data=f"Взаимодействие")]])
     
     def confirm_knock_keyboard(npc, witnesses):
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Вырубить', callback_data=npc.replace('KNOCK', f'con_knock{witnesses}'))], [InlineKeyboardButton('Отменить действие', callback_data=f"Взаимодействие")]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Вырубить', callback_data=npc.replace('KNOCK', f'con_knock{witnesses}')), InlineKeyboardButton('Отменить действие', callback_data=f"Взаимодействие")]])
     
     def confirm_distract_keyboard(npc):
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Вырубить', callback_data=npc.replace('DIS', 'CDKN'))], [InlineKeyboardButton('Убить', callback_data=npc.replace('DIS', 'CDKL'))], [InlineKeyboardButton('Отменить действие', callback_data=f"Взаимодействие")]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Вырубить', callback_data=npc.replace('DIS', 'CDKN')), InlineKeyboardButton('Убить', callback_data=npc.replace('DIS', 'CDKL'))], [InlineKeyboardButton('Отменить действие', callback_data=f"Взаимодействие")]])
     
     def save_and_quit_confirm_keyboard():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Да', callback_data='Конец игры')], [InlineKeyboardButton('Нет', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Да', callback_data='Конец игры'), InlineKeyboardButton('Нет', callback_data='Выбор действия')]])
 
     def destroy_heart_keyboard_1():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Да', callback_data='DH1')], [InlineKeyboardButton('Нет', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Да', callback_data='DH1'), InlineKeyboardButton('Нет', callback_data='Выбор действия')]])
     
     def destroy_heart_keyboard_2():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Повредить сердце', callback_data='DH2')], [InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Повредить сердце', callback_data='DH2'), InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
 
     def exit_mission_keyboard():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Завершить миссию', callback_data='Завершить миссию')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Завершить миссию', callback_data='Завершить миссию'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
     
     def destroy_servers_keyboard():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Повредить серверы', callback_data='Повредить серверы')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Повредить серверы', callback_data='Повредить серверы'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
 
     def sauna_kill_keyboard_1():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Увеличить температуру воды', callback_data='УТВ')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Увеличить температуру воды', callback_data='УТВ'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
     
     def sauna_kill_keyboard_2():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Запереть дверь в парилку', callback_data='ЗДП')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Запереть дверь в парилку', callback_data='ЗДП'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
 
     def robot_kill_keyboard_1():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Взять управление', callback_data='Взять управление')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Взять управление', callback_data='Взять управление'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
     
     def robot_kill_keyboard_2():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Убить Эриха Содерса', callback_data='УЭС')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Убить Эриха Содерса', callback_data='УЭС'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
     
     def surgeon_knock_out_keyboard_1():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Пойти в комнату пилота', callback_data='ПКП')], [InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Пойти в комнату пилота', callback_data='ПКП'), InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
     
     def surgeon_knock_out_keyboard_2():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Усмирить главного хирурга', callback_data='УГХ')], [InlineKeyboardButton('Убить главного хирурга', callback_data='УГХсм')], [InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Усмирить главного хирурга', callback_data='УГХ'), InlineKeyboardButton('Убить главного хирурга', callback_data='УГХсм')], [InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
 
     def yoga_kill_keyboard_1():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Начать тренировку', callback_data='Начать тренировку')], [InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Начать тренировку', callback_data='Начать тренировку'), InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
     
     def yoga_kill_keyboard_2():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Толкнуть Юки Ямадзаки', callback_data='ТЮЯ')], [InlineKeyboardButton('Завершить тренировку', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Толкнуть Юки Ямадзаки', callback_data='ТЮЯ'), InlineKeyboardButton('Завершить тренировку', callback_data='Выбор действия')]])
     
     def sushi_kill_keyboard_1(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
         if users[user_id].player.disguise.name == 'Шеф':
-            return InlineKeyboardMarkup([[InlineKeyboardButton('Отравить роллы', callback_data='ОР')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+            return InlineKeyboardMarkup([[InlineKeyboardButton('Отравить роллы', callback_data='ОР'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
         else:
-            return InlineKeyboardMarkup([[InlineKeyboardButton('Отравить роллы (3/10)', callback_data='ОР')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+            return InlineKeyboardMarkup([[InlineKeyboardButton('Отравить роллы (3/10)', callback_data='ОР'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
     
     def sushi_kill_keyboard_2(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
@@ -612,19 +606,19 @@ def telegram_bot():
         return InlineKeyboardMarkup(keyboard)
     
     def sushi_kill_keyboard_3():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Пойти за целью', callback_data='Пойти за целью')], [InlineKeyboardButton('Остаться', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Пойти за целью', callback_data='Пойти за целью'), InlineKeyboardButton('Остаться', callback_data='Выбор действия')]])
     
     def sushi_kill_keyboard_4():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Утопить цель', callback_data='Утопить цель')], [InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Утопить цель', callback_data='Утопить цель'), InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
     
     def cigar_kill_keyboard_1():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Положить новую пачку', callback_data='ПНПС')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Положить новую пачку', callback_data='ПНПС'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
     
     def cigar_kill_keyboard_2():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Пойти на балкон', callback_data='ПНБ')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Пойти на балкон', callback_data='ПНБ'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
     
     def cigar_kill_keyboard_3():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Создать утечку газа', callback_data='СУГ')], [InlineKeyboardButton('Уйти с балкона', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Создать утечку газа', callback_data='СУГ'), InlineKeyboardButton('Уйти с балкона', callback_data='Выбор действия')]])
     
     def cigar_kill_keyboard_4():
         return InlineKeyboardMarkup([[InlineKeyboardButton('Уйти с балкона', callback_data='УСБ')]])
@@ -740,7 +734,7 @@ def telegram_bot():
         if users[user_id].targets['Yuki Yamazaki'].alive:
             users[user_id].targets['Yuki Yamazaki'].alive = False
             if users[user_id].challenges['Курение убивает'].completed == False:
-                query.edit_message_text(text=users[user_id].challenges['Курение убивает'].achieved())
+                query.edit_message_text(text=users[user_id].challenges['Курение убивает'].achieved(update=update, context=context))
                 users[user_id].player_lvl += 5
                 if users[user_id].challenges['Так можно и пораниться'].completed == False:
                     context.bot.send_message(chat_id=update.effective_chat.id, text=text)
@@ -771,7 +765,7 @@ def telegram_bot():
         users[user_id].events['Сигареты на столе'].completed = True
         users[user_id].player.inventory.remove(users[user_id].items['Пачка сигарет'])
         if users[user_id].challenges['Не курить!'].completed == False:
-            query.edit_message_text(text=users[user_id].challenges['Не курить!'].achieved())
+            query.edit_message_text(text=users[user_id].challenges['Не курить!'].achieved(update=update, context=context))
             users[user_id].player_lvl += 5
             context.bot.send_message(chat_id=update.effective_chat.id, text='На балконе находится газовый обогреватель.', reply_markup=cigar_kill_keyboard_2())
         else:
@@ -782,10 +776,10 @@ def telegram_bot():
         query = update.callback_query
         query.answer()
         if users[user_id].challenges['Подержи волосы'].completed == False:
-            query.edit_message_text(text=users[user_id].challenges['Подержи волосы'].achieved())
+            query.edit_message_text(text=users[user_id].challenges['Подержи волосы'].achieved(update=update, context=context))
             users[user_id].player_lvl += 5
             if users[user_id].challenges['Без вкуса, без следа'].completed == False:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Без вкуса, без следа'].achieved())
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Без вкуса, без следа'].achieved(update=update, context=context))
                 users[user_id].player_lvl += 5
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].targets['Yuki Yamazaki'].kill(), reply_markup=choose_action_keyboard(update=update, context=context))
         else:
@@ -806,16 +800,16 @@ def telegram_bot():
         if poison.lethal:
             if poison.name == 'Яд рыбы Фугу':
                 if users[user_id].challenges['Приятного аппетита'].completed == False:
-                    query.edit_message_text(text=users[user_id].challenges['Приятного аппетита'].achieved())
+                    query.edit_message_text(text=users[user_id].challenges['Приятного аппетита'].achieved(update=update, context=context))
                     users[user_id].player_lvl += 5
                     if users[user_id].challenges['Без вкуса, без следа'].completed == False:
-                        context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Без вкуса, без следа'].achieved())
+                        context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Без вкуса, без следа'].achieved(update=update, context=context))
                         users[user_id].player_lvl += 5
                     context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].targets['Yuki Yamazaki'].kill(), reply_markup=choose_action_keyboard(update=update, context=context))
                 else:
                     query.edit_message_text(text=users[user_id].targets['Yuki Yamazaki'].kill(), reply_markup=choose_action_keyboard(update=update, context=context))
             elif users[user_id].challenges['Без вкуса, без следа'].completed == False:
-                query.edit_message_text(text=users[user_id].challenges['Без вкуса, без следа'].achieved())
+                query.edit_message_text(text=users[user_id].challenges['Без вкуса, без следа'].achieved(update=update, context=context))
                 users[user_id].player_lvl += 5
                 context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].targets['Yuki Yamazaki'].kill(), reply_markup=choose_action_keyboard(update=update, context=context))
             else:
@@ -842,11 +836,11 @@ def telegram_bot():
         query = update.callback_query
         query.answer()
         if users[user_id].challenges['Хорошая растяжка'].completed == False:
-            query.edit_message_text(text=users[user_id].challenges['Хорошая растяжка'].achieved())
+            query.edit_message_text(text=users[user_id].challenges['Хорошая растяжка'].achieved(update=update, context=context))
             users[user_id].player_lvl += 5
             users[user_id].challenges['Хорошая растяжка'].completed = True
             if users[user_id].challenges['Так можно и пораниться'].completed == False:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved())
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context))
                 users[user_id].player_lvl += 5
                 users[user_id].challenges['Так можно и пораниться'].completed = True
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].targets['Yuki Yamazaki'].kill(), reply_markup=(choose_action_keyboard(update=update, context=context)))
@@ -878,11 +872,11 @@ def telegram_bot():
         query = update.callback_query
         query.answer()
         if users[user_id].challenges['Убийство в парилке'].completed == False:
-            query.edit_message_text(text=users[user_id].challenges['Убийство в парилке'].achieved())
+            query.edit_message_text(text=users[user_id].challenges['Убийство в парилке'].achieved(update=update, context=context))
             users[user_id].player_lvl += 5
             users[user_id].challenges['Убийство в парилке'].completed = True
             if users[user_id].challenges['Так можно и пораниться'].completed == False:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved())
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context))
                 users[user_id].player_lvl += 5
                 users[user_id].challenges['Так можно и пораниться'].completed = True
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].targets['Yuki Yamazaki'].kill(), reply_markup=(choose_action_keyboard(update=update, context=context)))
@@ -904,11 +898,11 @@ def telegram_bot():
         query = update.callback_query
         query.answer()
         if users[user_id].challenges['(Не) врачебная ошибка'].completed == False:
-            query.edit_message_text(text=users[user_id].challenges['(Не) врачебная ошибка'].achieved())
+            query.edit_message_text(text=users[user_id].challenges['(Не) врачебная ошибка'].achieved(update=update, context=context))
             users[user_id].player_lvl += 5
             users[user_id].challenges['(Не) врачебная ошибка'].completed = True
             if users[user_id].challenges['Так можно и пораниться'].completed == False:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved())
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context))
                 users[user_id].player_lvl += 5
                 users[user_id].challenges['Так можно и пораниться'].completed = True
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].targets['Erich Soders'].kill(), reply_markup=(choose_action_keyboard(update=update, context=context)))
@@ -928,7 +922,7 @@ def telegram_bot():
         query = update.callback_query
         query.answer()
         if users[user_id].challenges['Бессердечный'].completed == False:
-            query.edit_message_text(text=users[user_id].challenges['Бессердечный'].achieved())
+            query.edit_message_text(text=users[user_id].challenges['Бессердечный'].achieved(update=update, context=context))
             users[user_id].player_lvl += 5
             context.bot.send_message(chat_id=update.effective_chat.id, text='Диана: 47-й, без сердца для пересадки Содерс не выживет. Ты смог от него избавиться даже не прикасаясь, изящный ход.', reply_markup=(choose_action_keyboard(update=update, context=context)))
         else:
@@ -940,10 +934,10 @@ def telegram_bot():
         query = update.callback_query
         query.answer()
         if users[user_id].challenges['Бессердечный'].completed == False:
-            query.edit_message_text(text=users[user_id].challenges['Призрак в машине'].achieved())
+            query.edit_message_text(text=users[user_id].challenges['Призрак в машине'].achieved(update=update, context=context))
             users[user_id].player_lvl += 5
             if users[user_id].challenges['Так можно и пораниться'].completed == False:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved())
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context))
                 users[user_id].player_lvl += 5
             context.bot.send_message(chat_id=update.effective_chat.id, text='Хирург: Что происходит с роботом?! Как его отключить?! Пациент сейчас умрет!\n\nДиана: Это было впечатляюще, агент. Эрих Содерс мертв.', reply_markup=(choose_action_keyboard(update=update, context=context)))
         else:
@@ -1048,7 +1042,7 @@ def telegram_bot():
         else:
             target = users[user_id].targets[data]
             if data == 'Erich Soders' and (users[user_id].player.item.name == 'Пистолет без глушителя' or users[user_id].player.item.name == 'Пистолет с глушителем') and users[user_id].challenges['Личное прощание'].completed == False:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Личное прощание'].achieved())
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Личное прощание'].achieved(update=update, context=context))
                 users[user_id].player_lvl += 5
             context.bot.send_message(chat_id=update.effective_chat.id, text=target.kill())
         target.alive = False
@@ -1102,22 +1096,22 @@ def telegram_bot():
         query.edit_message_text(text=result_string)
         if rating == 5 and users[user_id].suit_only == False:
             if users[user_id].challenges['Бесшумный убийца'].completed == False:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Бесшумный убийца'].achieved())
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Бесшумный убийца'].achieved(update=update, context=context))
                 users[user_id].player_lvl += 5
         elif rating == 5 and users[user_id].suit_only:
             if users[user_id].challenges['Бесшумный убийца. Только костюм.'].completed == False:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Бесшумный убийца. Только костюм.'].achieved())
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Бесшумный убийца. Только костюм.'].achieved(update=update, context=context))
                 users[user_id].player_lvl += 5
         elif users[user_id].suit_only:
             if users[user_id].challenges['Только костюм'].completed == False:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Только костюм'].achieved())
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Только костюм'].achieved(update=update, context=context))
                 users[user_id].player_lvl += 5
         if users[user_id].bodies == 0:
             if users[user_id].challenges['Без улик'].completed == False:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Без улик'].achieved())
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Без улик'].achieved(update=update, context=context))
                 users[user_id].player_lvl += 5
         if users[user_id].challenges['Точный выстрел'].completed == True and users[user_id].challenges['Подержи волосы'].completed == True and users[user_id].challenges['Пианист'].completed == True and users[user_id].challenges['Так можно и пораниться'].completed == True and users[user_id].challenges['Без вкуса, без следа'].completed == True and users[user_id].challenges['Мастер-убийца'].completed == False:
-            context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Мастер-убийца'].achieved())
+            context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Мастер-убийца'].achieved(update=update, context=context))
             users[user_id].player_lvl += 5
         users[user_id].player_lvl += rating
         completed_challenges = []
@@ -1513,6 +1507,7 @@ def telegram_bot():
                 users[user_id].challenges[i].completed = True
         text = 'Брифинг:\n\nДиана: Доброе утро, 47-й. Совет директоров одобрил ликвидацию Эриха Содерса. После Колорадо мы решили пристально изучить личные дела Содерса и выяснили, что его недавно доставили в частную клинику «Гама» на японском острове Хоккайдо для срочной операции на сердце. Без «Провиденс» тут явно не обошлось.\n\nСодерс страдает от редкой врожденной патологии — транспозиции органов: его внутренние органы в теле расположены зеркально. Для трансплантации ему необходимо правостороннее сердце, и он явно предал МКА, чтобы получить его. Его приняли прошлой ночью и сейчас он готовится к трёхэтапной операции.\n\nПод видом Тобиаса Рипера, крупного бизнесмена, ты отправляешься в «Гаму» для стандартного медицинского обследования, о формальностях мы уже позаботились. В таких условиях придётся импровизировать и самостоятельно добывать снаряжение.\n\nКроме того, тебе нужно ликвидировать Юки Ямадзаки — она адвокат из Токио, работает на «Провиденс». Содерс уже передал Ямадзаки доступ к нашей базе клиентов и согласился предоставить полный список оперативных сотрудников МКА после завершения операции. Этого допустить никак нельзя. Содерс должен заплатить за своё предательство — это послужит хорошим уроком его нанимателям. На кону будущее и репутация МКА. Какой бы властью и могуществом ни обладала «Провиденс», пора поставить их на место. Я оставлю тебя подготавливаться.'
         context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+        context.bot.send_photo(chat_id=update.effective_chat.id, photo='https://i.ytimg.com/vi/gpbEHfUcoOk/maxresdefault.jpg')
         update.message.reply_text(text='Выберите начальную локацию', reply_markup=choose_start_location_keyboard(update=update, context=context))
 
     def run_bot():
