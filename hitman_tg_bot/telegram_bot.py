@@ -429,11 +429,7 @@ def telegram_bot():
         return InlineKeyboardMarkup([[InlineKeyboardButton("Выйти", callback_data='Выбор действия')]])
     
     def choose_start_location_keyboard(update: Update, context: CallbackContext):
-        user_id = update.message.from_user['id']
-        if update.message['message_id'] != users[user_id].message:
-            users[user_id].message = update.message['message_id']
-            updated = int(tm.time())
-        adapter.update_by_id("Users", f'updated={updated}', user_id)
+        user_id = update.callback_query.from_user['id']
         options = []
         for i in range(1, 10):
             if i <= users[user_id].player_lvl // 10:
@@ -1613,6 +1609,10 @@ def telegram_bot():
         if users[user_id].unlocked_locations:
             for i in users[user_id].unlocked_locations.split(';'):
                 users[user_id].locations[i].unlocked = True
+        if update.message['message_id'] != users[user_id].message:
+            users[user_id].message = update.message['message_id']
+            updated = int(tm.time())
+        adapter.update_by_id("Users", f'updated={updated}', user_id)
         update.message.reply_text(text='Транспозиция органов\n\nХоккайдо, Япония', reply_markup=choose_briefing_keyboard())
 
     def run_bot():
