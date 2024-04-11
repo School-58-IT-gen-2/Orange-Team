@@ -16,7 +16,7 @@ from model.player.player_info import *
 adapter = HitmanAdapter()
 tg_token = os.getenv("TELEGRAM_TOKEN")
 
-def create_user(player_lvl: int, completed_challenges: str, unlocked_disguises: str):
+def create_user(player_lvl: int, completed_challenges: str, unlocked_disguises: str, unlocked_locations: str):
     """Создание объекта класса информации о пользователе"""
     challenges_values = list(challenges.values())
     user_challenges = {list(challenges.keys())[i]: Challenge(name=challenges_values[i].name, description=challenges_values[i].description, url=challenges_values[i].url) for i in range(len(challenges))}
@@ -25,16 +25,16 @@ def create_user(player_lvl: int, completed_challenges: str, unlocked_disguises: 
     items_values = list(items.values())
     user_items = {list(items.keys())[i]: Item(name=items_values[i].name, usage=items_values[i].usage, legal=items_values[i].legal, lethal=items_values[i].lethal, weapon=items_values[i].weapon) for i in range(len(items))}
     locations_values = list(locations.values())
-    user_locations = {list(locations.keys())[i]: Location(name=locations_values[i].name, connetcted_locations=locations_values[i].connected_locations, disguise=[user_disguises[j.name] for j in locations_values[i].disguise], witnesses=locations_values[i].witnesses, items=[user_items[j.name] for j in locations_values[i].items]) for i in range(len(locations))}
+    user_locations = {list(locations.keys())[i]: Location(name=locations_values[i].name, connetcted_locations=locations_values[i].connected_locations, disguise=[user_disguises[j.name] for j in locations_values[i].disguise], witnesses=locations_values[i].witnesses, items=[user_items[j.name] for j in locations_values[i].items], url=locations_values[i].url) for i in range(len(locations))}
     npcs_values = list(npcs.values())
     user_npcs = {list(npcs.keys())[i]: NPC(name=npcs_values[i].name, disguise=user_disguises[npcs_values[i].disguise.name], route=npcs_values[i].route, witness_chance=npcs_values[i].witness_chance, guard=npcs_values[i].guard) for i in range(len(npcs))}
     targets_values = list(targets.values())
     user_targets = {list(targets.keys())[i]: Target(name=targets_values[i].name, route=targets_values[i].route) for i in range(len(targets))}
     events_values = list(events.values())
     user_events = {list(events.keys())[i]: Event(name=events_values[i].name) for i in range(len(events))}
-    return PlayerInfo(challenges=user_challenges, npcs=user_npcs, targets=user_targets, events=user_events, locations=user_locations, carry_on_items=['Удавка', 'Смертельный яд', 'Рвотный яд', 'Электронный дешифровщик', 'Боевой нож', 'Монета'], player_lvl=player_lvl, completed_challenges=completed_challenges, unlocked_disguises=unlocked_disguises, items=user_items, disguises=user_disguises, player=Player())
+    return PlayerInfo(challenges=user_challenges, npcs=user_npcs, targets=user_targets, events=user_events, locations=user_locations, carry_on_items=['Удавка', 'Смертельный яд', 'Рвотный яд', 'Электронный дешифровщик', 'Боевой нож', 'Монета'], player_lvl=player_lvl, completed_challenges=completed_challenges, unlocked_disguises=unlocked_disguises, unlocked_locations=unlocked_locations, items=user_items, disguises=user_disguises, player=Player())
 
-users = {i[0]: create_user(player_lvl=i[5], completed_challenges=i[6], unlocked_disguises=i[7]) for i in adapter.get_all('Users')}
+users = {i[0]: create_user(player_lvl=i[5], completed_challenges=i[6], unlocked_disguises=i[7], unlocked_locations=i[8]) for i in adapter.get_all('Users')}
 
 #Начало создания ТГ бота
 logging.basicConfig(
@@ -129,11 +129,14 @@ def telegram_bot():
         user_id = update.callback_query.from_user['id']
         query = update.callback_query
         text = ''
+        completed_challenges = []
         for i in list(users[user_id].challenges.values()):
             if i.completed == False:
                 text += i.name + '\n' + i.description + '\n\n'
             else:
-                text += i.name + ' (выполнено)' +'\n\n'
+                completed_challenges.append(i.name + ' (выполнено)')
+        for i in completed_challenges:
+            text += i + '\n\n'
         text = text[:-1]
         query.answer()
         query.edit_message_text(text=text, reply_markup=challenges_keyboard())
@@ -376,7 +379,7 @@ def telegram_bot():
         return InlineKeyboardMarkup(keyboard)
 
     def choose_pistol_keyboard():
-        return InlineKeyboardMarkup(make_keyboard(['Пистолет с глушителем', 'Пистолет без глушителя'], 'choose_pistol'))
+        return InlineKeyboardMarkup(make_keyboard(['Пистолет с глушителем'], ['Пистолет без глушителя'], 'choose_pistol'))
 
     def status_keyboard():
         return InlineKeyboardMarkup([[InlineKeyboardButton("Выйти", callback_data='Выбор действия')]])
@@ -389,6 +392,8 @@ def telegram_bot():
         for i in list(users[user_id].disguises.values()):
             if i.unlocked:
                 unlocked_disguises += 1
+        if users[user_id].player.current_location.unlocked == False:
+            context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].player.current_location.unlock(update=update, context=context))
         if users[user_id].challenges['Хамелеон'].completed == False and unlocked_disguises == len(disguises):
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Хамелеон'].achieved(update=update, context=context))
             users[user_id].player_lvl += 5
@@ -459,14 +464,14 @@ def telegram_bot():
         user_id = update.callback_query.from_user['id']
         inventory = []
         if users[user_id].player.inventory.count(users[user_id].player.item) == 0:
-            users[user_id].player.item = items['Нет предмета']
+            users[user_id].player.item = users[user_id].items['Нет предмета']
         for i in users[user_id].player.inventory:
             if i.name == 'Пистолет без глушителя' or i.name == 'Пистолет с глушителем':
                 inventory.append(i.name + ' (1)')
             else:
                 inventory.append(i.name + ' (' + str(users[user_id].player.inventory.count(i)) + ')')
         inventory = list(set(inventory))
-        if users[user_id].player.inventory != []:
+        if users[user_id].player.item.name != 'Нет предмета':
             inventory.append('Убрать предмет из рук')
         keyboard = make_keyboard(inventory, '')
         keyboard.append([InlineKeyboardButton('Сменить маскировку', callback_data='МАСК')])
@@ -571,13 +576,13 @@ def telegram_bot():
             return InlineKeyboardMarkup(keyboard)
         
     def confirm_kill_keyboard(npc, witnesses):
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Убить', callback_data=npc.replace('KILL', f'con_kill{witnesses}')), InlineKeyboardButton('Отменить действие', callback_data=f"Взаимодействие")]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Убить', callback_data=npc.replace('KILL', f'con_kill{witnesses}')), InlineKeyboardButton('Назад', callback_data=f"Взаимодействие")]])
     
     def confirm_knock_keyboard(npc, witnesses):
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Вырубить', callback_data=npc.replace('KNOCK', f'con_knock{witnesses}')), InlineKeyboardButton('Отменить действие', callback_data=f"Взаимодействие")]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Вырубить', callback_data=npc.replace('KNOCK', f'con_knock{witnesses}')), InlineKeyboardButton('Назад', callback_data=f"Взаимодействие")]])
     
     def confirm_distract_keyboard(npc):
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Вырубить', callback_data=npc.replace('DIS', 'CDKN')), InlineKeyboardButton('Убить', callback_data=npc.replace('DIS', 'CDKL'))], [InlineKeyboardButton('Отменить действие', callback_data=f"Взаимодействие")]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Вырубить', callback_data=npc.replace('DIS', 'CDKN')), InlineKeyboardButton('Убить', callback_data=npc.replace('DIS', 'CDKL'))], [InlineKeyboardButton('Назад', callback_data=f"Взаимодействие")]])
     
     def save_and_quit_confirm_keyboard():
         return InlineKeyboardMarkup([[InlineKeyboardButton('Да', callback_data='Конец игры'), InlineKeyboardButton('Нет', callback_data='Выбор действия')]])
@@ -586,7 +591,7 @@ def telegram_bot():
         return InlineKeyboardMarkup([[InlineKeyboardButton('Да', callback_data='DH1'), InlineKeyboardButton('Нет', callback_data='Выбор действия')]])
     
     def destroy_heart_keyboard_2():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Повредить сердце', callback_data='DH2'), InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Повредить сердце', callback_data='DH2')], [InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
 
     def exit_mission_keyboard():
         return InlineKeyboardMarkup([[InlineKeyboardButton('Завершить миссию', callback_data='Завершить миссию'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
@@ -595,35 +600,35 @@ def telegram_bot():
         return InlineKeyboardMarkup([[InlineKeyboardButton('Повредить серверы', callback_data='Повредить серверы'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
 
     def sauna_kill_keyboard_1():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Увеличить температуру воды', callback_data='УТВ'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Увеличить температуру воды', callback_data='УТВ')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
     
     def sauna_kill_keyboard_2():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Запереть дверь в парилку', callback_data='ЗДП'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Запереть дверь в парилку', callback_data='ЗДП')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
 
     def robot_kill_keyboard_1():
         return InlineKeyboardMarkup([[InlineKeyboardButton('Взять управление', callback_data='Взять управление'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
     
     def robot_kill_keyboard_2():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Убить Эриха Содерса', callback_data='УЭС'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Убить Эриха Содерса', callback_data='УЭС')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
     
     def surgeon_knock_out_keyboard_1():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Пойти в комнату пилота', callback_data='ПКП'), InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Пойти в комнату пилота', callback_data='ПКП')], [InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
     
     def surgeon_knock_out_keyboard_2():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Усмирить главного хирурга', callback_data='УГХ'), InlineKeyboardButton('Убить главного хирурга', callback_data='УГХсм')], [InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Усмирить главного хирурга', callback_data='УГХ')], [InlineKeyboardButton('Убить главного хирурга', callback_data='УГХсм')], [InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
 
     def yoga_kill_keyboard_1():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Начать тренировку', callback_data='Начать тренировку'), InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Начать тренировку', callback_data='Начать тренировку')], [InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
     
     def yoga_kill_keyboard_2():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Толкнуть Юки Ямадзаки', callback_data='ТЮЯ'), InlineKeyboardButton('Завершить тренировку', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Толкнуть Юки Ямадзаки', callback_data='ТЮЯ')], [InlineKeyboardButton('Завершить тренировку', callback_data='Выбор действия')]])
     
     def sushi_kill_keyboard_1(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
         if users[user_id].player.disguise.name == 'Шеф':
-            return InlineKeyboardMarkup([[InlineKeyboardButton('Отравить роллы', callback_data='ОР'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+            return InlineKeyboardMarkup([[InlineKeyboardButton('Отравить роллы', callback_data='ОР')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
         else:
-            return InlineKeyboardMarkup([[InlineKeyboardButton('Отравить роллы (3/10)', callback_data='ОР'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+            return InlineKeyboardMarkup([[InlineKeyboardButton('Отравить роллы (3/10)', callback_data='ОР')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
     
     def sushi_kill_keyboard_2(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
@@ -637,22 +642,49 @@ def telegram_bot():
         return InlineKeyboardMarkup(keyboard)
     
     def sushi_kill_keyboard_3():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Пойти за целью', callback_data='Пойти за целью'), InlineKeyboardButton('Остаться', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Пойти за целью', callback_data='Пойти за целью')], [InlineKeyboardButton('Остаться', callback_data='Выбор действия')]])
     
     def sushi_kill_keyboard_4():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Утопить цель', callback_data='Утопить цель'), InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Утопить цель', callback_data='Утопить цель')], [InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
     
     def cigar_kill_keyboard_1():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Положить новую пачку', callback_data='ПНПС'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Положить новую пачку', callback_data='ПНПС')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
     
     def cigar_kill_keyboard_2():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Пойти на балкон', callback_data='ПНБ'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Пойти на балкон', callback_data='ПНБ')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
     
     def cigar_kill_keyboard_3():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Создать утечку газа', callback_data='СУГ'), InlineKeyboardButton('Уйти с балкона', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Создать утечку газа', callback_data='СУГ')], [InlineKeyboardButton('Уйти с балкона', callback_data='Выбор действия')]])
     
     def cigar_kill_keyboard_4():
         return InlineKeyboardMarkup([[InlineKeyboardButton('Уйти с балкона', callback_data='УСБ')]])
+
+    def briefing_keyboard_1(update: Update, context: CallbackContext):
+        context.bot.send_photo(chat_id=update.effective_chat.id, photo=open('hitman_tg_bot/assets/hokkaido.png', 'rb'), timeout=1000)
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Далее', callback_data='briefing_2')]])
+    
+    def briefing_keyboard_2(update: Update, context: CallbackContext):
+        context.bot.send_photo(chat_id=update.effective_chat.id, photo='https://static.wikia.nocookie.net/hitman/images/2/2d/H2018-Erich-Soders-Intel-Card.png/revision/latest?cb=20220601174305')
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Далее', callback_data='briefing_3')]])
+    
+    def briefing_keyboard_3(update: Update, context: CallbackContext):
+        context.bot.send_photo(chat_id=update.effective_chat.id, photo=open('hitman_tg_bot/assets/equipment.png', 'rb'), timeout=1000)
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Далее', callback_data='briefing_4')]])
+    
+    def briefing_keyboard_4(update: Update, context: CallbackContext):
+        context.bot.send_photo(chat_id=update.effective_chat.id, photo='https://static.wikia.nocookie.net/hitman/images/a/a8/H2018-Yuki-Yamazaki-Intel-Card.png/revision/latest?cb=20220601174346')
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Далее', callback_data='briefing_5')]])
+    
+    def briefing_keyboard_5(update: Update, context: CallbackContext):
+        context.bot.send_photo(chat_id=update.effective_chat.id, photo=open('hitman_tg_bot/assets/erich_yuki.png', 'rb'), timeout=1000)
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Далее', callback_data='briefing_6')]])
+    
+    def briefing_keyboard_6(update: Update, context: CallbackContext):
+        context.bot.send_photo(chat_id=update.effective_chat.id, photo=open('hitman_tg_bot/assets/clock.png', 'rb'), timeout=1000)
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Подготовка к миссии', callback_data='Выбор начальной локации')]])
+    
+    def choose_briefing_keyboard():
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Брифинг к миссии', callback_data='briefing_1')], [InlineKeyboardButton('Подготовка к миссии', callback_data='Выбор начальной локации')]])
 
     #Проверка query для меню
 
@@ -982,6 +1014,7 @@ def telegram_bot():
         query = update.callback_query
         query.answer()
         completed_challenges = []
+        completed_challenges = []
         for i in list(users[user_id].challenges.values()):
             if i.completed:
                 completed_challenges.append(i.name)
@@ -989,12 +1022,18 @@ def telegram_bot():
         for i in list(users[user_id].disguises.values()):
             if i.unlocked:
                 unlocked_disguises.append(i.name)
+        unlocked_locations = []
+        for i in list(users[user_id].locations.values()):
+            if i.unlocked:
+                unlocked_locations.append(i.name)
         completed_challenges_str = ';'.join(completed_challenges)
         unlocked_disguises_str = ';'.join(unlocked_disguises)
+        unlocked_locations_str = ';'.join(unlocked_locations)
         adapter.update_by_id("Users", f'completed_challenges={completed_challenges_str}', user_id)
         adapter.update_by_id("Users", f'unlocked_disguises={unlocked_disguises_str}', user_id)
+        adapter.update_by_id("Users", f'unlocked_locations={unlocked_locations_str}', user_id)
         adapter.update_by_id("Users", f'player_lvl={users[user_id].player_lvl}', user_id)
-        users[user_id] = create_user(player_lvl=users[user_id].player_lvl, completed_challenges=completed_challenges_str, unlocked_disguises=unlocked_disguises_str)
+        users[user_id] = create_user(player_lvl=users[user_id].player_lvl, completed_challenges=completed_challenges_str, unlocked_disguises=unlocked_disguises_str, unlocked_locations=unlocked_locations_str)
         query.edit_message_text(text='Данные сохранены.\n\nЧтобы начать новую игру используйте /begin')
 
     def use(update: Update, context: CallbackContext):
@@ -1159,12 +1198,18 @@ def telegram_bot():
         for i in list(users[user_id].disguises.values()):
             if i.unlocked:
                 unlocked_disguises.append(i.name)
+        unlocked_locations = []
+        for i in list(users[user_id].locations.values()):
+            if i.unlocked:
+                unlocked_locations.append(i.name)
         completed_challenges_str = ';'.join(completed_challenges)
         unlocked_disguises_str = ';'.join(unlocked_disguises)
+        unlocked_locations_str = ';'.join(unlocked_locations)
         adapter.update_by_id("Users", f'completed_challenges={completed_challenges_str}', user_id)
         adapter.update_by_id("Users", f'unlocked_disguises={unlocked_disguises_str}', user_id)
+        adapter.update_by_id("Users", f'unlocked_locations={unlocked_locations_str}', user_id)
         adapter.update_by_id("Users", f'player_lvl={users[user_id].player_lvl}', user_id)
-        users[user_id] = create_user(player_lvl=users[user_id].player_lvl, completed_challenges=completed_challenges_str, unlocked_disguises=unlocked_disguises_str)
+        users[user_id] = create_user(player_lvl=users[user_id].player_lvl, completed_challenges=completed_challenges_str, unlocked_disguises=unlocked_disguises_str, unlocked_locations=unlocked_locations_str)
         context.bot.send_message(chat_id=update.effective_chat.id, text='Чтобы начать новую игру используйте /begin')
 
     def hide_combat(update: Update, context: CallbackContext):
@@ -1471,6 +1516,47 @@ def telegram_bot():
             query.answer()
             query.edit_message_text(text='Выберите действие', reply_markup=(choose_action_keyboard(update=update, context=context)))
 
+    def briefing_1(update: Update, context: CallbackContext):
+        """Брифинг к миссии"""
+        query = update.callback_query
+        query.answer()
+        query.edit_message_text(text='Диана: Доброе утро, 47-й. Совет директоров одобрил ликвидацию Эриха Содерса. После Колорадо мы решили пристально изучить личные дела Содерса и выяснили, что его недавно доставили в частную клинику «Гама» на японском острове Хоккайдо для срочной операции на сердце. Без «Провиденс» тут явно не обошлось.', reply_markup=(briefing_keyboard_1(update=update, context=context)))
+
+    def briefing_2(update: Update, context: CallbackContext):
+        """Брифинг к миссии"""
+        query = update.callback_query
+        query.answer()
+        query.edit_message_text(text='Диана: Доброе утро, 47-й. Совет директоров одобрил ликвидацию Эриха Содерса. После Колорадо мы решили пристально изучить личные дела Содерса и выяснили, что его недавно доставили в частную клинику «Гама» на японском острове Хоккайдо для срочной операции на сердце. Без «Провиденс» тут явно не обошлось.')
+        context.bot.send_message(chat_id=update.effective_chat.id, text='Содерс страдает от редкой врожденной патологии — транспозиции органов: его внутренние органы в теле расположены зеркально. Для трансплантации ему необходимо правостороннее сердце, и он явно предал МКА, чтобы получить его. Его приняли прошлой ночью и сейчас он готовится к трёхэтапной операции.', reply_markup=(briefing_keyboard_2(update=update, context=context)))
+    
+    def briefing_3(update: Update, context: CallbackContext):
+        """Брифинг к миссии"""
+        query = update.callback_query
+        query.answer()
+        query.edit_message_text(text='Содерс страдает от редкой врожденной патологии — транспозиции органов: его внутренние органы в теле расположены зеркально. Для трансплантации ему необходимо правостороннее сердце, и он явно предал МКА, чтобы получить его. Его приняли прошлой ночью и сейчас он готовится к трёхэтапной операции.')
+        context.bot.send_message(chat_id=update.effective_chat.id, text='Под видом Тобиаса Рипера, крупного бизнесмена, ты отправляешься в «Гаму» для стандартного медицинского обследования, о формальностях мы уже позаботились. В таких условиях придётся импровизировать и самостоятельно добывать снаряжение.', reply_markup=(briefing_keyboard_3(update=update, context=context)))
+
+    def briefing_4(update: Update, context: CallbackContext):
+        """Брифинг к миссии"""
+        query = update.callback_query
+        query.answer()
+        query.edit_message_text(text='Под видом Тобиаса Рипера, крупного бизнесмена, ты отправляешься в «Гаму» для стандартного медицинского обследования, о формальностях мы уже позаботились. В таких условиях придётся импровизировать и самостоятельно добывать снаряжение.')
+        context.bot.send_message(chat_id=update.effective_chat.id, text='Кроме того, тебе нужно ликвидировать Юки Ямадзаки — она адвокат из Токио, работает на «Провиденс». Содерс уже передал Ямадзаки доступ к нашей базе клиентов и согласился предоставить полный список оперативных сотрудников МКА после завершения операции. Этого допустить никак нельзя. Содерс должен заплатить за своё предательство — это послужит хорошим уроком его нанимателям.', reply_markup=(briefing_keyboard_4(update=update, context=context)))
+
+    def briefing_5(update: Update, context: CallbackContext):
+        """Брифинг к миссии"""
+        query = update.callback_query
+        query.answer()
+        query.edit_message_text(text='Кроме того, тебе нужно ликвидировать Юки Ямадзаки — она адвокат из Токио, работает на «Провиденс». Содерс уже передал Ямадзаки доступ к нашей базе клиентов и согласился предоставить полный список оперативных сотрудников МКА после завершения операции. Этого допустить никак нельзя. Содерс должен заплатить за своё предательство — это послужит хорошим уроком его нанимателям.')
+        context.bot.send_message(chat_id=update.effective_chat.id, text='На кону будущее и репутация МКА. Какой бы властью и могуществом ни обладала «Провиденс», пора поставить их на место.', reply_markup=(briefing_keyboard_5(update=update, context=context)))
+
+    def briefing_6(update: Update, context: CallbackContext):
+        """Брифинг к миссии"""
+        query = update.callback_query
+        query.answer()
+        query.edit_message_text(text='На кону будущее и репутация МКА. Какой бы властью и могуществом ни обладала «Провиденс», пора поставить их на место.')
+        context.bot.send_message(chat_id=update.effective_chat.id, text='Я оставлю тебя подготавливаться.', reply_markup=(briefing_keyboard_6(update=update, context=context)))
+
     #Команды бота
 
     def help(update: Update, context: CallbackContext):
@@ -1502,7 +1588,7 @@ def telegram_bot():
                 f'user_nickname={user_nickname}',
                 f'updated={created}'
             ])
-            users[user_id] = create_user(player_lvl=10, completed_challenges='', unlocked_disguises='')
+            users[user_id] = create_user(player_lvl=10, completed_challenges='', unlocked_disguises='', unlocked_locations='')
         if update.message['message_id'] != users[user_id].message:
             users[user_id].message = update.message['message_id']
             updated = int(tm.time())
@@ -1521,10 +1607,13 @@ def telegram_bot():
         if users[user_id].completed_challenges:
             for i in users[user_id].completed_challenges.split(';'):
                 users[user_id].challenges[i].completed = True
-        text = 'Брифинг:\n\nДиана: Доброе утро, 47-й. Совет директоров одобрил ликвидацию Эриха Содерса. После Колорадо мы решили пристально изучить личные дела Содерса и выяснили, что его недавно доставили в частную клинику «Гама» на японском острове Хоккайдо для срочной операции на сердце. Без «Провиденс» тут явно не обошлось.\n\nСодерс страдает от редкой врожденной патологии — транспозиции органов: его внутренние органы в теле расположены зеркально. Для трансплантации ему необходимо правостороннее сердце, и он явно предал МКА, чтобы получить его. Его приняли прошлой ночью и сейчас он готовится к трёхэтапной операции.\n\nПод видом Тобиаса Рипера, крупного бизнесмена, ты отправляешься в «Гаму» для стандартного медицинского обследования, о формальностях мы уже позаботились. В таких условиях придётся импровизировать и самостоятельно добывать снаряжение.\n\nКроме того, тебе нужно ликвидировать Юки Ямадзаки — она адвокат из Токио, работает на «Провиденс». Содерс уже передал Ямадзаки доступ к нашей базе клиентов и согласился предоставить полный список оперативных сотрудников МКА после завершения операции. Этого допустить никак нельзя. Содерс должен заплатить за своё предательство — это послужит хорошим уроком его нанимателям. На кону будущее и репутация МКА. Какой бы властью и могуществом ни обладала «Провиденс», пора поставить их на место. Я оставлю тебя подготавливаться.'
-        context.bot.send_message(chat_id=update.effective_chat.id, text=text)
-        context.bot.send_photo(chat_id=update.effective_chat.id, photo='https://i.ytimg.com/vi/gpbEHfUcoOk/maxresdefault.jpg')
-        update.message.reply_text(text='Выберите начальную локацию', reply_markup=choose_start_location_keyboard(update=update, context=context))
+        if users[user_id].unlocked_disguises:
+            for i in users[user_id].unlocked_disguises.split(';'):
+                users[user_id].disguises[i].unlocked = True
+        if users[user_id].unlocked_locations:
+            for i in users[user_id].unlocked_locations.split(';'):
+                users[user_id].locations[i].unlocked = True
+        update.message.reply_text(text='Транспозиция органов\n\nХоккайдо, Япония', reply_markup=choose_briefing_keyboard())
 
     def run_bot():
         """Работа бота"""
@@ -1603,6 +1692,12 @@ def telegram_bot():
         dispatcher.add_handler(CallbackQueryHandler(cigar_kill_2, pattern='ПНБ'))
         dispatcher.add_handler(CallbackQueryHandler(cigar_kill_3, pattern='СУГ'))
         dispatcher.add_handler(CallbackQueryHandler(cigar_kill_4, pattern='УСБ'))
+        dispatcher.add_handler(CallbackQueryHandler(briefing_1, pattern='briefing_1'))
+        dispatcher.add_handler(CallbackQueryHandler(briefing_2, pattern='briefing_2'))
+        dispatcher.add_handler(CallbackQueryHandler(briefing_3, pattern='briefing_3'))
+        dispatcher.add_handler(CallbackQueryHandler(briefing_4, pattern='briefing_4'))
+        dispatcher.add_handler(CallbackQueryHandler(briefing_5, pattern='briefing_5'))
+        dispatcher.add_handler(CallbackQueryHandler(briefing_6, pattern='briefing_6'))
 
         updater.start_polling()
         updater.idle()

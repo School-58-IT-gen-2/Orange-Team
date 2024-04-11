@@ -17,6 +17,7 @@ class PlayerInfo:
                  player_lvl=10,
                  completed_challenges='',
                  unlocked_disguises='',
+                 unlocked_locations='',
                  player=Player(),
                  message=-1,
                  challenges={},
@@ -41,6 +42,8 @@ class PlayerInfo:
         self.start_items = start_items
         self.player_lvl = player_lvl
         self.completed_challenges = completed_challenges
+        self.unlocked_disguises = unlocked_disguises
+        self.unlocked_locations = unlocked_locations
         self.player = player
         self.message = message
         self.challenges = challenges
