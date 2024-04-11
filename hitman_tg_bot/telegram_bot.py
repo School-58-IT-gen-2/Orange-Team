@@ -392,10 +392,17 @@ def telegram_bot():
         for i in list(users[user_id].disguises.values()):
             if i.unlocked:
                 unlocked_disguises += 1
+        unlocked_locations = 0
+        for i in list(users[user_id].locations.values()):
+            if i.unlocked:
+                unlocked_locations += 1
         if users[user_id].player.current_location.unlocked == False:
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].player.current_location.unlock(update=update, context=context))
         if users[user_id].challenges['Хамелеон'].completed == False and unlocked_disguises == len(disguises):
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Хамелеон'].achieved(update=update, context=context))
+            users[user_id].player_lvl += 5
+        if users[user_id].challenges['Исследуйте Хоккайдо'].completed == False and unlocked_locations == len(locations):
+            context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Исследуйте Хоккайдо'].achieved(update=update, context=context))
             users[user_id].player_lvl += 5
         if users[user_id].events['Убийство в сауне'].completed == False and users[user_id].player.current_location.name == 'Водоснабжение спа':
             context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=sauna_kill_keyboard_1())
