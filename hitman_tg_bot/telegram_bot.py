@@ -379,7 +379,7 @@ def telegram_bot():
         return InlineKeyboardMarkup(keyboard)
 
     def choose_pistol_keyboard():
-        return InlineKeyboardMarkup(make_keyboard(['Пистолет с глушителем'], ['Пистолет без глушителя'], 'choose_pistol'))
+        return InlineKeyboardMarkup(make_keyboard(['Пистолет с глушителем', 'Пистолет без глушителя'], 'choose_pistol'))
 
     def status_keyboard():
         return InlineKeyboardMarkup([[InlineKeyboardButton("Выйти", callback_data='Выбор действия')]])
@@ -396,8 +396,6 @@ def telegram_bot():
         for i in list(users[user_id].locations.values()):
             if i.unlocked:
                 unlocked_locations += 1
-        if users[user_id].player.current_location.unlocked == False:
-            context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].player.current_location.unlock(update=update, context=context))
         if users[user_id].challenges['Хамелеон'].completed == False and unlocked_disguises == len(disguises):
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Хамелеон'].achieved(update=update, context=context))
             users[user_id].player_lvl += 5
@@ -1084,7 +1082,7 @@ def telegram_bot():
         npc.alive = False
         users[user_id].player.found_disguises.append(npc.disguise)
         query.answer()
-        query.edit_message_text(text=f'Вы вырубили {npc.name}', reply_markup=(confirm_knock_keyboard(query.data)))
+        query.edit_message_text(text=f'Вы вырубили {npc.name}', reply_markup=(choose_action_keyboard(update=update, context=context)))
 
     def knock_out(update: Update, context: CallbackContext):
         """Вырубить предметом"""
@@ -1310,6 +1308,12 @@ def telegram_bot():
             query.edit_message_text(text='Интересно. Руководство для KAI, искусственного интеллекта клиники «Гама». Значит, местный искусственный интеллект по имени KAI не только поддерживает работу систем здания, но и управляет роботом в операционной.\n\nИменно там сейчас находится Содерс. В руководстве говорится, что после остановки сердца пациента искусственный интеллект автоматически начинает его реанимацию, что очень некстати.\n\nОднако... У директора клиники есть доступ к главному компьютеру. Справишься с управлением целой клиникой, 47-й?')
             users[user_id].events['Информация об ИИ'].completed = True
             edit = False
+        if move_to_location.unlocked == False:
+            if edit:
+                query.edit_message_text(text=move_to_location.unlock(update=update, context=context))
+            else:
+                context.bot.send_message(chat_id=update.effective_chat.id, text=move_to_location.unlock(update=update, context=context))
+            edit = False
         if random.randrange(1, 11) <= chance:
             users[user_id].player.compromised_disguises.append(users[user_id].player.disguise)
             users[user_id].player.current_location = move_to_location
@@ -1375,6 +1379,12 @@ def telegram_bot():
         if users[user_id].events['Информация об ИИ'].completed == False and move_to_location.name == 'Комната охраны':
             query.edit_message_text(text='Интересно. Руководство для KAI, искусственного интеллекта клиники «Гама». Значит, местный искусственный интеллект по имени KAI не только поддерживает работу систем здания, но и управляет роботом в операционной.\n\nИменно там сейчас находится Содерс. В руководстве говорится, что после остановки сердца пациента искусственный интеллект автоматически начинает его реанимацию, что очень некстати.\n\nОднако... У директора клиники есть доступ к главному компьютеру. Справишься с управлением целой клиникой, 47-й?')
             users[user_id].events['Информация об ИИ'].completed = True
+            edit = False
+        if move_to_location.unlocked == False:
+            if edit:
+                query.edit_message_text(text=move_to_location.unlock(update=update, context=context))
+            else:
+                context.bot.send_message(chat_id=update.effective_chat.id, text=move_to_location.unlock(update=update, context=context))
             edit = False
         #Случай, когда для входа нужна маскировка или ключ-карта
         if move_to_location.name == 'Комната с серверами':
@@ -1448,6 +1458,7 @@ def telegram_bot():
             users[user_id].events['Расписание занятий по йоге'].completed = False
             users[user_id].events['Информация о пилоте'].completed = False
             users[user_id].events['Информация об ИИ'].completed = False
+            move_to_location.unlocked = False
             chance = min(10, location_witnesses(update=update, context=context, location=users[user_id].player.current_location))
             query.edit_message_text(text='У вас нет подходящей маскировки. Переместиться на локацию?', reply_markup=(no_disguise_move_keyboard(chance=chance, location=move_to_location)))
 
