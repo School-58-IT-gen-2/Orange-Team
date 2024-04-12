@@ -4,7 +4,7 @@ import time as tm
 
 import logging
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
+from telegram.ext import Updater, CallbackQueryHandler, CallbackContext, CommandHandler
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -32,7 +32,7 @@ def create_user(player_lvl: int, completed_challenges: str, unlocked_disguises: 
     user_targets = {list(targets.keys())[i]: Target(name=targets_values[i].name, route=targets_values[i].route) for i in range(len(targets))}
     events_values = list(events.values())
     user_events = {list(events.keys())[i]: Event(name=events_values[i].name) for i in range(len(events))}
-    return PlayerInfo(challenges=user_challenges, npcs=user_npcs, targets=user_targets, events=user_events, locations=user_locations, carry_on_items=['Удавка', 'Смертельный яд', 'Рвотный яд', 'Электронный дешифровщик', 'Боевой нож', 'Монета'], player_lvl=player_lvl, completed_challenges=completed_challenges, unlocked_disguises=unlocked_disguises, unlocked_locations=unlocked_locations, items=user_items, disguises=user_disguises, player=Player())
+    return PlayerInfo(challenges=user_challenges, npcs=user_npcs, targets=user_targets, events=user_events, locations=user_locations, carry_on_items=['Удавка', 'Смертельный яд', 'Рвотный яд', 'Дешифровщик', 'Боевой нож', 'Монета'], player_lvl=player_lvl, completed_challenges=completed_challenges, unlocked_disguises=unlocked_disguises, unlocked_locations=unlocked_locations, items=user_items, disguises=user_disguises, player=Player(), loadout={'Начальная локация': None, 'Пистолет': None, 'Снаряжение 1': None, 'Снаряжение 2': None})
 
 users = {i[0]: create_user(player_lvl=i[5], completed_challenges=i[6], unlocked_disguises=i[7], unlocked_locations=i[8]) for i in adapter.get_all('Users')}
 
@@ -100,6 +100,18 @@ def telegram_bot():
         for i in range(len(options)):
             keyboard.append([InlineKeyboardButton(f"{options[i]}", callback_data=options[i] + func_name)])
         return keyboard
+    
+    def make_keyboard_two_rows(options: list, func_name: str) -> list:
+        """Создание клавиатуры с двумя колонками для меню"""
+        keyboard = []
+        if len(options) % 2 == 0:
+            for i in range(0, len(options), 2):
+                keyboard.append([InlineKeyboardButton(f'{options[i]}', callback_data=f'{options[i]}' + func_name), InlineKeyboardButton(f'{options[i + 1]}', callback_data=f'{options[i + 1]}' + func_name)])
+        else:
+            for i in range(0, len(options) - 1, 2):
+                keyboard.append([InlineKeyboardButton(f'{options[i]}', callback_data=f'{options[i]}' + func_name), InlineKeyboardButton(f'{options[i + 1]}', callback_data=f'{options[i + 1]}' + func_name)])
+            keyboard.append([InlineKeyboardButton(f'{options[-1]}', callback_data=f'{options[-1]}' + func_name)])
+        return keyboard
 
     #Меню в игре
 
@@ -147,40 +159,14 @@ def telegram_bot():
         query.edit_message_text(text='Выберите начальную локацию', reply_markup=(choose_start_location_keyboard(update=update, context=context)))
         
     def choose_start_item_menu_1(update: Update, context: CallbackContext):
-        user_id = update.callback_query.from_user['id']
         query = update.callback_query
         query.answer()
-        users[user_id].start_items += ',' + query.data.replace('choose_pistol', '')
         query.edit_message_text(text='Выберите первый предмет снаряжения', reply_markup=(choose_start_item_keyboard_1(update=update, context=context)))
         
     def choose_start_item_menu_2(update: Update, context: CallbackContext):
-        user_id = update.callback_query.from_user['id']
         query = update.callback_query
-        data = query.data.replace('CSI1', '')
-        start_items = []
-        if len(users[user_id].carry_on_items) == 6:
-            start_items.append(data)
-            if data == 'Монета':
-                start_items.append(data)
-                start_items.append(data)
-            users[user_id].start_items = ','.join(start_items)
-            users[user_id].carry_on_items.remove(data)
         query.answer()
         query.edit_message_text(text='Выберите второй предмет снаряжения', reply_markup=(choose_start_item_keyboard_2(update=update, context=context)))
-    
-    def game_start_menu(update: Update, context: CallbackContext):
-        user_id = update.callback_query.from_user['id']
-        query = update.callback_query
-        data = query.data.replace('CSI2', '')
-        start_items = []
-        if len(users[user_id].carry_on_items) == 5:
-            start_items.append(data)
-            if query == 'Монета':
-                start_items.append(data)
-                start_items.append(data)
-            users[user_id].start_items += ',' + ','.join(start_items)
-        query.answer()
-        query.edit_message_text(text='Выберите действие', reply_markup=(game_start_keyboard()))
 
     def choose_pistol_menu(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
@@ -191,7 +177,7 @@ def telegram_bot():
                 users[user_id].start_disguise = i[1]
         query.answer()
         if users[user_id].player_lvl >= 100:
-            query.edit_message_text(text='Выберите пистолет', reply_markup=(choose_pistol_keyboard()))
+            query.edit_message_text(text='Выберите пистолет', reply_markup=choose_pistol_keyboard())
         else:
             spawn_player(update=update, context=context)
 
@@ -239,7 +225,7 @@ def telegram_bot():
                 users[user_id].events['Информация о сигаретах 1'].completed = True
                 query.edit_message_text(text='Диана: Это пачка сигарет. Не территории клиники «Гама» курение строго запрещено, так что эти сигареты — явная контрабанда.')
                 context.bot.send_message(chat_id=update.effective_chat.id, text=result_string, reply_markup=(choose_action_keyboard(update=update, context=context)))
-            elif users[user_id].items['Пульт для управления нейрочипом'] in users[user_id].player.inventory and users[user_id].events['Информация о чипе'].completed == False:
+            elif users[user_id].items['Пульт от нейрочипа'] in users[user_id].player.inventory and users[user_id].events['Информация о чипе'].completed == False:
                 users[user_id].events['Информация о чипе'].completed = True
                 query.edit_message_text(text='Диана: Нейрочип для изменения настроения. Интересно...\n\nДоктор Каташи Ито, он же Куратор, проводит сейчас какое-то медицинское испытание. Занимательно.\n\nХранилище органов находится в ведении Куратора, а значит, у него точно есть доступ к сердцу, которое должны пересадить Содерсу. 47-й, я рекомендую найти отчёт сотрудника и выяснить, для чего нужен этот нейроимплантат. Может пригодиться.')
                 context.bot.send_message(chat_id=update.effective_chat.id, text=result_string, reply_markup=(choose_action_keyboard(update=update, context=context)))
@@ -304,7 +290,10 @@ def telegram_bot():
         if 'Бросить' in query.data:
             users[user_id].thrown_weapon = True
         query.answer()
-        query.edit_message_text(text='Выберите цель', reply_markup=(kill_keyboard(update=update, context=context)))
+        if find_location_npcs(update=update, context=context, location=users[user_id].player.current_location):
+            query.edit_message_text(text='Выберите цель', reply_markup=(kill_keyboard(update=update, context=context)))
+        else:
+            query.edit_message_text(text='На локации никого нет', reply_markup=(choose_action_keyboard(update=update, context=context)))
         
     def knock_out_menu(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
@@ -312,7 +301,10 @@ def telegram_bot():
         if 'Бросить' in query.data:
             users[user_id].thrown_weapon = True
         query.answer()
-        query.edit_message_text(text='Выберите цель', reply_markup=(knock_out_keyboard(update=update, context=context)))
+        if find_location_npcs(update=update, context=context, location=users[user_id].player.current_location):
+            query.edit_message_text(text='Выберите цель', reply_markup=(knock_out_keyboard(update=update, context=context)))
+        else:
+            query.edit_message_text(text='На локации никого нет', reply_markup=(choose_action_keyboard(update=update, context=context)))
 
     def distract_menu(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
@@ -364,22 +356,83 @@ def telegram_bot():
         query.answer()
         query.edit_message_text(text='ВНИМАНИЕ: При выходе будут сохранены ваш текущий уровень и выполненные испытания, но не текущее продвижение по миссии.\n\nВы уверены, что хотите завершить игру?', reply_markup=(save_and_quit_confirm_keyboard()))
 
+    def choose_equipment_menu(update: Update, context: CallbackContext):
+        query = update.callback_query
+        query.answer()
+        query.edit_message_text(text='Транспозиция органов\n\nХоккайдо, Япония', reply_markup=(choose_equipment_keyboard(update=update, context=context)))
+
     #Клавиатуры для меню
+
+    def choose_equipment_keyboard(update: Update, context: CallbackContext):
+        user_id = update.callback_query.from_user['id']
+        data = update.callback_query.data
+        if 'CSL' in data:
+            users[user_id].loadout['Начальная локация'] = data.replace('CSL', '')
+        if 'choose_pistol' in data:
+            users[user_id].loadout['Пистолет'] = data.replace('choose_pistol', '')
+        if 'choose_item_1' in data:
+            users[user_id].loadout['Снаряжение 1'] = data.replace('choose_item_1', '')
+            if users[user_id].loadout['Снаряжение 1'] == users[user_id].loadout['Снаряжение 2']:
+                users[user_id].loadout['Снаряжение 2'] = None
+        if 'choose_item_2' in data:
+            users[user_id].loadout['Снаряжение 2'] = data.replace('choose_item_2', '')
+            if users[user_id].loadout['Снаряжение 1'] == users[user_id].loadout['Снаряжение 2']:
+                users[user_id].loadout['Снаряжение 1'] = None
+        start_location=users[user_id].loadout['Начальная локация']
+        pistol=users[user_id].loadout['Пистолет']
+        equipment_1=users[user_id].loadout['Снаряжение 1']
+        equipment_2=users[user_id].loadout['Снаряжение 2']
+        options = []
+        if start_location:
+            options.append(start_location)
+        else:
+            options.append('Начальная локация')
+        if users[user_id].player_lvl >= 100:
+            if pistol:
+                options.append(pistol)
+            else:
+                options.append('Пистолет')
+            if equipment_1:
+                options.append(equipment_1)
+            else:
+                options.append('Снаряжение 1')
+            if equipment_2:
+                options.append(equipment_2)
+            else:
+                options.append('Снаряжение 2')
+            return InlineKeyboardMarkup([
+                    [InlineKeyboardButton('Брифинг', callback_data="briefing_1")],
+                    [InlineKeyboardButton(options[0], callback_data="Выбор начальной локации"), InlineKeyboardButton(options[1], callback_data="Выбор пистолета")],
+                    [InlineKeyboardButton(options[2], callback_data="Выбор снаряжения 1"), InlineKeyboardButton(options[3], callback_data="Выбор снаряжения 2")],
+                    [InlineKeyboardButton('Начать миссию', callback_data="Начало игры")]
+                ])
+        return InlineKeyboardMarkup([
+                    [InlineKeyboardButton('Брифинг', callback_data="briefing_1")],
+                    [InlineKeyboardButton(options[0], callback_data="Выбор начальной локации")]
+                    [InlineKeyboardButton('Начать миссию', callback_data="Начало игры")]
+                ])
+
 
     def safe_move_keyboard(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
-        keyboard = make_keyboard(users[user_id].player.current_location.connected_locations, 'SM')
+        if len(users[user_id].player.current_location.connected_locations) > 3:
+            keyboard = make_keyboard_two_rows(users[user_id].player.current_location.connected_locations, 'SM')
+        else:
+            keyboard = make_keyboard(users[user_id].player.current_location.connected_locations, 'SM')
         keyboard.append([InlineKeyboardButton("Отменить действие", callback_data='Взаимодействие')])
         return InlineKeyboardMarkup(keyboard)
     
     def move_keyboard(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
-        keyboard = make_keyboard(users[user_id].player.current_location.connected_locations, 'basic_move')
+        if len(users[user_id].player.current_location.connected_locations) > 3:
+            keyboard = make_keyboard_two_rows(users[user_id].player.current_location.connected_locations, 'basic_move')
+        else:
+            keyboard = make_keyboard(users[user_id].player.current_location.connected_locations, 'basic_move')
         keyboard.append([InlineKeyboardButton("Отменить действие", callback_data='Выбор действия')])
         return InlineKeyboardMarkup(keyboard)
 
     def choose_pistol_keyboard():
-        return InlineKeyboardMarkup(make_keyboard(['Пистолет с глушителем', 'Пистолет без глушителя'], 'choose_pistol'))
+        return InlineKeyboardMarkup([[InlineKeyboardButton("ICA 19", callback_data="ICA 19choose_pistol"), InlineKeyboardButton("Bartoli 75R", callback_data="Bartoli 75Rchoose_pistol")], [InlineKeyboardButton("Не брать пистолет", callback_data="choose_pistol")]])
 
     def status_keyboard():
         return InlineKeyboardMarkup([[InlineKeyboardButton("Выйти", callback_data='Выбор действия')]])
@@ -387,7 +440,7 @@ def telegram_bot():
     def choose_action_keyboard(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
         if users[user_id].disguises['Охранник'] in users[user_id].player.found_disguises or users[user_id].disguises['Телохранитель'] in users[user_id].player.found_disguises:
-            users[user_id].player.inventory.append(users[user_id].items['Пистолет без глушителя'])
+            users[user_id].player.inventory.append(users[user_id].items['Bartoli 75R'])
         unlocked_disguises = 0
         for i in list(users[user_id].disguises.values()):
             if i.unlocked:
@@ -439,19 +492,20 @@ def telegram_bot():
         for i in range(1, 10):
             if i <= users[user_id].player_lvl // 10:
                 options.append(lvl_unlocks[i][0])
-        return InlineKeyboardMarkup(make_keyboard(options, 'CSL'))
+        return InlineKeyboardMarkup(make_keyboard_two_rows(options, 'CSL'))
     
     def choose_start_item_keyboard_1(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
-        return InlineKeyboardMarkup(make_keyboard(users[user_id].carry_on_items, 'CSI1'))
+        keyboard = make_keyboard_two_rows(users[user_id].carry_on_items, 'choose_item_1')
+        keyboard.append([InlineKeyboardButton("Не брать снаряжение 1", callback_data="choose_item_1")])
+        return InlineKeyboardMarkup(keyboard)
     
     def choose_start_item_keyboard_2(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
-        return InlineKeyboardMarkup(make_keyboard(users[user_id].carry_on_items, 'CSI2'))
+        keyboard = make_keyboard_two_rows(users[user_id].carry_on_items, 'choose_item_2')
+        keyboard.append([InlineKeyboardButton("Не брать снаряжение 2", callback_data="choose_item_2")])
+        return InlineKeyboardMarkup(keyboard)
     
-    def game_start_keyboard():
-        return InlineKeyboardMarkup([[InlineKeyboardButton("Начать игру", callback_data="Начало игры")]])
-
     def attack_keyboard(npc=None, location=None):
         return InlineKeyboardMarkup([[InlineKeyboardButton(f"Напасть (3/10)", callback_data=f"НПД{npc.name}:{location.name}"), InlineKeyboardButton("Уйти", callback_data=f"Выбор действия")]])
     
@@ -467,14 +521,17 @@ def telegram_bot():
         if users[user_id].player.inventory.count(users[user_id].player.item) == 0:
             users[user_id].player.item = users[user_id].items['Нет предмета']
         for i in users[user_id].player.inventory:
-            if i.name == 'Пистолет без глушителя' or i.name == 'Пистолет с глушителем':
+            if i.name == 'Bartoli 75R' or i.name == 'ICA 19':
                 inventory.append(i.name + ' (1)')
             else:
                 inventory.append(i.name + ' (' + str(users[user_id].player.inventory.count(i)) + ')')
         inventory = list(set(inventory))
+        if len(inventory) > 3:
+            keyboard = make_keyboard_two_rows(inventory, '')
+        else:
+            keyboard = make_keyboard(inventory, '')
         if users[user_id].player.item.name != 'Нет предмета':
-            inventory.append('Убрать предмет из рук')
-        keyboard = make_keyboard(inventory, '')
+            keyboard.append(InlineKeyboardButton('Убрать предмет из рук', callback_data='Убрать предмет из рук'))
         keyboard.append([InlineKeyboardButton('Сменить маскировку', callback_data='МАСК')])
         keyboard.append([InlineKeyboardButton(f"Выйти", callback_data=f"Выбор действия")])
         return InlineKeyboardMarkup(keyboard)
@@ -485,14 +542,17 @@ def telegram_bot():
 
     def choose_illegal_item_keyboard():
         return InlineKeyboardMarkup([[InlineKeyboardButton('Да', callback_data='ВНО'), InlineKeyboardButton(f"Нет", callback_data=f"Инвентарь")]])
-
+    
     def choose_weapon_keyboard(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
         weapons = ['Нет предмета']
         for i in users[user_id].player.inventory:
             if i.weapon:
                 weapons.append(i.name)
-        return InlineKeyboardMarkup(make_keyboard(weapons, 'WP'))
+        if len(weapons) > 3:
+            return InlineKeyboardMarkup(make_keyboard_two_rows(weapons, 'WP'))
+        else:
+            return InlineKeyboardMarkup(make_keyboard(weapons, 'WP'))
 
     def combat_start_keyboard():
         return InlineKeyboardMarkup([[InlineKeyboardButton('Прятаться (5/10)', callback_data='Прятаться'), InlineKeyboardButton(f"Напасть", callback_data=f"Напасть")]])
@@ -682,31 +742,18 @@ def telegram_bot():
     
     def briefing_keyboard_6(update: Update, context: CallbackContext):
         context.bot.send_photo(chat_id=update.effective_chat.id, photo=open('hitman_tg_bot/assets/clock.png', 'rb'), timeout=1000)
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Подготовка к миссии', callback_data='Выбор начальной локации')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Подготовка к миссии', callback_data='Выбор снаряжения')]])
     
-    def choose_briefing_keyboard():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Брифинг к миссии', callback_data='briefing_1')], [InlineKeyboardButton('Подготовка к миссии', callback_data='Выбор начальной локации')]])
+    def start_keyboard():
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Управление', callback_data='help')], [InlineKeyboardButton('Начать игру', callback_data='begin')]])
 
     #Проверка query для меню
 
+    def is_choose_equipment(query):
+        return 'choose_pistol' in query or 'choose_item_1' in query or 'choose_item_2' in query or 'CSL' in query or query == 'Выбор снаряжения'
+
     def is_basic_move(query):
         return 'basic_move' in query
-
-    def is_start_location(query):
-        location = False
-        for i in list(lvl_unlocks.values()):
-            if i[0] == query.replace('CSL', ''):
-                location = True
-        return location
-    
-    def is_start_item_1(query):
-        return 'CSI1' in query
-    
-    def is_start_item_2(query):
-        return 'CSI2' in query
-    
-    def is_pistol(query):
-        return 'choose_pistol' in query
 
     def is_safe_move(query):
         return 'SM' in query
@@ -1035,19 +1082,19 @@ def telegram_bot():
         adapter.update_by_id("Users", f'unlocked_locations={unlocked_locations_str}', user_id)
         adapter.update_by_id("Users", f'player_lvl={users[user_id].player_lvl}', user_id)
         users[user_id] = create_user(player_lvl=users[user_id].player_lvl, completed_challenges=completed_challenges_str, unlocked_disguises=unlocked_disguises_str, unlocked_locations=unlocked_locations_str)
-        query.edit_message_text(text='Данные сохранены.\n\nЧтобы начать новую игру используйте /begin')
+        query.edit_message_text(text='Данные сохранены.', reply_markup=start_keyboard())
 
     def use(update: Update, context: CallbackContext):
         """Использовать предмет"""
         user_id = update.callback_query.from_user['id']
         query = update.callback_query
         query.answer()
-        if users[user_id].player.item.name == 'Пульт для управления нейрочипом' and users[user_id].events['Уничтожить сердце'].completed == False and users[user_id].player.current_location.name == 'Морг':
+        if users[user_id].player.item.name == 'Пульт от нейрочипа' and users[user_id].events['Уничтожить сердце'].completed == False and users[user_id].player.current_location.name == 'Морг':
             users[user_id].events['Уничтожить сердце'].completed = True
             users[user_id].player.inventory.remove(users[user_id].player.item)
             users[user_id].player.item = users[user_id].items['Нет предмета']
             query.edit_message_text(text='Нейрочип подействовал на одного из работников морга и тот отправился в комнату, где хранится сердце, которое должны пересадить Эриху Содерсу.\n\nПоследовать за ним?', reply_markup=(destroy_heart_keyboard_1()))
-        if users[user_id].player.item.name == 'Пульт для управления нейрочипом' and (users[user_id].events['Уничтожить сердце'].completed == True or users[user_id].player.current_location.name != 'Морг'):
+        if users[user_id].player.item.name == 'Пульт от нейрочипа' and (users[user_id].events['Уничтожить сердце'].completed == True or users[user_id].player.current_location.name != 'Морг'):
             query.edit_message_text(text='Вне зоны действия', reply_markup=(choose_action_keyboard(update=update, context=context)))
 
     def distract_kill(update: Update, context: CallbackContext):
@@ -1118,7 +1165,7 @@ def telegram_bot():
             users[user_id].kills += 1
         else:
             target = users[user_id].targets[data]
-            if data == 'Erich Soders' and (users[user_id].player.item.name == 'Пистолет без глушителя' or users[user_id].player.item.name == 'Пистолет с глушителем') and users[user_id].challenges['Личное прощание'].completed == False:
+            if data == 'Erich Soders' and (users[user_id].player.item.name == 'Bartoli 75R' or users[user_id].player.item.name == 'ICA 19') and users[user_id].challenges['Личное прощание'].completed == False:
                 context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Личное прощание'].achieved(update=update, context=context))
                 users[user_id].player_lvl += 5
             context.bot.send_message(chat_id=update.effective_chat.id, text=target.kill())
@@ -1127,7 +1174,7 @@ def telegram_bot():
             users[user_id].bodies += 1
             combat(update=update, context=context, start_string=f'Цель устранена: {target.name}\n\n', type='add')
         else:
-            if data == 'Erich Soders' and (users[user_id].player.item.name == 'Пистолет без глушителя' or users[user_id].player.item.name == 'Пистолет с глушителем'):
+            if data == 'Erich Soders' and (users[user_id].player.item.name == 'Bartoli 75R' or users[user_id].player.item.name == 'ICA 19'):
                 context.bot.send_message(chat_id=update.effective_chat.id, text=f'Цель устранена: {target.name}', reply_markup=(choose_action_keyboard(update=update, context=context)))
             else:
                 query.answer()
@@ -1211,7 +1258,7 @@ def telegram_bot():
         adapter.update_by_id("Users", f'unlocked_locations={unlocked_locations_str}', user_id)
         adapter.update_by_id("Users", f'player_lvl={users[user_id].player_lvl}', user_id)
         users[user_id] = create_user(player_lvl=users[user_id].player_lvl, completed_challenges=completed_challenges_str, unlocked_disguises=unlocked_disguises_str, unlocked_locations=unlocked_locations_str)
-        context.bot.send_message(chat_id=update.effective_chat.id, text='Чтобы начать новую игру используйте /begin')
+        context.bot.send_message(chat_id=update.effective_chat.id, text='Миссия выполнена.', reply_markup=start_keyboard())
 
     def hide_combat(update: Update, context: CallbackContext):
         """Скрыться во время боя"""
@@ -1388,7 +1435,7 @@ def telegram_bot():
             edit = False
         #Случай, когда для входа нужна маскировка или ключ-карта
         if move_to_location.name == 'Комната с серверами':
-            if users[user_id].player.disguise.name == 'Директор клиники' or users[user_id].items['Ключ-карта'] in users[user_id].player.inventory or users[user_id].items['Электронный дешифровщик'] in users[user_id].player.inventory:
+            if users[user_id].player.disguise.name == 'Директор клиники' or users[user_id].items['Ключ-карта'] in users[user_id].player.inventory or users[user_id].items['Дешифровщик'] in users[user_id].player.inventory:
                 users[user_id].player.current_location = move_to_location
                 if edit:
                     if users[user_id].targets['Erich Soders'].alive == True:
@@ -1508,19 +1555,34 @@ def telegram_bot():
     def spawn_player(update: Update, context: CallbackContext):
         """Задать начальные параметры для игрока"""
         user_id = update.callback_query.from_user['id']
-        users[user_id].player.current_location = users[user_id].locations[users[user_id].start_location]
+        if users[user_id].loadout['Начальная локация']:
+            users[user_id].player.current_location = users[user_id].locations[users[user_id].loadout['Начальная локация']]
+        else:
+            users[user_id].player.current_location = users[user_id].locations['Номер 47-го']
         users[user_id].player.inventory = []
-        if users[user_id].start_items:
-            for i in users[user_id].start_items.split(','):
-                users[user_id].player.inventory.append(users[user_id].items[i])
-        users[user_id].player.found_disguises = [users[user_id].disguises[users[user_id].start_disguise]]
+        if users[user_id].loadout['Пистолет']:
+            users[user_id].player.inventory.append(users[user_id].items[users[user_id].loadout['Пистолет']])
+        if users[user_id].loadout['Снаряжение 1']:
+            users[user_id].player.inventory.append(users[user_id].items[users[user_id].loadout['Снаряжение 1']])
+            if users[user_id].loadout['Снаряжение 1'] == 'Монета':
+                users[user_id].player.inventory.append(users[user_id].items[users[user_id].loadout['Снаряжение 1']])
+                users[user_id].player.inventory.append(users[user_id].items[users[user_id].loadout['Снаряжение 1']])
+        if users[user_id].loadout['Снаряжение 2']:
+            users[user_id].player.inventory.append(users[user_id].items[users[user_id].loadout['Снаряжение 2']])
+            if users[user_id].loadout['Снаряжение 2'] == 'Монета':
+                users[user_id].player.inventory.append(users[user_id].items[users[user_id].loadout['Снаряжение 2']])
+                users[user_id].player.inventory.append(users[user_id].items[users[user_id].loadout['Снаряжение 2']])
+        for i in list(lvl_unlocks.values()):
+            if i[0] == users[user_id].player.current_location.name:
+                start_disguise = users[user_id].disguises[i[1]]
+        users[user_id].player.found_disguises = [start_disguise]
         users[user_id].player.item = users[user_id].items['Нет предмета']
         users[user_id].player.compromised_disguises = []
-        users[user_id].player.disguise = users[user_id].disguises[users[user_id].start_disguise]
+        users[user_id].player.disguise = start_disguise
         if users[user_id].player.disguise.name != 'VIP - пациент':
             users[user_id].suit_only = False
         text = 'Диана: Добро пожаловать на Хоккайдо, 47-й. Частная клиника «Гама» оказывает медицинские услуги высочайшего уровня представителям мировой элиты, выходя при необходимости за рамки закона\n\n Частично здание находится под управлением искусственного интеллекта — KAI. Система контролирует доступ пациентов в разные части клиники и даже принимает участие в ряде медицинских процедур.\n\nЭрих Содерс уже находится в операционной, где он проходит предварительную подготовку с применением стволовых клеток. Это крайне противоречивая процедура ещё не одобрена властями Японии.\n\nЮки Ямадзаки уже прибыла. Она находится либо в своём номере, либо в ресторане, либо в спа-зоне клиники. Содерсу скоро введут наркоз. Сделай так, чтобы он больше никогда не проснулся. Удачи, 47-й.'
-        if users[user_id].start_location == 'Номер 47-го':
+        if users[user_id].player.current_location.name == 'Номер 47-го':
             query = update.callback_query
             query.answer()
             query.edit_message_text(text=text)
@@ -1575,17 +1637,13 @@ def telegram_bot():
 
     def help(update: Update, context: CallbackContext):
         """Вывод инструкции к игре"""
-        user_id = update.message.from_user['id']
-
-        if update.message['message_id'] != users[user_id].message:
-            users[user_id].message = update.message['message_id']
-            updated = int(tm.time())
-            
-        adapter.update_by_id("Users", f'updated={updated}', user_id)
         
-        update.message.reply_text(
+        query = update.callback_query
+        query.answer()
+        query.edit_message_text(
             'Обучение:\n\nПередвежение – перемещение по локациям игры. Иногда данное действие требует некоторых условий, таких как нужной маскировки или небходимого предмета.\n\nВзаимодействие – использование текущего предмета. Может являться нелегальным действием.\n\nИнвентарь – открытие меню с вашими предметами и текущей маскировкой.\n\nОбыскать локацию – добавляет все предметы на текущей локации вам в инвентарь.\n\nСтатус – показывает нахождение целей задания, а также состояние текущей локации.\n\nИспытания – открывает список со всеми испытаниями. Выполненные испытания отмечаются отдельно.\n\nСохранить и выйти – завершает игру, сохраняя текущие выполненные испытания, а также уровень игрока.\n\nУровень игрока – за выполнение испытаний, а также прохождения уровня на высокий рейтинг у вас будут появляться новые стартовые локации, а также появится возможность брать с собой снаряжение.\n\nРейтинг задания – убийство невинных, количество найденных тел и раз, когда вас заметили – всё это снижает рейтинг прохождения.'
         )
+        context.bot.send_message(chat_id=update.effective_chat.id, text='Добро пожаловать!', reply_markup=(start_keyboard()))
 
     def start(update: Update, context: CallbackContext):
         """Начало работы бота"""
@@ -1611,13 +1669,11 @@ def telegram_bot():
 
         users[user_id].message = update.message['message_id']
 
-        update.message.reply_text(
-            'Добро пожаловать в игру!\n\nКоманда /help покажет вам управление. Команда /begin начнет игру.'
-        )
+        context.bot.send_message(chat_id=update.effective_chat.id, text='Добро пожаловать!', reply_markup=(start_keyboard()))
         
     def begin(update: Update, context: CallbackContext):
         """Начало игры"""
-        user_id = update.message.from_user['id']
+        user_id = update.callback_query.from_user['id']
         if users[user_id].completed_challenges:
             for i in users[user_id].completed_challenges.split(';'):
                 users[user_id].challenges[i].completed = True
@@ -1627,11 +1683,9 @@ def telegram_bot():
         if users[user_id].unlocked_locations:
             for i in users[user_id].unlocked_locations.split(';'):
                 users[user_id].locations[i].unlocked = True
-        if update.message['message_id'] != users[user_id].message:
-            users[user_id].message = update.message['message_id']
-            updated = int(tm.time())
-        adapter.update_by_id("Users", f'updated={updated}', user_id)
-        update.message.reply_text(text='Транспозиция органов\n\nХоккайдо, Япония', reply_markup=choose_briefing_keyboard())
+        query = update.callback_query
+        query.answer()
+        query.edit_message_text(text='Транспозиция органов\n\nХоккайдо, Япония', reply_markup=choose_equipment_keyboard(update=update, context=context))
 
     def run_bot():
         """Работа бота"""
@@ -1639,17 +1693,16 @@ def telegram_bot():
         dispatcher = updater.dispatcher
 
         dispatcher.add_handler(CommandHandler('start', start))
-        dispatcher.add_handler(CommandHandler('help', help))
-        dispatcher.add_handler(CommandHandler('begin', begin))
 
+        dispatcher.add_handler(CallbackQueryHandler(help, pattern='help'))
+        dispatcher.add_handler(CallbackQueryHandler(begin, pattern='begin'))
         dispatcher.add_handler(CallbackQueryHandler(choose_action_menu, pattern='Выбор действия'))
         dispatcher.add_handler(CallbackQueryHandler(challenges_menu, pattern='Испытания'))
         dispatcher.add_handler(CallbackQueryHandler(status_menu, pattern='Статус'))
         dispatcher.add_handler(CallbackQueryHandler(choose_start_location_menu, pattern='Выбор начальной локации'))
-        dispatcher.add_handler(CallbackQueryHandler(choose_pistol_menu, pattern=is_start_location))
-        dispatcher.add_handler(CallbackQueryHandler(choose_start_item_menu_1, pattern=is_pistol))
-        dispatcher.add_handler(CallbackQueryHandler(choose_start_item_menu_2, pattern=is_start_item_1))
-        dispatcher.add_handler(CallbackQueryHandler(game_start_menu, pattern=is_start_item_2))
+        dispatcher.add_handler(CallbackQueryHandler(choose_pistol_menu, pattern='Выбор пистолета'))
+        dispatcher.add_handler(CallbackQueryHandler(choose_start_item_menu_1, pattern='Выбор снаряжения 1'))
+        dispatcher.add_handler(CallbackQueryHandler(choose_start_item_menu_2, pattern='Выбор снаряжения 2'))
         dispatcher.add_handler(CallbackQueryHandler(spawn_player, pattern='Начало игры'))
         dispatcher.add_handler(CallbackQueryHandler(safe_move, pattern=is_safe_move))
         dispatcher.add_handler(CallbackQueryHandler(move, pattern=is_basic_move))
@@ -1716,6 +1769,7 @@ def telegram_bot():
         dispatcher.add_handler(CallbackQueryHandler(briefing_4, pattern='briefing_4'))
         dispatcher.add_handler(CallbackQueryHandler(briefing_5, pattern='briefing_5'))
         dispatcher.add_handler(CallbackQueryHandler(briefing_6, pattern='briefing_6'))
+        dispatcher.add_handler(CallbackQueryHandler(choose_equipment_menu, pattern=is_choose_equipment))
 
         updater.start_polling()
         updater.idle()

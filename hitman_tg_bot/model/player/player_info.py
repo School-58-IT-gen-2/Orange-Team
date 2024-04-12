@@ -11,9 +11,6 @@ class PlayerInfo:
                  suit_only=True,
                  illegal_item='',
                  thrown_weapon=False,
-                 start_location='',
-                 start_disguise='',
-                 start_items='',
                  player_lvl=10,
                  completed_challenges='',
                  unlocked_disguises='',
@@ -27,7 +24,8 @@ class PlayerInfo:
                  locations={},
                  items={},
                  disguises={},
-                 carry_on_items=[]
+                 carry_on_items=[],
+                 loadout={}
                  ):
         
         self.suspicion_count = suspicion_count
@@ -37,9 +35,6 @@ class PlayerInfo:
         self.suit_only = suit_only
         self.illegal_item = illegal_item
         self.thrown_weapon = thrown_weapon
-        self.start_location = start_location
-        self.start_disguise = start_disguise
-        self.start_items = start_items
         self.player_lvl = player_lvl
         self.completed_challenges = completed_challenges
         self.unlocked_disguises = unlocked_disguises
@@ -54,3 +49,4 @@ class PlayerInfo:
         self.carry_on_items = carry_on_items
         self.items = items
         self.disguises = disguises
+        self.loadout = loadout
