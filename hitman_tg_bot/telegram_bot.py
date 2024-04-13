@@ -395,8 +395,8 @@ def telegram_bot():
         text = 'Выберите, кого вы хотите отвлечь'
         if find_location_npcs(update=update, context=context, location=users[user_id].player.current_location) == []:
             text = 'На локации никого нет'
-        if location_witnesses(update=update, context=context, location=users[user_id].player.current_location) > 3:
-            text = 'На локации слишком много свидетелей'
+        if len(find_location_npcs(update=update, context=context, location=users[user_id].player.current_location)) > 3:
+            text = 'На локации слишком много людей'
         query.edit_message_text(text=text, reply_markup=(distract_keyboard(update=update, context=context)))
 
     def confirm_kill_menu(update: Update, context: CallbackContext):
@@ -727,7 +727,7 @@ def telegram_bot():
         user_id = update.callback_query.from_user['id']
         if find_location_npcs(update=update, context=context, location=users[user_id].player.current_location) == []:
                 return InlineKeyboardMarkup([[InlineKeyboardButton("Выйти", callback_data='Взаимодействие')]])
-        elif location_witnesses(update=update, context=context, location=users[user_id].player.current_location) > 3:
+        elif len(find_location_npcs(update=update, context=context, location=users[user_id].player.current_location)) > 3:
             return InlineKeyboardMarkup([[InlineKeyboardButton("Отвлечь для перемещения", callback_data='safe_move')], [InlineKeyboardButton("Отменить действие", callback_data='Взаимодействие')]])
         else:
             location_npcs = []
@@ -820,7 +820,7 @@ def telegram_bot():
         return InlineKeyboardMarkup([[InlineKeyboardButton('Пойти на балкон', callback_data='ПНБ')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
     
     def cigar_kill_keyboard_3():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Создать утечку газа', callback_data='СУГ'), InlineKeyboardButton('Подождать Юки Ямадзаки', callback_data='ПЮЯ')], [InlineKeyboardButton('Уйти с балкона', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Создать утечку газа', callback_data='СУГ')], [InlineKeyboardButton('Подождать Юки Ямадзаки', callback_data='ПЮЯ')], [InlineKeyboardButton('Уйти с балкона', callback_data='Выбор действия')]])
     
     def cigar_kill_keyboard_4():
         return InlineKeyboardMarkup([[InlineKeyboardButton('Уйти с балкона', callback_data='УСБ')]])
