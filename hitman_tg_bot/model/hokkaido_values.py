@@ -10,7 +10,7 @@ from model.common.events import Event
 
 adapter = HitmanAdapter()
 
-challenges = {i[0]: Challenge(name=i[0], description=i[2], url=i[3]) for i in adapter.get_all('Challenges')}
+challenges = {i[0]: Challenge(name=i[0], description=i[2], url=i[3], type=i[4], xp=i[5]) for i in adapter.get_all('Challenges')}
 disguises = {i[0]: Disguise(name=i[0], url=i[2]) for i in adapter.get_all('Disguise')}
 items = {i[0]: Item(name=i[0], usage=i[5].split('/') if i[5] else [], legal=i[3], lethal=i[4], weapon=i[2]) for i in adapter.get_all('Items')}
 locations = {i[0]: Location(name=i[0], connetcted_locations=[adapter.get_by_id('Locations', l)[0][0] for l in adapter.get_by_id('Locations Connection', i[1])[0][1]], disguise=[disguises[adapter.get_by_id('Disguise', j)[0][0]] for j in i[3]], witnesses=i[4], items=[items[adapter.get_by_id('Items', k)[0][0]] for k in i[2]], url=i[5]) for i in adapter.get_all('Locations')}
@@ -29,11 +29,3 @@ lvl_unlocks = {
             8: ['Морг', 'VIP - пациент'],
             9: ['Оперционная', 'Хирург']
         }
-
-carry_on_items = [
-    'Удавка', 
-    'Смертельный яд', 
-    'Рвотный яд', 
-    'Электронный дешифровщик', 
-    'Боевой нож', 
-    'Монета']

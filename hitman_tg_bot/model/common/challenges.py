@@ -4,10 +4,12 @@ from telegram.ext import CallbackContext
 
 class Challenge:
     """Класс, описывающий испытания на локации"""
-    def __init__(self, name, description, url='', completed=False):
+    def __init__(self, name, description, url, type, xp, completed=False):
         self.name = name
         self.description = description
         self.url = url
+        self.type = type
+        self.xp = xp
         self.completed = completed
 
     def achieved(self, update: Update, context: CallbackContext):
