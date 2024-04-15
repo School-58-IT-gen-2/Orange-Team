@@ -493,7 +493,7 @@ def telegram_bot():
                 ])
         return InlineKeyboardMarkup([
                     [InlineKeyboardButton('Брифинг', callback_data="briefing_1")],
-                    [InlineKeyboardButton(options[0], callback_data="Выбор начальной локации")]
+                    [InlineKeyboardButton(options[0], callback_data="Выбор начальной локации")],
                     [InlineKeyboardButton('Начать миссию', callback_data="Начало игры")]
                 ])
 
