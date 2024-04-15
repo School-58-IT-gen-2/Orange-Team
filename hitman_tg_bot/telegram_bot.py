@@ -335,7 +335,7 @@ def telegram_bot():
         query = update.callback_query
         query.answer()
         if users[user_id].player.disguise.name != 'Охранник' and users[user_id].player.disguise.name != 'Телохранитель':
-            users[user_id].illegal_item = query[:-4]
+            users[user_id].illegal_item = query.data[:-4]
             query.edit_message_text(text=f'Вы собираетесь взять нелегальный предмет. Достать предмет?', reply_markup=(choose_illegal_item_keyboard()))
         else:
             query.edit_message_text(text=f'Сейчас в руках: {users[user_id].player.item.name}', reply_markup=(choose_action_keyboard(update=update, context=context)))
