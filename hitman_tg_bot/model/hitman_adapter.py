@@ -23,8 +23,9 @@ class HitmanAdapter:
 			"""
             )
             return conn
-        except:
+        except Exception as e:
             print("connection error")
+            print(e)
 
     def get_all(self, table_name: str):
         """Получение всей таблицы"""

@@ -3,4 +3,4 @@ services:
   hello_logic:
     image: test_docker-image:0.0.2
     container_name: hello_logic
-    command: 'python main.py'
+    command: 'python3 hitman_tg_bot/telegram_bot.py'
