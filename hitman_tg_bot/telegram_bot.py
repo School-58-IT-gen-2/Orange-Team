@@ -855,7 +855,10 @@ def telegram_bot():
         return InlineKeyboardMarkup([[InlineKeyboardButton('Подготовка к миссии', callback_data='Выбор снаряжения')]])
     
     def start_keyboard():
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Управление', callback_data='help')], [InlineKeyboardButton('Начать игру', callback_data='begin')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Транспозиция органов', callback_data='begin')]])
+    
+    def new_game_keyboard():
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Начать новую игру', callback_data='begin')]])
     
     def knock_jason_portman_keyboard_1():
         return InlineKeyboardMarkup([[InlineKeyboardButton('Пойти в укромное место', callback_data='ВДП')], [InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
@@ -1302,7 +1305,7 @@ def telegram_bot():
         adapter.update_by_id("Users", f'unlocked_locations={unlocked_locations_str}', user_id)
         adapter.update_by_id("Users", f'player_lvl={users[user_id].player_lvl}', user_id)
         users[user_id] = create_user(player_lvl=users[user_id].player_lvl, completed_challenges=completed_challenges_str, unlocked_disguises=unlocked_disguises_str, unlocked_locations=unlocked_locations_str)
-        query.edit_message_text(text='Данные сохранены.', reply_markup=start_keyboard())
+        query.edit_message_text(text='Данные сохранены.', reply_markup=new_game_keyboard())
 
     def use(update: Update, context: CallbackContext):
         """Использовать предмет"""
@@ -1472,7 +1475,7 @@ def telegram_bot():
         adapter.update_by_id("Users", f'unlocked_locations={unlocked_locations_str}', user_id)
         adapter.update_by_id("Users", f'player_lvl={users[user_id].player_lvl}', user_id)
         users[user_id] = create_user(player_lvl=users[user_id].player_lvl, completed_challenges=completed_challenges_str, unlocked_disguises=unlocked_disguises_str, unlocked_locations=unlocked_locations_str)
-        context.bot.send_message(chat_id=update.effective_chat.id, text='*_Миссия выполнена\._*', reply_markup=start_keyboard(), parse_mode='MarkdownV2')
+        context.bot.send_message(chat_id=update.effective_chat.id, text='*_Миссия выполнена\._*', reply_markup=new_game_keyboard(), parse_mode='MarkdownV2')
 
     def hide_combat(update: Update, context: CallbackContext):
         """Скрыться во время боя"""
@@ -1604,7 +1607,7 @@ def telegram_bot():
                 context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(choose_action_keyboard(update=update, context=context)), parse_mode='MarkdownV2')
         else:
             users[user_id].player.compromised_disguises.append(users[user_id].player.disguise)
-            locations_npcs = find_location_npcs(update=update, context=context, location=move_to_location)
+            locations_npcs = find_location_npcs(update=update, context=context, location=users[user_id].player.current_location)
             location_npc = locations_npcs[random.randrange(len(locations_npcs))]
             query.answer()
             if edit:
@@ -1895,12 +1898,34 @@ def telegram_bot():
 
     def help(update: Update, context: CallbackContext):
         """Вывод инструкции к игре"""
-        
-        query = update.callback_query
-        query.answer()
-        query.edit_message_text(
-            make_heading('Обучение') + tg_text_convert('Передвежение – перемещение по локациям игры. Иногда данное действие требует некоторых условий, таких как нужной маскировки или небходимого предмета.\n\nВзаимодействие – использование текущего предмета. Может являться нелегальным действием.\n\nИнвентарь – открытие меню с вашими предметами и текущей маскировкой.\n\nОбыскать локацию – добавляет все предметы на текущей локации вам в инвентарь.\n\nСтатус – показывает нахождение целей задания, а также состояние текущей локации.\n\nИспытания – открывает список со всеми испытаниями. Выполненные испытания отмечаются отдельно.\n\nСохранить и выйти – завершает игру, сохраняя текущие выполненные испытания, а также уровень игрока.\n\nУровень игрока – за выполнение испытаний, а также прохождения уровня на высокий рейтинг у вас будут появляться новые стартовые локации, а также появится возможность брать с собой снаряжение.\n\nРейтинг задания – убийство невинных, количество найденных тел и раз, когда вас заметили – всё это снижает рейтинг прохождения.'), parse_mode='MarkdownV2')
-        context.bot.send_message(chat_id=update.effective_chat.id, text='*_Добро пожаловать\!_*', reply_markup=(start_keyboard()), parse_mode='MarkdownV2')
+        context.bot.send_message(chat_id=update.effective_chat.id, text=make_heading('Обучение') + tg_text_convert('Передвежение – перемещение по локациям игры. Иногда данное действие требует некоторых условий, таких как нужной маскировки или небходимого предмета.\n\nВзаимодействие – использование текущего предмета. Может являться нелегальным действием.\n\nИнвентарь – открытие меню с вашими предметами и текущей маскировкой.\n\nОбыскать локацию – добавляет все предметы на текущей локации вам в инвентарь.\n\nСтатус – показывает нахождение целей задания, а также состояние текущей локации.\n\nИспытания – открывает список со всеми испытаниями. Выполненные испытания отмечаются отдельно.\n\nСохранить и выйти – завершает игру, сохраняя текущие выполненные испытания, а также уровень игрока.\n\nУровень игрока – за выполнение испытаний, а также прохождения уровня на высокий рейтинг у вас будут появляться новые стартовые локации, а также появится возможность брать с собой снаряжение.\n\nРейтинг задания – убийство невинных, количество найденных тел и раз, когда вас заметили – всё это снижает рейтинг прохождения.'), parse_mode='MarkdownV2')
+
+    def stats(update: Update, context: CallbackContext):
+        """Вывод статистики игрока"""
+        user_id = update.message.from_user['id']
+        text = make_heading('Карьера')
+        text += f'*_Текущий уровень: {users[user_id].player_lvl // 6}_*\n\n'
+        text_check = make_heading('Карьера') + f'*_Текущий уровень: {users[user_id].player_lvl // 6}_*\n\n'
+        if users[user_id].completed_challenges:
+            text += make_heading('Выполненные испытания')
+            for i in users[user_id].completed_challenges.split(';'):
+                text += tg_text_convert(users[user_id].challenges[i].name) + '\n'
+            text += '\n'
+        if users[user_id].unlocked_disguises:
+            text += make_heading('Открытые маскировки')
+            for i in users[user_id].unlocked_disguises.split(';'):
+                text += tg_text_convert(users[user_id].disguises[i].name) + '\n'
+            text += '\n'
+        if users[user_id].unlocked_locations:
+            text += make_heading('Открытые локации')
+            for i in users[user_id].unlocked_locations.split(';'):
+                text += tg_text_convert(users[user_id].locations[i].name) + '\n'
+            text += '\n\n'
+        if text == text_check:
+            text += 'Пока у вас нет достижений\n\n\n'
+        text += '||Здесь отображаются только сохранённые достижения\. Новые достижения появятся после завершения миссии\.||'
+        context.bot.send_photo(chat_id=update.effective_chat.id, photo='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS6aeydIURHFfHBqGd1-qU9CXxHZfbRw44wTVqkuF09Rg&s')
+        context.bot.send_message(chat_id=update.effective_chat.id, text=text, parse_mode='MarkdownV2')
 
     def start(update: Update, context: CallbackContext):
         """Начало работы бота"""
@@ -1925,7 +1950,7 @@ def telegram_bot():
         adapter.update_by_id("Users", f'updated={updated}', user_id)
 
         users[user_id].message = update.message['message_id']
-        context.bot.send_message(chat_id=update.effective_chat.id, text='*_Добро пожаловать\!_*', reply_markup=(start_keyboard()), parse_mode='MarkdownV2')
+        context.bot.send_message(chat_id=update.effective_chat.id, text='*_Добро пожаловать\!_*\n\nВыберите миссию', reply_markup=(start_keyboard()), parse_mode='MarkdownV2')
         
     def begin(update: Update, context: CallbackContext):
         """Начало игры"""
@@ -1949,8 +1974,9 @@ def telegram_bot():
         dispatcher = updater.dispatcher
 
         dispatcher.add_handler(CommandHandler('start', start))
+        dispatcher.add_handler(CommandHandler('help', help))
+        dispatcher.add_handler(CommandHandler('stats', stats))
 
-        dispatcher.add_handler(CallbackQueryHandler(help, pattern='help'))
         dispatcher.add_handler(CallbackQueryHandler(begin, pattern='begin'))
         dispatcher.add_handler(CallbackQueryHandler(choose_action_menu, pattern='Выбор действия'))
         dispatcher.add_handler(CallbackQueryHandler(challenges_menu, pattern='Испытания'))
