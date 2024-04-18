@@ -16,4 +16,8 @@ class Challenge:
         """Уведомление о выполнении условий испытания"""
         self.completed = True
         context.bot.send_photo(chat_id=update.effective_chat.id, photo=self.url)
-        return f'Испытание выполнено: {self.name}'
+        restricted_symbols = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+        text = self.name
+        for i in restricted_symbols:
+            text = text.replace(i, '\\' + i)
+        return f'*_Испытание выполнено: {text}_*'

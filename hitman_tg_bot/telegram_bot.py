@@ -48,21 +48,31 @@ def telegram_bot():
 
     #Часто используемые функции
 
+    def tg_text_convert(text: str) -> str:
+        restricted_symbols = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+        for i in restricted_symbols:
+            text = text.replace(i, '\\' + i)
+        return text
+
+    def make_heading(string: str) -> str:
+        """Создание заголовка для меню"""
+        return f'*_\U00002E3A {string} \U00002E3A_*\n\n'
+
     def location_status(update: Update, context: CallbackContext, location: Location) -> str:
         """Вывод статуса локации"""
         user_id = update.callback_query.from_user['id']
         query = update.callback_query
         query.answer()
-        result_string = f'{location.name}\n'
+        result_string = make_heading(tg_text_convert(location.name))[:-1]
         location_npcs = find_location_npcs(update=update, context=context, location=location)
         location_disguises = []
         for i in location_npcs:
             location_disguises.append(i.disguise.name)
-        if location_witnesses(update=update, context=context, location=location) > 0:
+        if location_npcs != [] or location.witnesses != 0:
             result_string += '\nНа локации находятся:\n'
             for i in list(users[user_id].targets.values()):
                 if i.move(users[user_id].time) == location.name:
-                    result_string += f'\n{i.name}\n'
+                    result_string += tg_text_convert(f'\n{i.name}\n')
             if location.witnesses > 0:
                 result_string += f'\n{location.witnesses} Пациент'
             for i in list(users[user_id].disguises.values()):
@@ -70,7 +80,7 @@ def telegram_bot():
                     result_string += f'\n{location_disguises.count(i.name)} {i.name}'
             if users[user_id].targets['Yuki Yamazaki'].alive == False and users[user_id].targets['Erich Soders'].alive == False and users[user_id].events['Все цели убиты'].completed == False:
                 users[user_id].events['Все цели убиты'].completed = True
-                result_string = 'Все цели убиты. Найдте выход с миссии.\n\n\n' + result_string
+                result_string = tg_text_convert('Все цели убиты. Найдте выход с миссии.\n\n\n') + result_string
             return result_string
         else:
             result_string += '\nНа локации никого нет'
@@ -132,94 +142,84 @@ def telegram_bot():
         result_string += f'Предмет в руках: {users[user_id].player.item.name}'
         if int(5-(users[user_id].bodies*0.5)-(users[user_id].kills*0.7)-(users[user_id].suspicion_count*0.2)) == 5:
             result_string += f'\n\nБесшумный убийца'
-        result_string += '\n\n\n\n' + location_status(update=update, context=context, location=users[user_id].player.current_location)
+        result_string = make_heading('Статус') + tg_text_convert(result_string)
+        result_string += '\n\n\n' + location_status(update=update, context=context, location=users[user_id].player.current_location)
         query = update.callback_query
         query.answer()
-        query.edit_message_text(text=result_string, reply_markup=(status_keyboard()))
+        query.edit_message_text(text=result_string, reply_markup=(status_keyboard()), parse_mode='MarkdownV2')
 
     def challenges_menu(update: Update, context: CallbackContext):
-        user_id = update.callback_query.from_user['id']
         query = update.callback_query
-        text = ''
-        completed_challenges = []
-        for i in list(users[user_id].challenges.values()):
-            if i.completed == False:
-                text += i.name + '\n' + i.description + '\n\n'
-            else:
-                completed_challenges.append(i.name + ' (выполнено)')
-        for i in completed_challenges:
-            text += i + '\n\n'
-        text = text[:-1]
         query.answer()
-        query.edit_message_text(text='Испытания', reply_markup=challenges_keyboard())
+        query.edit_message_text(text=make_heading('Испытания')[:-2], reply_markup=challenges_keyboard(), parse_mode='MarkdownV2')
 
     def assasinations_menu(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
         query = update.callback_query
-        text = ''
+        text = make_heading('Убийства')
         completed_challenges = []
         for i in list(users[user_id].challenges.values()):
             if i.type == 'Убийство':
                 if i.completed == False:
-                    text += i.name + '\n' + i.description + '\n\n'
+                    text += tg_text_convert(i.name + '\n' + i.description + '\n\n')
                 else:
                     completed_challenges.append(i.name + ' (выполнено)')
         for i in completed_challenges:
-            text += i + '\n\n'
+            text += tg_text_convert(i + '\n\n')
         text = text[:-1]
         query.answer()
-        query.edit_message_text(text=text, reply_markup=challenges_section_keyboard())
+        query.edit_message_text(text=text, reply_markup=challenges_section_keyboard(), parse_mode='MarkdownV2')
 
     def feats_menu(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
         query = update.callback_query
-        text = ''
+        text = make_heading('Усложнение')
         completed_challenges = []
         for i in list(users[user_id].challenges.values()):
             if i.type == 'Усложнение':
                 if i.completed == False:
-                    text += i.name + '\n' + i.description + '\n\n'
+                    text += tg_text_convert(i.name + '\n' + i.description + '\n\n')
                 else:
                     completed_challenges.append(i.name + ' (выполнено)')
         for i in completed_challenges:
-            text += i + '\n\n'
+            text += tg_text_convert(i + '\n\n')
         text = text[:-1]
         query.answer()
-        query.edit_message_text(text=text, reply_markup=challenges_section_keyboard())
+        query.edit_message_text(text=text, reply_markup=challenges_section_keyboard(), parse_mode='MarkdownV2')
 
     def discovery_menu(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
         query = update.callback_query
-        text = ''
+        text = make_heading('Исследование')
         completed_challenges = []
         for i in list(users[user_id].challenges.values()):
             if i.type == 'Исследование':
                 if i.completed == False:
-                    text += i.name + '\n' + i.description + '\n\n'
+                    text += tg_text_convert(i.name + '\n' + i.description + '\n\n')
                 else:
                     completed_challenges.append(i.name + ' (выполнено)')
         for i in completed_challenges:
-            text += i + '\n\n'
+            text += tg_text_convert(i + '\n\n')
         text = text[:-1]
         query.answer()
-        query.edit_message_text(text=text, reply_markup=challenges_section_keyboard())
+        query.edit_message_text(text=text, reply_markup=challenges_section_keyboard(), parse_mode='MarkdownV2')
 
     def classics_menu(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
         query = update.callback_query
-        text = ''
+        text = make_heading('Классика')
         completed_challenges = []
         for i in list(users[user_id].challenges.values()):
             if i.type == 'Классика':
                 if i.completed == False:
-                    text += i.name + '\n' + i.description + '\n\n'
+                    text += tg_text_convert(i.name + '\n' + i.description + '\n\n')
                 else:
                     completed_challenges.append(i.name + ' (выполнено)')
         for i in completed_challenges:
-            text += i + '\n\n'
+            text += tg_text_convert
         text = text[:-1]
         query.answer()
-        query.edit_message_text(text=text, reply_markup=challenges_section_keyboard())
+        query.edit_message_text(text=text, reply_markup=challenges_section_keyboard(), parse_mode='MarkdownV2')
         
     def choose_start_location_menu(update: Update, context: CallbackContext):
         query = update.callback_query
@@ -289,40 +289,42 @@ def telegram_bot():
             for i in list(users[user_id].items.values()):
                 if i in users[user_id].player.current_location.items:
                     result_string += f'{i.name} ({users[user_id].player.current_location.items.count(i)})\n'
+            result_string = tg_text_convert(result_string)
             if users[user_id].items['Пачка сигарет'] in users[user_id].player.inventory and users[user_id].events['Информация о сигаретах 1'].completed == False:
                 users[user_id].events['Информация о сигаретах 1'].completed = True
-                query.edit_message_text(text='Диана: Это пачка сигарет. Не территории клиники «Гама» курение строго запрещено, так что эти сигареты — явная контрабанда.')
+                query.edit_message_text(text=make_heading('Пачка сигарет') + tg_text_convert('Диана: Это пачка сигарет. Не территории клиники «Гама» курение строго запрещено, так что эти сигареты — явная контрабанда.'), parse_mode='MarkdownV2')
                 if users[user_id].challenges['Дайте ещё одну'].completed == False:
-                    context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Дайте ещё одну'].achieved(update=update, context=context))
+                    context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Дайте ещё одну'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                     users[user_id].player_lvl += users[user_id].challenges['Дайте ещё одну'].xp
-                context.bot.send_message(chat_id=update.effective_chat.id, text=result_string, reply_markup=(choose_action_keyboard(update=update, context=context)))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=result_string, reply_markup=(choose_action_keyboard(update=update, context=context)), parse_mode='MarkdownV2')
             elif users[user_id].items['Пульт от нейрочипа'] in users[user_id].player.inventory and users[user_id].events['Информация о чипе'].completed == False:
                 users[user_id].events['Информация о чипе'].completed = True
-                query.edit_message_text(text='Диана: Нейрочип для изменения настроения. Интересно...\n\nДоктор Каташи Ито, он же Куратор, проводит сейчас какое-то медицинское испытание. Занимательно.\n\nХранилище органов находится в ведении Куратора, а значит, у него точно есть доступ к сердцу, которое должны пересадить Содерсу. 47-й, я рекомендую найти отчёт сотрудника и выяснить, для чего нужен этот нейроимплантат. Может пригодиться.')
+                query.edit_message_text(text=make_heading('Пульт от нейрочипа') + tg_text_convert('Диана: Нейрочип для изменения настроения. Интересно...\n\nДоктор Каташи Ито, он же Куратор, проводит сейчас какое-то медицинское испытание. Занимательно.\n\nХранилище органов находится в ведении Куратора, а значит, у него точно есть доступ к сердцу, которое должны пересадить Содерсу. 47-й, я рекомендую найти отчёт сотрудника и выяснить, для чего нужен этот нейроимплантат. Может пригодиться.'), parse_mode='MarkdownV2')
                 if users[user_id].challenges['Изменение настроения'].completed == False:
-                    context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Изменение настроения'].achieved(update=update, context=context))
+                    context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Изменение настроения'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                     users[user_id].player_lvl += users[user_id].challenges['Изменение настроения'].xp
-                context.bot.send_message(chat_id=update.effective_chat.id, text=result_string, reply_markup=(choose_action_keyboard(update=update, context=context)))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=result_string, reply_markup=(choose_action_keyboard(update=update, context=context)), parse_mode='MarkdownV2')
             elif users[user_id].items['Стволовые клетки'] in users[user_id].player.inventory and users[user_id].events['Стволовые клетки'].completed == False:
                 users[user_id].events['Стволовые клетки'].completed = True
-                query.edit_message_text(text='Контейнер, заполненный заражёнными и ядовитыми стволовыми клетками. Попадание таких клеток в кровь крайне опасно для здоровья.')
-                context.bot.send_message(chat_id=update.effective_chat.id, text=result_string, reply_markup=(choose_action_keyboard(update=update, context=context)))
+                query.edit_message_text(text=make_heading('Зараженные стволовые клетки') + tg_text_convert('Контейнер, заполненный заражёнными и ядовитыми стволовыми клетками. Попадание таких клеток в кровь крайне опасно для здоровья.'), parse_mode='MarkdownV2')
+                context.bot.send_message(chat_id=update.effective_chat.id, text=result_string, reply_markup=(choose_action_keyboard(update=update, context=context)), parse_mode='MarkdownV2')
             elif users[user_id].items['Яд рыбы Фугу'] in users[user_id].player.inventory and users[user_id].challenges['Запахло рыбой'].completed == False:
-                query.edit_message_text(text=users[user_id].challenges['Запахло рыбой'].achieved(update=update, context=context))
+                query.edit_message_text(text=users[user_id].challenges['Запахло рыбой'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                 users[user_id].player_lvl += users[user_id].challenges['Запахло рыбой'].xp
-                context.bot.send_message(chat_id=update.effective_chat.id, text=result_string, reply_markup=(choose_action_keyboard(update=update, context=context)))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=result_string, reply_markup=(choose_action_keyboard(update=update, context=context)), parse_mode='MarkdownV2')
             else:
-                query.edit_message_text(text=result_string, reply_markup=(choose_action_keyboard(update=update, context=context)))
+                query.edit_message_text(text=result_string, reply_markup=(choose_action_keyboard(update=update, context=context)), parse_mode='MarkdownV2')
         users[user_id].player.current_location.items = []
 
     def inventory_menu(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
         query = update.callback_query
-        result_string = f'Сейчас в руках: {users[user_id].player.item.name}'
+        result_string = make_heading('Инвентарь')
+        result_string += f'Сейчас в руках: {users[user_id].player.item.name}'
         if users[user_id].player.inventory == []:
             result_string += '\n\nУ вас нет предметов'
         query.answer()
-        query.edit_message_text(text=result_string, reply_markup=(inventory_keyboard(update=update, context=context)))
+        query.edit_message_text(text=result_string, reply_markup=(inventory_keyboard(update=update, context=context)), parse_mode='MarkdownV2')
 
     def disguise_menu(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
@@ -436,12 +438,12 @@ def telegram_bot():
     def save_and_quit_confirm_menu(update: Update, context: CallbackContext):
         query = update.callback_query
         query.answer()
-        query.edit_message_text(text='ВНИМАНИЕ: При выходе будут сохранены ваш текущий уровень и выполненные испытания, но не текущее продвижение по миссии.\n\nВы уверены, что хотите завершить игру?', reply_markup=(save_and_quit_confirm_keyboard()))
+        query.edit_message_text(text=tg_text_convert('*ВНИМАНИЕ*: При выходе будут сохранены ваш текущий уровень и выполненные испытания, но не текущее продвижение по миссии.\n\nВы уверены, что хотите завершить игру?'), reply_markup=(save_and_quit_confirm_keyboard()), parse_mode='MarkdownV2')
 
     def choose_equipment_menu(update: Update, context: CallbackContext):
         query = update.callback_query
         query.answer()
-        query.edit_message_text(text='Транспозиция органов\n\nХоккайдо, Япония', reply_markup=(choose_equipment_keyboard(update=update, context=context)))
+        query.edit_message_text(text='*_Транспозиция органов\n\nХоккайдо, Япония_*', reply_markup=(choose_equipment_keyboard(update=update, context=context)), parse_mode='MarkdownV2')
 
     #Клавиатуры для меню
 
@@ -534,10 +536,10 @@ def telegram_bot():
             if i.unlocked:
                 unlocked_locations += 1
         if users[user_id].challenges['Хамелеон'].completed == False and unlocked_disguises == len(disguises):
-            context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Хамелеон'].achieved(update=update, context=context))
+            context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Хамелеон'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             users[user_id].player_lvl += users[user_id].challenges['Хамелеон'].xp
         if users[user_id].challenges['Исследуйте Хоккайдо'].completed == False and unlocked_locations == len(locations):
-            context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Исследуйте Хоккайдо'].achieved(update=update, context=context))
+            context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Исследуйте Хоккайдо'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             users[user_id].player_lvl += users[user_id].challenges['Исследуйте Хоккайдо'].xp
         if users[user_id].events['Убийство в сауне'].completed == False and users[user_id].player.current_location.name == 'Водоснабжение спа':
             context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=sauna_kill_keyboard_1())
@@ -965,10 +967,10 @@ def telegram_bot():
         query.answer()
         if users[user_id].targets['Erich Soders'].alive:
             if users[user_id].challenges['Поцелуй смерти'].completed == False:
-                query.edit_message_text(text=users[user_id].challenges['Поцелуй смерти'].achieved(update=update, context=context))
+                query.edit_message_text(text=users[user_id].challenges['Поцелуй смерти'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                 users[user_id].player_lvl += users[user_id].challenges['Поцелуй смерти'].xp
                 if users[user_id].challenges['Так можно и пораниться'].completed == False:
-                    context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context))
+                    context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                     users[user_id].player_lvl += users[user_id].challenges['Так можно и пораниться'].xp
                 context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].targets['Erich Soders'].kill(), reply_markup=(choose_action_keyboard(update=update, context=context)))
             else:
@@ -983,19 +985,19 @@ def telegram_bot():
         users[user_id].player.current_location = users[user_id].locations['Приёмная']
         edit = True
         if users[user_id].player.current_location.unlocked == False:
-            query.edit_message_text(text=users[user_id].player.current_location.unlock(update=update, context=context))
+            query.edit_message_text(text=users[user_id].player.current_location.unlock(update=update, context=context), parse_mode='MarkdownV2')
             edit = False
         if users[user_id].challenges['Смена внешности'].completed == False:
             users[user_id].player_lvl += users[user_id].challenges['Смена внешности'].xp
             if edit:
-                query.edit_message_text(text=users[user_id].challenges['Смена внешности'].achieved(update=update, context=context))
+                query.edit_message_text(text=users[user_id].challenges['Смена внешности'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             else:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Смена внешности'].achieved(update=update, context=context))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Смена внешности'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             edit = False
         if edit:
-            query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location) + '\n\nХирург: Я рад, что вы пришли, сначала я подготовлю инструменты, а потом мы приступим.', reply_markup=(choose_action_keyboard(update=update, context=context)))
+            query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location) + tg_text_convert('\n\nХирург: Я рад, что вы пришли, сначала я подготовлю инструменты, а потом мы приступим.'), reply_markup=(choose_action_keyboard(update=update, context=context)), parse_mode='MarkdownV2')
         else:
-            context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location) + '\n\nХирург: Я рад, что вы пришли, сначала я подготовлю инструменты, а потом мы приступим.', reply_markup=(choose_action_keyboard(update=update, context=context)))
+            context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location) + tg_text_convert('\n\nХирург: Я рад, что вы пришли, сначала я подготовлю инструменты, а потом мы приступим.'), reply_markup=(choose_action_keyboard(update=update, context=context)), parse_mode='MarkdownV2')
 
     def knock_jason_portman_2(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
@@ -1014,22 +1016,22 @@ def telegram_bot():
         users[user_id].player.current_location = users[user_id].locations['Уборная']
         edit = True
         if users[user_id].player.current_location.unlocked == False:
-            query.edit_message_text(text=users[user_id].player.current_location.unlock(update=update, context=context))
+            query.edit_message_text(text=users[user_id].player.current_location.unlock(update=update, context=context), parse_mode='MarkdownV2')
             edit = False
         if edit:
-            query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(knock_jason_portman_keyboard_2()))
+            query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(knock_jason_portman_keyboard_2()), parse_mode='MarkdownV2')
         else:
-            context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(knock_jason_portman_keyboard_2()))
+            context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(knock_jason_portman_keyboard_2()), parse_mode='MarkdownV2')
 
     def cigar_kill_6(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
         query = update.callback_query
         query.answer()
         if users[user_id].challenges['Курение убивает'].completed == False:
-            query.edit_message_text(text=users[user_id].challenges['Курение убивает'].achieved(update=update, context=context))
+            query.edit_message_text(text=users[user_id].challenges['Курение убивает'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             users[user_id].player_lvl += users[user_id].challenges['Курение убивает'].xp
             if users[user_id].challenges['Так можно и пораниться'].completed == False:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                 users[user_id].player_lvl += users[user_id].challenges['Так можно и пораниться'].xp
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].targets['Yuki Yamazaki'].kill(), reply_markup=(choose_action_keyboard(update=update, context=context)))
         else:
@@ -1052,10 +1054,10 @@ def telegram_bot():
         if users[user_id].targets['Yuki Yamazaki'].alive:
             users[user_id].targets['Yuki Yamazaki'].alive = False
             if users[user_id].challenges['В клубах дыма'].completed == False:
-                query.edit_message_text(text=users[user_id].challenges['В клубах дыма'].achieved(update=update, context=context))
+                query.edit_message_text(text=users[user_id].challenges['В клубах дыма'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                 users[user_id].player_lvl += users[user_id].challenges['В клубах дыма'].xp
                 if users[user_id].challenges['Так можно и пораниться'].completed == False:
-                    context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context))
+                    context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                     users[user_id].player_lvl += users[user_id].challenges['Так можно и пораниться'].xp
                 context.bot.send_message(chat_id=update.effective_chat.id, text=text, reply_markup=(choose_action_keyboard(update=update, context=context)))
             else:
@@ -1083,7 +1085,7 @@ def telegram_bot():
         users[user_id].events['Сигареты на столе'].completed = True
         users[user_id].player.inventory.remove(users[user_id].items['Пачка сигарет'])
         if users[user_id].challenges['Не курить!'].completed == False:
-            query.edit_message_text(text=users[user_id].challenges['Не курить!'].achieved(update=update, context=context))
+            query.edit_message_text(text=users[user_id].challenges['Не курить!'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             users[user_id].player_lvl += users[user_id].challenges['Не курить!'].xp
             context.bot.send_message(chat_id=update.effective_chat.id, text='На балконе находится газовый обогреватель.', reply_markup=cigar_kill_keyboard_2())
         else:
@@ -1094,10 +1096,10 @@ def telegram_bot():
         query = update.callback_query
         query.answer()
         if users[user_id].challenges['Подержи волосы'].completed == False:
-            query.edit_message_text(text=users[user_id].challenges['Подержи волосы'].achieved(update=update, context=context))
+            query.edit_message_text(text=users[user_id].challenges['Подержи волосы'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             users[user_id].player_lvl += users[user_id].challenges['Подержи волосы'].xp
             if users[user_id].challenges['Без вкуса, без следа'].completed == False:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Без вкуса, без следа'].achieved(update=update, context=context))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Без вкуса, без следа'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                 users[user_id].player_lvl += users[user_id].challenges['Без вкуса, без следа'].xp
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].targets['Yuki Yamazaki'].kill(), reply_markup=choose_action_keyboard(update=update, context=context))
         else:
@@ -1118,16 +1120,16 @@ def telegram_bot():
         if poison.lethal:
             if poison.name == 'Яд рыбы Фугу':
                 if users[user_id].challenges['Приятного аппетита'].completed == False:
-                    query.edit_message_text(text=users[user_id].challenges['Приятного аппетита'].achieved(update=update, context=context))
+                    query.edit_message_text(text=users[user_id].challenges['Приятного аппетита'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                     users[user_id].player_lvl += users[user_id].challenges['Приятного аппетита'].xp
                     if users[user_id].challenges['Без вкуса, без следа'].completed == False:
-                        context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Без вкуса, без следа'].achieved(update=update, context=context))
+                        context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Без вкуса, без следа'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                         users[user_id].player_lvl += users[user_id].challenges['Без вкуса, без следа'].xp
                     context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].targets['Yuki Yamazaki'].kill(), reply_markup=choose_action_keyboard(update=update, context=context))
                 else:
                     query.edit_message_text(text=users[user_id].targets['Yuki Yamazaki'].kill(), reply_markup=choose_action_keyboard(update=update, context=context))
             elif users[user_id].challenges['Без вкуса, без следа'].completed == False:
-                query.edit_message_text(text=users[user_id].challenges['Без вкуса, без следа'].achieved(update=update, context=context))
+                query.edit_message_text(text=users[user_id].challenges['Без вкуса, без следа'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                 users[user_id].player_lvl += users[user_id].challenges['Без вкуса, без следа'].xp
                 context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].targets['Yuki Yamazaki'].kill(), reply_markup=choose_action_keyboard(update=update, context=context))
             else:
@@ -1147,17 +1149,17 @@ def telegram_bot():
                 users[user_id].suspicion_count += 1
                 query.edit_message_text(text=f'{location_npc.name} ({location_npc.disguise.name}): Эй, ты что делаешь?', reply_markup=hide_keyboard(location_npc, users[user_id].player.current_location))
             else:
-                query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context))
+                query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context), parse_mode='MarkdownV2')
 
     def yoga_kill_2(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
         query = update.callback_query
         query.answer()
         if users[user_id].challenges['Хорошая растяжка'].completed == False:
-            query.edit_message_text(text=users[user_id].challenges['Хорошая растяжка'].achieved(update=update, context=context))
+            query.edit_message_text(text=users[user_id].challenges['Хорошая растяжка'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             users[user_id].player_lvl += users[user_id].challenges['Хорошая растяжка'].xp
             if users[user_id].challenges['Так можно и пораниться'].completed == False:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                 users[user_id].player_lvl += users[user_id].challenges['Так можно и пораниться'].xp
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].targets['Yuki Yamazaki'].kill(), reply_markup=(choose_action_keyboard(update=update, context=context)))
         else:
@@ -1180,24 +1182,35 @@ def telegram_bot():
 
     def surgeon_knock_out_1(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
+        users[user_id].player.current_location = users[user_id].locations['Комната пилота']
+        edit = True
+        if users[user_id].player.current_location.unlocked == False:
+            query.edit_message_text(text=users[user_id].player.current_location.unlock(update=update, context=context), parse_mode='MarkdownV2')
+            edit = False
         query = update.callback_query
         query.answer()
         if users[user_id].challenges['Личная встреча'].completed == False:
             users[user_id].player_lvl += users[user_id].challenges['Личная встреча'].xp
-            query.edit_message_text(text=users[user_id].challenges['Личная встреча'].achieved(update=update, context=context))
+            if edit:
+                query.edit_message_text(text=users[user_id].challenges['Личная встреча'].achieved(update=update, context=context), parse_mode='MarkdownV2')
+            else:
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Личная встреча'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             context.bot.send_message(chat_id=update.effective_chat.id, text='Главный хирург отвернулся от вас и начал принимать таблетки.', reply_markup=(surgeon_knock_out_keyboard_2()))
         else:
-            query.edit_message_text(text='Главный хирург отвернулся от вас и начал принимать таблетки.', reply_markup=(surgeon_knock_out_keyboard_2()))
+            if edit:
+                query.edit_message_text(text='Главный хирург отвернулся от вас и начал принимать таблетки.', reply_markup=(surgeon_knock_out_keyboard_2()))
+            else:
+                context.bot.send_message(chat_id=update.effective_chat.id, text='Главный хирург отвернулся от вас и начал принимать таблетки.', reply_markup=(surgeon_knock_out_keyboard_2()))
 
     def sauna_kill_2(update: Update, context: CallbackContext):
         user_id = update.callback_query.from_user['id']
         query = update.callback_query
         query.answer()
         if users[user_id].challenges['Убийство в парилке'].completed == False:
-            query.edit_message_text(text=users[user_id].challenges['Убийство в парилке'].achieved(update=update, context=context))
+            query.edit_message_text(text=users[user_id].challenges['Убийство в парилке'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             users[user_id].player_lvl += users[user_id].challenges['Убийство в парилке'].xp
             if users[user_id].challenges['Так можно и пораниться'].completed == False:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                 users[user_id].player_lvl += users[user_id].challenges['Так можно и пораниться'].xp
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].targets['Yuki Yamazaki'].kill(), reply_markup=(choose_action_keyboard(update=update, context=context)))
         else:
@@ -1218,10 +1231,10 @@ def telegram_bot():
         query = update.callback_query
         query.answer()
         if users[user_id].challenges['(Не) врачебная ошибка'].completed == False:
-            query.edit_message_text(text=users[user_id].challenges['(Не) врачебная ошибка'].achieved(update=update, context=context))
+            query.edit_message_text(text=users[user_id].challenges['(Не) врачебная ошибка'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             users[user_id].player_lvl += users[user_id].challenges['(Не) врачебная ошибка'].xp
             if users[user_id].challenges['Так можно и пораниться'].completed == False:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                 users[user_id].player_lvl += users[user_id].challenges['Так можно и пораниться'].xp
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].targets['Erich Soders'].kill(), reply_markup=(choose_action_keyboard(update=update, context=context)))
         else:
@@ -1240,7 +1253,7 @@ def telegram_bot():
         query = update.callback_query
         query.answer()
         if users[user_id].challenges['Бессердечный'].completed == False:
-            query.edit_message_text(text=users[user_id].challenges['Бессердечный'].achieved(update=update, context=context))
+            query.edit_message_text(text=users[user_id].challenges['Бессердечный'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             users[user_id].player_lvl += users[user_id].challenges['Бессердечный'].xp
             context.bot.send_message(chat_id=update.effective_chat.id, text='Диана: 47-й, без сердца для пересадки Содерс не выживет. Ты смог от него избавиться даже не прикасаясь, изящный ход.', reply_markup=(choose_action_keyboard(update=update, context=context)))
         else:
@@ -1252,10 +1265,10 @@ def telegram_bot():
         query = update.callback_query
         query.answer()
         if users[user_id].challenges['Призрак в машине'].completed == False:
-            query.edit_message_text(text=users[user_id].challenges['Призрак в машине'].achieved(update=update, context=context))
+            query.edit_message_text(text=users[user_id].challenges['Призрак в машине'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             users[user_id].player_lvl += users[user_id].challenges['Призрак в машине'].xp
             if users[user_id].challenges['Так можно и пораниться'].completed == False:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                 users[user_id].player_lvl += users[user_id].challenges['Так можно и пораниться'].xp
             context.bot.send_message(chat_id=update.effective_chat.id, text='Хирург: Что происходит с роботом?! Как его отключить?! Пациент сейчас умрет!\n\nДиана: Это было впечатляюще, агент. Эрих Содерс мертв.', reply_markup=(choose_action_keyboard(update=update, context=context)))
         else:
@@ -1367,7 +1380,7 @@ def telegram_bot():
         else:
             target = users[user_id].targets[data]
             if data == 'Erich Soders' and (users[user_id].player.item.name == 'Bartoli 75R' or users[user_id].player.item.name == 'ICA 19') and users[user_id].challenges['Личное прощание'].completed == False:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Личное прощание'].achieved(update=update, context=context))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Личное прощание'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                 users[user_id].player_lvl += users[user_id].challenges['Личное прощание'].xp
             context.bot.send_message(chat_id=update.effective_chat.id, text=target.kill())
         target.alive = False
@@ -1421,22 +1434,22 @@ def telegram_bot():
         query.edit_message_text(text=result_string)
         if rating == 5 and users[user_id].suit_only == False:
             if users[user_id].challenges['Бесшумный убийца'].completed == False:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Бесшумный убийца'].achieved(update=update, context=context))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Бесшумный убийца'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                 users[user_id].player_lvl += users[user_id].challenges['Бесшумный убийца'].xp
         elif rating == 5 and users[user_id].suit_only:
             if users[user_id].challenges['Бесшумный убийца. Только костюм.'].completed == False:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Бесшумный убийца. Только костюм.'].achieved(update=update, context=context))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Бесшумный убийца. Только костюм.'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                 users[user_id].player_lvl += users[user_id].challenges['Бесшумный убийца. Только костюм.'].xp
         elif users[user_id].suit_only:
             if users[user_id].challenges['Только костюм'].completed == False:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Только костюм'].achieved(update=update, context=context))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Только костюм'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                 users[user_id].player_lvl += users[user_id].challenges['Только костюм'].xp
         if users[user_id].bodies == 0:
             if users[user_id].challenges['Без улик'].completed == False:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Без улик'].achieved(update=update, context=context))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Без улик'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                 users[user_id].player_lvl += users[user_id].challenges['Без улик'].xp
         if users[user_id].challenges['Точный выстрел'].completed == True and users[user_id].challenges['Подержи волосы'].completed == True and users[user_id].challenges['Пианист'].completed == True and users[user_id].challenges['Так можно и пораниться'].completed == True and users[user_id].challenges['Без вкуса, без следа'].completed == True and users[user_id].challenges['Мастер-убийца'].completed == False:
-            context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Мастер-убийца'].achieved(update=update, context=context))
+            context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Мастер-убийца'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             users[user_id].player_lvl += users[user_id].challenges['Мастер-убийца'].xp
         users[user_id].player_lvl += rating
         completed_challenges = []
@@ -1459,7 +1472,7 @@ def telegram_bot():
         adapter.update_by_id("Users", f'unlocked_locations={unlocked_locations_str}', user_id)
         adapter.update_by_id("Users", f'player_lvl={users[user_id].player_lvl}', user_id)
         users[user_id] = create_user(player_lvl=users[user_id].player_lvl, completed_challenges=completed_challenges_str, unlocked_disguises=unlocked_disguises_str, unlocked_locations=unlocked_locations_str)
-        context.bot.send_message(chat_id=update.effective_chat.id, text='Миссия выполнена.', reply_markup=start_keyboard())
+        context.bot.send_message(chat_id=update.effective_chat.id, text='*_Миссия выполнена\._*', reply_markup=start_keyboard(), parse_mode='MarkdownV2')
 
     def hide_combat(update: Update, context: CallbackContext):
         """Скрыться во время боя"""
@@ -1508,19 +1521,19 @@ def telegram_bot():
         if users[user_id].player.disguise.name != 'VIP - пациент':
             users[user_id].suit_only = False
         if users[user_id].player.disguise.unlocked == False:
-            query.edit_message_text(text=users[user_id].player.disguise.unlock(update=update, context=context))
+            query.edit_message_text(text=users[user_id].player.disguise.unlock(update=update, context=context), parse_mode='MarkdownV2')
             if users[user_id].player.disguise.name == 'Директор клиники' and users[user_id].challenges['Новое руководство'].completed == False:
                 users[user_id].player_lvl += users[user_id].challenges['Новое руководство'].xp
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Новое руководство'].achieved(update=update, context=context))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Новое руководство'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             if users[user_id].player.disguise.name == 'Инструктор по йоге' and users[user_id].challenges['Поза лотоса'].completed == False:
                 users[user_id].player_lvl += users[user_id].challenges['Поза лотоса'].xp
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Поза лотоса'].achieved(update=update, context=context))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Поза лотоса'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             if users[user_id].player.disguise.name == 'Пилот' and users[user_id].challenges['Включите автопилот'].completed == False:
                 users[user_id].player_lvl += users[user_id].challenges['Включите автопилот'].xp
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Включите автопилот'].achieved(update=update, context=context))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Включите автопилот'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             if users[user_id].player.disguise.name == 'Джейсон Портман' and users[user_id].challenges['Новое лицо'].completed == False:
                 users[user_id].player_lvl += users[user_id].challenges['Новое лицо'].xp
-                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Новое лицо'].achieved(update=update, context=context))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Новое лицо'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             context.bot.send_message(chat_id=update.effective_chat.id, text=f'Текущая маскировка: {users[user_id].player.disguise.name}', reply_markup=(choose_action_keyboard(update=update, context=context)))
         else:
             query.edit_message_text(text=f'Текущая маскировка: {users[user_id].player.disguise.name}', reply_markup=(choose_action_keyboard(update=update, context=context)))
@@ -1545,52 +1558,52 @@ def telegram_bot():
         move_to_location = users[user_id].locations[query.data.replace('ПРТ', '').split(':')[1]]
         edit = True
         if users[user_id].events['Информация о стволовых клетках'].completed == False and move_to_location.name == 'Операционная':
-            query.edit_message_text(text='Руководство по проведению революционной терапии стволовыми клетками, разработанной доктором Лораном.\n\nОчевидно, стволовые клетки способны временно ускорять выздоровление тканей, что значительно повышает шансы пациента на выживание.\n\nСтволовые клетки забираются из специального сосуда и вливаются прямо в кровь пациента.')
+            query.edit_message_text(text=make_heading('Руководство по стволовым клеткам') + tg_text_convert('Руководство по проведению революционной терапии стволовыми клетками, разработанной доктором Лораном.\n\nОчевидно, стволовые клетки способны временно ускорять выздоровление тканей, что значительно повышает шансы пациента на выживание.\n\nСтволовые клетки забираются из специального сосуда и вливаются прямо в кровь пациента.'), parse_mode='MarkdownV2')
             users[user_id].events['Информация о стволовых клетках'].completed = True
             edit = False
         if users[user_id].events['Джейсон Портман'].completed == False and move_to_location.name == 'Холл':
-            query.edit_message_text(text='Диана: У меня есть сведения о пациенте в бинтах.\n\nТак-так, это уже интересно. Забинтованный пациент — Джейсон Портман, генеральный директор «Квантум лип».\n\nСогласно моим данным, ему сделали полную реконструкцию лица и сегодня снимают повязки. И вот что самое занятное — он хочет быть как две капли воды похожим на Хельмута Крюгера.')
+            query.edit_message_text(text=make_heading('Пациент в бинтах') + tg_text_convert('Диана: У меня есть сведения о пациенте в бинтах.\n\nТак-так, это уже интересно. Забинтованный пациент — Джейсон Портман, генеральный директор «Квантум лип».\n\nСогласно моим данным, ему сделали полную реконструкцию лица и сегодня снимают повязки. И вот что самое занятное — он хочет быть как две капли воды похожим на Хельмута Крюгера.'), parse_mode='MarkdownV2')
             users[user_id].events['Джейсон Портман'].completed = True
             edit = False
         if users[user_id].events['Компьютер в морге'].completed == False and move_to_location.name == 'Морг':
-            query.edit_message_text(text='Вы нашли файл на компьютере. Это заметки о Кураторе и его нейрочипе.\n\nВ них приводятся подробные сведения об устройстве чипа и принципе его работы, а также описание того, как изменение дозы влияет на настроение Куратора. Судя по всему, увеличение дозы приводит к улучшению его настроения, а уменьшение, напротив, возвращает его в привычное подавленное состояние.\n\nЧто любопытно, научный сотрудник, похоже, сам менял дозу Куратора без его ведома: для этого он использовал пульт управления чипом, который куратор хранит в своей спальне.')
+            query.edit_message_text(text=make_heading('Компьютер в морге') + tg_text_convert('Вы нашли файл на компьютере. Это заметки о Кураторе и его нейрочипе.\n\nВ них приводятся подробные сведения об устройстве чипа и принципе его работы, а также описание того, как изменение дозы влияет на настроение Куратора. Судя по всему, увеличение дозы приводит к улучшению его настроения, а уменьшение, напротив, возвращает его в привычное подавленное состояние.\n\nЧто любопытно, научный сотрудник, похоже, сам менял дозу Куратора без его ведома: для этого он использовал пульт управления чипом, который куратор хранит в своей спальне.'), parse_mode='MarkdownV2')
             users[user_id].events['Компьютер в морге'].completed = True
             edit = False
         if users[user_id].events['Информация о сигаретах 2'].completed == False and move_to_location.name == 'Канатная дорога':
-            query.edit_message_text(text='Диана: Значит, Юки Ямадзаки выронила свои сигареты по пути к клинике. Интересно.\n\nЮки Ямадзаки уронила свои сигареты, когда поднималась на фуникулере по прибытии в клинику. Если верить её охране, это её ужасно взбесило.\n\nМожет быть, тебе удастся утолить её «жажду», 47-й? Сигареты в «Гаме» запрещены, но не все следуют этому правилу...')
+            query.edit_message_text(text=make_heading('Разговор телохранителей') + tg_text_convert('Диана: Значит, Юки Ямадзаки выронила свои сигареты по пути к клинике. Интересно.\n\nЮки Ямадзаки уронила свои сигареты, когда поднималась на фуникулере по прибытии в клинику. Если верить её охране, это её ужасно взбесило.\n\nМожет быть, тебе удастся утолить её «жажду», 47-й? Сигареты в «Гаме» запрещены, но не все следуют этому правилу...'), parse_mode='MarkdownV2')
             users[user_id].events['Информация о сигаретах 2'].completed = True
             edit = False
         if users[user_id].events['Информация о суши'].completed == False and move_to_location.name == 'Ресторан':
-            query.edit_message_text(text='Диана: Ядовитая Рыба фугу и адвокат в поисках острых ощущений — убийственная комбинация.\n\nНе так давно из-за ошибки повара один из пациентов отравился ядовитой рыбой, и с тех пор фугу здесь под строжайшим запретом. Но, судя по всему, Юки Ямадзаки пытается уговорить шеф-повара подать ей последнюю рыбу из его запасов.\n\nРазве мы вправе отказывает ей в таком удовольствии, 47-й?')
+            query.edit_message_text(text=make_heading('Рыба фугу') + tg_text_convert('Диана: Ядовитая Рыба фугу и адвокат в поисках острых ощущений — убийственная комбинация.\n\nНе так давно из-за ошибки повара один из пациентов отравился ядовитой рыбой, и с тех пор фугу здесь под строжайшим запретом. Но, судя по всему, Юки Ямадзаки пытается уговорить шеф-повара подать ей последнюю рыбу из его запасов.\n\nРазве мы вправе отказывает ей в таком удовольствии, 47-й?'), parse_mode='MarkdownV2')
             users[user_id].events['Информация о суши'].completed = True
             edit = False
         if users[user_id].events['Расписание занятий по йоге'].completed == False and move_to_location.name == 'Зона отдыха':
-            query.edit_message_text(text='Диана: Расписание занятий по йоге. Имя Юки Ямадзаки — в каждой графе. Что ж, судя по всему, Юки Ямадзаки — настоящий фанат йоги.\n\nИз расписания у горячего источника видно, что она заняла тренера на целый день. Готов размяться, 47-й?')
+            query.edit_message_text(text=make_heading('Расписание занятий по йоге') + tg_text_convert('Диана: Расписание занятий по йоге. Имя Юки Ямадзаки — в каждой графе. Что ж, судя по всему, Юки Ямадзаки — настоящий фанат йоги.\n\nИз расписания у горячего источника видно, что она заняла тренера на целый день. Готов размяться, 47-й?'), parse_mode='MarkdownV2')
             users[user_id].events['Расписание занятий по йоге'].completed = True
             edit = False
         if users[user_id].events['Информация о пилоте'].completed == False and (move_to_location.name == 'Вертолетная площадка' or move_to_location.name == 'Комната пилота'):
-            query.edit_message_text(text='Диана: 47-й, у меня есть сведения о пилоте. Мне удалось извлечь кое-какие данные из системы безопасности клиники.\n\nГлавный хирург, Николя Лоран, похоже, часто встречается с пилотом вертолёта у выхода из мед-комплекса. А если верить слухам, у главного хирурга дрожат руки.')
+            query.edit_message_text(text=make_heading('Сведения о пилоте') + tg_text_convert('Диана: 47-й, у меня есть сведения о пилоте. Мне удалось извлечь кое-какие данные из системы безопасности клиники.\n\nГлавный хирург, Николя Лоран, похоже, часто встречается с пилотом вертолёта у выхода из мед-комплекса. А если верить слухам, у главного хирурга дрожат руки.'), parse_mode='MarkdownV2')
             users[user_id].events['Информация о пилоте'].completed = True
             edit = False
         if users[user_id].events['Информация об ИИ'].completed == False and move_to_location.name == 'Комната охраны':
-            query.edit_message_text(text='Интересно. Руководство для KAI, искусственного интеллекта клиники «Гама». Значит, местный искусственный интеллект по имени KAI не только поддерживает работу систем здания, но и управляет роботом в операционной.\n\nИменно там сейчас находится Содерс. В руководстве говорится, что после остановки сердца пациента искусственный интеллект автоматически начинает его реанимацию, что очень некстати.\n\nОднако... У директора клиники есть доступ к главному компьютеру. Справишься с управлением целой клиникой, 47-й?')
+            query.edit_message_text(text=make_heading('Руководство для KAI') + tg_text_convert('Интересно. Руководство для KAI, искусственного интеллекта клиники «Гама». Значит, местный искусственный интеллект по имени KAI не только поддерживает работу систем здания, но и управляет роботом в операционной.\n\nИменно там сейчас находится Содерс. В руководстве говорится, что после остановки сердца пациента искусственный интеллект автоматически начинает его реанимацию, что очень некстати.\n\nОднако... У директора клиники есть доступ к главному компьютеру. Справишься с управлением целой клиникой, 47-й?'), parse_mode='MarkdownV2')
             users[user_id].events['Информация об ИИ'].completed = True
             edit = False
         if move_to_location.unlocked == False:
             if edit:
-                query.edit_message_text(text=move_to_location.unlock(update=update, context=context))
+                query.edit_message_text(text=move_to_location.unlock(update=update, context=context), parse_mode='MarkdownV2')
             else:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=move_to_location.unlock(update=update, context=context))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=move_to_location.unlock(update=update, context=context), parse_mode='MarkdownV2')
             edit = False
         if random.randrange(1, 11) <= chance:
-            users[user_id].player.compromised_disguises.append(users[user_id].player.disguise)
             users[user_id].player.current_location = move_to_location
             query.answer()
             if edit:
-                query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(choose_action_keyboard(update=update, context=context)))
+                query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(choose_action_keyboard(update=update, context=context)), parse_mode='MarkdownV2')
             else:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(choose_action_keyboard(update=update, context=context)))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(choose_action_keyboard(update=update, context=context)), parse_mode='MarkdownV2')
         else:
+            users[user_id].player.compromised_disguises.append(users[user_id].player.disguise)
             locations_npcs = find_location_npcs(update=update, context=context, location=move_to_location)
             location_npc = locations_npcs[random.randrange(len(locations_npcs))]
             query.answer()
@@ -1627,42 +1640,42 @@ def telegram_bot():
         if users[user_id].player.disguise in move_to_location.disguise:
             #Случай, когда маскировка игрока позволяет пройти на локацию
             if users[user_id].events['Информация о стволовых клетках'].completed == False and move_to_location.name == 'Операционная':
-                query.edit_message_text(text='Руководство по проведению революционной терапии стволовыми клетками, разработанной доктором Лораном.\n\nОчевидно, стволовые клетки способны временно ускорять выздоровление тканей, что значительно повышает шансы пациента на выживание.\n\nСтволовые клетки забираются из специального сосуда и вливаются прямо в кровь пациента.')
+                query.edit_message_text(text=make_heading('Руководство по стволовым клеткам') + tg_text_convert('Руководство по проведению революционной терапии стволовыми клетками, разработанной доктором Лораном.\n\nОчевидно, стволовые клетки способны временно ускорять выздоровление тканей, что значительно повышает шансы пациента на выживание.\n\nСтволовые клетки забираются из специального сосуда и вливаются прямо в кровь пациента.'), parse_mode='MarkdownV2')
                 users[user_id].events['Информация о стволовых клетках'].completed = True
                 edit = False
             if users[user_id].events['Джейсон Портман'].completed == False and move_to_location.name == 'Холл':
-                query.edit_message_text(text='Диана: У меня есть сведения о пациенте в бинтах.\n\nТак-так, это уже интересно. Забинтованный пациент — Джейсон Портман, генеральный директор «Квантум лип».\n\nСогласно моим данным, ему сделали полную реконструкцию лица и сегодня снимают повязки. И вот что самое занятное — он хочет быть как две капли воды похожим на Хельмута Крюгера.')
+                query.edit_message_text(text=make_heading('Пациент в бинтах') + tg_text_convert('Диана: У меня есть сведения о пациенте в бинтах.\n\nТак-так, это уже интересно. Забинтованный пациент — Джейсон Портман, генеральный директор «Квантум лип».\n\nСогласно моим данным, ему сделали полную реконструкцию лица и сегодня снимают повязки. И вот что самое занятное — он хочет быть как две капли воды похожим на Хельмута Крюгера.'), parse_mode='MarkdownV2')
                 users[user_id].events['Джейсон Портман'].completed = True
                 edit = False
             if users[user_id].events['Компьютер в морге'].completed == False and move_to_location.name == 'Морг':
-                query.edit_message_text(text='Вы нашли файл на компьютере. Это заметки о Кураторе и его нейрочипе.\n\nВ них приводятся подробные сведения об устройстве чипа и принципе его работы, а также описание того, как изменение дозы влияет на настроение Куратора. Судя по всему, увеличение дозы приводит к улучшению его настроения, а уменьшение, напротив, возвращает его в привычное подавленное состояние.\n\nЧто любопытно, научный сотрудник, похоже, сам менял дозу Куратора без его ведома: для этого он использовал пульт управления чипом, который куратор хранит в своей спальне.')
+                query.edit_message_text(text=make_heading('Компьютер в морге') + tg_text_convert('Вы нашли файл на компьютере. Это заметки о Кураторе и его нейрочипе.\n\nВ них приводятся подробные сведения об устройстве чипа и принципе его работы, а также описание того, как изменение дозы влияет на настроение Куратора. Судя по всему, увеличение дозы приводит к улучшению его настроения, а уменьшение, напротив, возвращает его в привычное подавленное состояние.\n\nЧто любопытно, научный сотрудник, похоже, сам менял дозу Куратора без его ведома: для этого он использовал пульт управления чипом, который куратор хранит в своей спальне.'), parse_mode='MarkdownV2')
                 users[user_id].events['Компьютер в морге'].completed = True
                 edit = False
             if users[user_id].events['Информация о сигаретах 2'].completed == False and move_to_location.name == 'Канатная дорога':
-                query.edit_message_text(text='Диана: Значит, Юки Ямадзаки выронила свои сигареты по пути к клинике. Интересно.\n\nЮки Ямадзаки уронила свои сигареты, когда поднималась на фуникулере по прибытии в клинику. Если верить её охране, это её ужасно взбесило.\n\nМожет быть, тебе удастся утолить её «жажду», 47-й? Сигареты в «Гаме» запрещены, но не все следуют этому правилу...')
+                query.edit_message_text(text=make_heading('Разговор телохранителей') + tg_text_convert('Диана: Значит, Юки Ямадзаки выронила свои сигареты по пути к клинике. Интересно.\n\nЮки Ямадзаки уронила свои сигареты, когда поднималась на фуникулере по прибытии в клинику. Если верить её охране, это её ужасно взбесило.\n\nМожет быть, тебе удастся утолить её «жажду», 47-й? Сигареты в «Гаме» запрещены, но не все следуют этому правилу...'), parse_mode='MarkdownV2')
                 users[user_id].events['Информация о сигаретах 2'].completed = True
                 edit = False
             if users[user_id].events['Информация о суши'].completed == False and move_to_location.name == 'Ресторан':
-                query.edit_message_text(text='Диана: Ядовитая Рыба фугу и адвокат в поисках острых ощущений — убийственная комбинация.\n\nНе так давно из-за ошибки повара один из пациентов отравился ядовитой рыбой, и с тех пор фугу здесь под строжайшим запретом. Но, судя по всему, Юки Ямадзаки пытается уговорить шеф-повара подать ей последнюю рыбу из его запасов.\n\nРазве мы вправе отказывает ей в таком удовольствии, 47-й?')
+                query.edit_message_text(text=make_heading('Рыба фугу') + tg_text_convert('Диана: Ядовитая Рыба фугу и адвокат в поисках острых ощущений — убийственная комбинация.\n\nНе так давно из-за ошибки повара один из пациентов отравился ядовитой рыбой, и с тех пор фугу здесь под строжайшим запретом. Но, судя по всему, Юки Ямадзаки пытается уговорить шеф-повара подать ей последнюю рыбу из его запасов.\n\nРазве мы вправе отказывает ей в таком удовольствии, 47-й?'), parse_mode='MarkdownV2')
                 users[user_id].events['Информация о суши'].completed = True
                 edit = False
             if users[user_id].events['Расписание занятий по йоге'].completed == False and move_to_location.name == 'Зона отдыха':
-                query.edit_message_text(text='Диана: Расписание занятий по йоге. Имя Юки Ямадзаки — в каждой графе. Что ж, судя по всему, Юки Ямадзаки — настоящий фанат йоги.\n\nИз расписания у горячего источника видно, что она заняла тренера на целый день. Готов размяться, 47-й?')
+                query.edit_message_text(text=make_heading('Расписание занятий по йоге') + tg_text_convert('Диана: Расписание занятий по йоге. Имя Юки Ямадзаки — в каждой графе. Что ж, судя по всему, Юки Ямадзаки — настоящий фанат йоги.\n\nИз расписания у горячего источника видно, что она заняла тренера на целый день. Готов размяться, 47-й?'), parse_mode='MarkdownV2')
                 users[user_id].events['Расписание занятий по йоге'].completed = True
                 edit = False
             if users[user_id].events['Информация о пилоте'].completed == False and (move_to_location.name == 'Вертолетная площадка' or move_to_location.name == 'Комната пилота'):
-                query.edit_message_text(text='Диана: 47-й, у меня есть сведения о пилоте. Мне удалось извлечь кое-какие данные из системы безопасности клиники.\n\nГлавный хирург, Николя Лоран, похоже, часто встречается с пилотом вертолёта у выхода из мед-комплекса. А если верить слухам, у главного хирурга дрожат руки.')
+                query.edit_message_text(text=make_heading('Сведения о пилоте') + tg_text_convert('Диана: 47-й, у меня есть сведения о пилоте. Мне удалось извлечь кое-какие данные из системы безопасности клиники.\n\nГлавный хирург, Николя Лоран, похоже, часто встречается с пилотом вертолёта у выхода из мед-комплекса. А если верить слухам, у главного хирурга дрожат руки.'), parse_mode='MarkdownV2')
                 users[user_id].events['Информация о пилоте'].completed = True
                 edit = False
             if users[user_id].events['Информация об ИИ'].completed == False and move_to_location.name == 'Комната охраны':
-                query.edit_message_text(text='Интересно. Руководство для KAI, искусственного интеллекта клиники «Гама». Значит, местный искусственный интеллект по имени KAI не только поддерживает работу систем здания, но и управляет роботом в операционной.\n\nИменно там сейчас находится Содерс. В руководстве говорится, что после остановки сердца пациента искусственный интеллект автоматически начинает его реанимацию, что очень некстати.\n\nОднако... У директора клиники есть доступ к главному компьютеру. Справишься с управлением целой клиникой, 47-й?')
+                query.edit_message_text(text=make_heading('Руководство для KAI') + tg_text_convert('Интересно. Руководство для KAI, искусственного интеллекта клиники «Гама». Значит, местный искусственный интеллект по имени KAI не только поддерживает работу систем здания, но и управляет роботом в операционной.\n\nИменно там сейчас находится Содерс. В руководстве говорится, что после остановки сердца пациента искусственный интеллект автоматически начинает его реанимацию, что очень некстати.\n\nОднако... У директора клиники есть доступ к главному компьютеру. Справишься с управлением целой клиникой, 47-й?'), parse_mode='MarkdownV2')
                 users[user_id].events['Информация об ИИ'].completed = True
                 edit = False
             if move_to_location.unlocked == False:
                 if edit:
-                    query.edit_message_text(text=move_to_location.unlock(update=update, context=context))
+                    query.edit_message_text(text=move_to_location.unlock(update=update, context=context), parse_mode='MarkdownV2')
                 else:
-                    context.bot.send_message(chat_id=update.effective_chat.id, text=move_to_location.unlock(update=update, context=context))
+                    context.bot.send_message(chat_id=update.effective_chat.id, text=move_to_location.unlock(update=update, context=context), parse_mode='MarkdownV2')
                 edit = False
             users[user_id].player.current_location = move_to_location
             if users[user_id].player.disguise in users[user_id].player.compromised_disguises:
@@ -1678,9 +1691,9 @@ def telegram_bot():
                         users[user_id].suspicion_count += 1
                 else:
                     if edit:
-                        query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context))
+                        query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context), parse_mode='MarkdownV2')
                     else:
-                        context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context))
+                        context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context), parse_mode='MarkdownV2')
             elif users[user_id].player.item.legal == False:
                 #Случай, когда в руках игрока нелегальный предмет
                 if users[user_id].player.disguise.name != 'Охранник' and users[user_id].player.disguise.name != 'Телохранитель':
@@ -1693,19 +1706,19 @@ def telegram_bot():
                             context.bot.send_message(chat_id=update.effective_chat.id, text=f'{location_npc.name} ({location_npc.disguise.name}): Он вооружен!', reply_markup=hide_keyboard(location_npc, users[user_id].player.current_location))
                     else:
                         if edit:
-                            query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context))
+                            query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context), parse_mode='MarkdownV2')
                         else:
-                            context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context))
+                            context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context), parse_mode='MarkdownV2')
                 else:
                     if edit:
-                        query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context))
+                        query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context), parse_mode='MarkdownV2')
                     else:
-                        context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context))
+                        context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context), parse_mode='MarkdownV2')
             else:
                 if edit:
-                    query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context))
+                    query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context), parse_mode='MarkdownV2')
                 else:
-                    context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context))
+                    context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=choose_action_keyboard(update=update, context=context), parse_mode='MarkdownV2')
         else:
             #Случай, когда маскировка игрока не позволяет пройти на локацию
             if move_to_location.name == 'Комната с серверами':
@@ -1721,12 +1734,12 @@ def telegram_bot():
                         if users[user_id].targets['Erich Soders'].alive == True:
                             query.edit_message_text(text='Выберите действие', reply_markup=(destroy_servers_keyboard()))
                         else:
-                            query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(choose_action_keyboard(update=update, context=context)))
+                            query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(choose_action_keyboard(update=update, context=context)), parse_mode='MarkdownV2')
                     else:
                         if users[user_id].targets['Erich Soders'].alive == True:
                             context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=(destroy_servers_keyboard()))
                         else:
-                            context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(choose_action_keyboard(update=update, context=context)))
+                            context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(choose_action_keyboard(update=update, context=context)), parse_mode='MarkdownV2')
                 else:
                     if edit:
                         query.edit_message_text(text='Для входа необходима маскировка директора клиники или ключ-карта', reply_markup=move_keyboard(update=update, context=context))
@@ -1742,9 +1755,9 @@ def telegram_bot():
                         edit = False
                     users[user_id].player.current_location = move_to_location
                     if edit:
-                        query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(choose_action_keyboard(update=update, context=context)))
+                        query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(choose_action_keyboard(update=update, context=context)), parse_mode='MarkdownV2')
                     else:
-                        context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(choose_action_keyboard(update=update, context=context)))
+                        context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(choose_action_keyboard(update=update, context=context)), parse_mode='MarkdownV2')
                 else:
                     if edit:
                         query.edit_message_text(text='Для входа необходима маскировка.', reply_markup=move_keyboard(update=update, context=context))
@@ -1795,7 +1808,7 @@ def telegram_bot():
         users[user_id].player.inventory.remove(users[user_id].player.item)
         users[user_id].player.current_location = users[user_id].locations[query.data.replace('SM', '')]
         query.answer()
-        query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(choose_action_keyboard(update=update, context=context)))
+        query.edit_message_text(text=location_status(update=update, context=context, location=users[user_id].player.current_location), reply_markup=(choose_action_keyboard(update=update, context=context)), parse_mode='MarkdownV2')
 
     def spawn_player(update: Update, context: CallbackContext):
         """Задать начальные параметры для игрока"""
@@ -1826,11 +1839,11 @@ def telegram_bot():
         users[user_id].player.disguise = start_disguise
         if users[user_id].player.disguise.name != 'VIP - пациент':
             users[user_id].suit_only = False
-        text = 'Диана: Добро пожаловать на Хоккайдо, 47-й. Частная клиника «Гама» оказывает медицинские услуги высочайшего уровня представителям мировой элиты, выходя при необходимости за рамки закона\n\n Частично здание находится под управлением искусственного интеллекта — KAI. Система контролирует доступ пациентов в разные части клиники и даже принимает участие в ряде медицинских процедур.\n\nЭрих Содерс уже находится в операционной, где он проходит предварительную подготовку с применением стволовых клеток. Это крайне противоречивая процедура ещё не одобрена властями Японии.\n\nЮки Ямадзаки уже прибыла. Она находится либо в своём номере, либо в ресторане, либо в спа-зоне клиники. Содерсу скоро введут наркоз. Сделай так, чтобы он больше никогда не проснулся. Удачи, 47-й.'
+        text = make_heading('Добро пожаловать на Хоккайдо') + tg_text_convert('Диана: Добро пожаловать на Хоккайдо, 47-й. Частная клиника «Гама» оказывает медицинские услуги высочайшего уровня представителям мировой элиты, выходя при необходимости за рамки закона\n\n Частично здание находится под управлением искусственного интеллекта — KAI. Система контролирует доступ пациентов в разные части клиники и даже принимает участие в ряде медицинских процедур.\n\nЭрих Содерс уже находится в операционной, где он проходит предварительную подготовку с применением стволовых клеток. Это крайне противоречивая процедура ещё не одобрена властями Японии.\n\nЮки Ямадзаки уже прибыла. Она находится либо в своём номере, либо в ресторане, либо в спа-зоне клиники. Содерсу скоро введут наркоз. Сделай так, чтобы он больше никогда не проснулся. Удачи, 47-й.')
         if users[user_id].player.current_location.name == 'Номер 47-го':
             query = update.callback_query
             query.answer()
-            query.edit_message_text(text=text)
+            query.edit_message_text(text=text, parse_mode='MarkdownV2')
             context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=(choose_action_keyboard(update=update, context=context)))
         else:
             query = update.callback_query
@@ -1886,7 +1899,7 @@ def telegram_bot():
         query = update.callback_query
         query.answer()
         query.edit_message_text(
-            'Обучение:\n\nПередвежение – перемещение по локациям игры. Иногда данное действие требует некоторых условий, таких как нужной маскировки или небходимого предмета.\n\nВзаимодействие – использование текущего предмета. Может являться нелегальным действием.\n\nИнвентарь – открытие меню с вашими предметами и текущей маскировкой.\n\nОбыскать локацию – добавляет все предметы на текущей локации вам в инвентарь.\n\nСтатус – показывает нахождение целей задания, а также состояние текущей локации.\n\nИспытания – открывает список со всеми испытаниями. Выполненные испытания отмечаются отдельно.\n\nСохранить и выйти – завершает игру, сохраняя текущие выполненные испытания, а также уровень игрока.\n\nУровень игрока – за выполнение испытаний, а также прохождения уровня на высокий рейтинг у вас будут появляться новые стартовые локации, а также появится возможность брать с собой снаряжение.\n\nРейтинг задания – убийство невинных, количество найденных тел и раз, когда вас заметили – всё это снижает рейтинг прохождения.'
+            make_heading('Обучение') + tg_text_convert('Передвежение – перемещение по локациям игры. Иногда данное действие требует некоторых условий, таких как нужной маскировки или небходимого предмета.\n\nВзаимодействие – использование текущего предмета. Может являться нелегальным действием.\n\nИнвентарь – открытие меню с вашими предметами и текущей маскировкой.\n\nОбыскать локацию – добавляет все предметы на текущей локации вам в инвентарь.\n\nСтатус – показывает нахождение целей задания, а также состояние текущей локации.\n\nИспытания – открывает список со всеми испытаниями. Выполненные испытания отмечаются отдельно.\n\nСохранить и выйти – завершает игру, сохраняя текущие выполненные испытания, а также уровень игрока.\n\nУровень игрока – за выполнение испытаний, а также прохождения уровня на высокий рейтинг у вас будут появляться новые стартовые локации, а также появится возможность брать с собой снаряжение.\n\nРейтинг задания – убийство невинных, количество найденных тел и раз, когда вас заметили – всё это снижает рейтинг прохождения.')
         )
         context.bot.send_message(chat_id=update.effective_chat.id, text='Добро пожаловать!', reply_markup=(start_keyboard()))
 
@@ -1913,7 +1926,6 @@ def telegram_bot():
         adapter.update_by_id("Users", f'updated={updated}', user_id)
 
         users[user_id].message = update.message['message_id']
-
         context.bot.send_message(chat_id=update.effective_chat.id, text='Добро пожаловать!', reply_markup=(start_keyboard()))
         
     def begin(update: Update, context: CallbackContext):
@@ -1930,7 +1942,7 @@ def telegram_bot():
                 users[user_id].locations[i].unlocked = True
         query = update.callback_query
         query.answer()
-        query.edit_message_text(text='Транспозиция органов\n\nХоккайдо, Япония', reply_markup=choose_equipment_keyboard(update=update, context=context))
+        query.edit_message_text(text='*_Транспозиция органов\n\nХоккайдо, Япония_*', reply_markup=choose_equipment_keyboard(update=update, context=context), parse_mode='MarkdownV2')
 
     def run_bot():
         """Работа бота"""

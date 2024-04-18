@@ -20,4 +20,8 @@ class Location:
             context.bot.send_photo(chat_id=update.effective_chat.id, photo=self.url)
         else:
             context.bot.send_photo(chat_id=update.effective_chat.id, photo=open(self.url, 'rb'), timeout=1000)
-        return f'Открыта новая локация: {self.name}'
+        restricted_symbols = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+        text = self.name
+        for i in restricted_symbols:
+            text = text.replace(i, '\\' + i)
+        return f'*_Открыта новая локация: {text}_*'

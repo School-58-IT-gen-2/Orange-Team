@@ -13,4 +13,8 @@ class Disguise():
         """Уведомление об открытии новой маскировки"""
         self.unlocked = True
         context.bot.send_photo(chat_id=update.effective_chat.id, photo=self.url)
-        return f'Открыта новая маскировка: {self.name}'
+        restricted_symbols = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+        text = self.name
+        for i in restricted_symbols:
+            text = text.replace(i, '\\' + i)
+        return f'*_Открыта новая маскировка: {text}_*'
