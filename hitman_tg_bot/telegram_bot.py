@@ -438,7 +438,7 @@ def telegram_bot():
     def save_and_quit_confirm_menu(update: Update, context: CallbackContext):
         query = update.callback_query
         query.answer()
-        query.edit_message_text(text=tg_text_convert('*ВНИМАНИЕ*: При выходе будут сохранены ваш текущий уровень и выполненные испытания, но не текущее продвижение по миссии.\n\nВы уверены, что хотите завершить игру?'), reply_markup=(save_and_quit_confirm_keyboard()), parse_mode='MarkdownV2')
+        query.edit_message_text(text='*ВНИМАНИЕ*\: При выходе будут сохранены ваш текущий уровень и выполненные испытания, но не текущее продвижение по миссии\.\n\nВы уверены, что хотите завершить игру\?', reply_markup=(save_and_quit_confirm_keyboard()), parse_mode='MarkdownV2')
 
     def choose_equipment_menu(update: Update, context: CallbackContext):
         query = update.callback_query
@@ -1942,7 +1942,7 @@ def telegram_bot():
             updated = int(tm.time())
         adapter.update_by_id("Users", f'updated={updated}', user_id)
         users[user_id].message = update.message['message_id']
-        context.bot.send_message(chat_id=update.effective_chat.id, text='*_Добро пожаловать\!_*\n\nИспользуйте меню, чтобы начать игру.', parse_mode='MarkdownV2')
+        context.bot.send_message(chat_id=update.effective_chat.id, text='*_Добро пожаловать\!_*\n\nИспользуйте меню, чтобы начать игру\.', parse_mode='MarkdownV2')
 
     def new_game(update: Update, context: CallbackContext):
         """Начало новой игры"""
