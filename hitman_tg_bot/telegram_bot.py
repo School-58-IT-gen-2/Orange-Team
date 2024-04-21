@@ -1948,6 +1948,25 @@ def telegram_bot():
         """Начало новой игры"""
         user_id = update.message.from_user['id']
         if users[user_id].time != 0:
+            completed_challenges = []
+            for i in list(users[user_id].challenges.values()):
+                if i.completed:
+                    completed_challenges.append(i.name)
+            unlocked_disguises = []
+            for i in list(users[user_id].disguises.values()):
+                if i.unlocked:
+                    unlocked_disguises.append(i.name)
+            unlocked_locations = []
+            for i in list(users[user_id].locations.values()):
+                if i.unlocked:
+                    unlocked_locations.append(i.name)
+            completed_challenges_str = ';'.join(completed_challenges)
+            unlocked_disguises_str = ';'.join(unlocked_disguises)
+            unlocked_locations_str = ';'.join(unlocked_locations)
+            adapter.update_by_id("Users", f'completed_challenges={completed_challenges_str}', user_id)
+            adapter.update_by_id("Users", f'unlocked_disguises={unlocked_disguises_str}', user_id)
+            adapter.update_by_id("Users", f'unlocked_locations={unlocked_locations_str}', user_id)
+            adapter.update_by_id("Users", f'player_lvl={users[user_id].player_lvl}', user_id)
             users[user_id] = create_user(player_lvl=users[user_id].player_lvl, completed_challenges=users[user_id].completed_challenges, unlocked_disguises=users[user_id].unlocked_disguises, unlocked_locations=users[user_id].unlocked_locations)
         context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите миссию', reply_markup=(start_keyboard()))
         
