@@ -220,7 +220,7 @@ def classics_menu(update: Update, context: CallbackContext):
             else:
                 completed_challenges.append(i.name + ' (выполнено)')
     for i in completed_challenges:
-        text += tg_text_convert
+        text += tg_text_convert(i + '\n\n')
     text = text[:-1]
     query.answer()
     query.edit_message_text(text=text, reply_markup=challenges_section_keyboard(), parse_mode='MarkdownV2')
@@ -1835,11 +1835,11 @@ def rating(update: Update, context: CallbackContext):
         if users[user_id].challenges['Бесшумный убийца'].completed == False:
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Бесшумный убийца'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             users[user_id].player_lvl += users[user_id].challenges['Бесшумный убийца'].xp
-    elif rating == 5 and users[user_id].suit_only:
+    if rating == 5 and users[user_id].suit_only:
         if users[user_id].challenges['Бесшумный убийца. Только костюм.'].completed == False:
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Бесшумный убийца. Только костюм.'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             users[user_id].player_lvl += users[user_id].challenges['Бесшумный убийца. Только костюм.'].xp
-    elif users[user_id].suit_only:
+    if users[user_id].suit_only:
         if users[user_id].challenges['Только костюм'].completed == False:
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Только костюм'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             users[user_id].player_lvl += users[user_id].challenges['Только костюм'].xp
