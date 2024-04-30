@@ -1969,7 +1969,7 @@ def start(update: Update, context: CallbackContext):
             f'user_nickname={user_nickname}',
             f'updated={created}'
         ])
-        users[user_id] = create_user(player_lvl=10, completed_challenges='', unlocked_disguises='', unlocked_locations='')
+        users[user_id] = create_user(player_lvl=6, completed_challenges='', unlocked_disguises='', unlocked_locations='')
     if update.message['message_id'] != users[user_id].message:
         users[user_id].message = update.message['message_id']
         updated = int(tm.time())

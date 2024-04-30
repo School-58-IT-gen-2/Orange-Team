@@ -11,7 +11,7 @@ class PlayerInfo:
                  suit_only=True,
                  illegal_item='',
                  thrown_weapon=False,
-                 player_lvl=10,
+                 player_lvl=6,
                  completed_challenges='',
                  unlocked_disguises='',
                  unlocked_locations='',
