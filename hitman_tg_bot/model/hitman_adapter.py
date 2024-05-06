@@ -14,7 +14,6 @@ class HitmanAdapter:
                 """
 				host=rc1d-9cjee2y71olglqhg.mdb.yandexcloud.net
 				port=6432
-                sslmode=verify-full
 				dbname=sch58_db
 				user=Admin
 				password=atdhfkm2024

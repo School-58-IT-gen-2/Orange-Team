@@ -1,6 +1,6 @@
 version: '3'
 services:
   hello_logic:
-    image: alex11201/image_name:0.0.4
+    image: alex11201/image_name:0.0.6
     container_name: hello_logic
     command: 'python3 hitman_tg_bot/telegram_bot.py'
