@@ -3,7 +3,6 @@ import csv
 
 
 class HitmanAdapter:
-
     def __init__(self) -> None:
         self.conn = self.__get_connect()
         self.random = 0
@@ -15,6 +14,7 @@ class HitmanAdapter:
                 """
 				host=rc1d-9cjee2y71olglqhg.mdb.yandexcloud.net
 				port=6432
+                sslmode=verify-full
 				dbname=sch58_db
 				user=Admin
 				password=atdhfkm2024
@@ -22,9 +22,8 @@ class HitmanAdapter:
 			"""
             )
             return conn
-        except Exception as e:
+        except:
             print("connection error")
-            print(e)
 
     def get_all(self, table_name: str):
         """Получение всей таблицы"""
@@ -52,7 +51,7 @@ class HitmanAdapter:
     
     def search(self, table_name: str, selection: str):
         """Проверка наличия значения в таблице"""
-        request = f'SELECT COUNT(1) FROM "Orange_team"."{table_name}" WHERE {selection.split('=')[0]} = {selection.split('=')[1]}'
+        request = f'SELECT COUNT(1) FROM "Orange_team"."{table_name}" WHERE {selection.split("=")[0]} = {selection.split("=")[1]}'
         cursor = self.conn.cursor()
         cursor.execute(request)
         data = cursor.fetchall()
@@ -63,6 +62,22 @@ class HitmanAdapter:
         update_param = update.split('=')[0]
         update_value = update.split('=')[1]
         request = f'UPDATE "Orange_team"."{table_name}" SET "{update_param}"=\'{update_value}\' WHERE "user_id" = {id}'
+        cursor = self.conn.cursor()
+        cursor.execute(request)
+        self.conn.commit()
+        request = f'SELECT * FROM "Orange_team"."{table_name}"'
+        cursor = self.conn.cursor()
+        cursor.execute(request)
+        data = cursor.fetchall()
+        return data
+    
+    def update_array_by_id(self, table_name: str, update: str, id: int):
+        """Изменение параметра по id"""
+        update_param = update.split('=')[0]
+        update_value = update.split('=')[1]
+        curlb_left = '{'
+        curlb_right = '}'
+        request = f'UPDATE "Orange_team"."{table_name}" SET "{update_param}"=\'{{{update_value}}}\' WHERE "user_id" = {id}'
         cursor = self.conn.cursor()
         cursor.execute(request)
         self.conn.commit()
@@ -106,7 +121,6 @@ class HitmanAdapter:
         return data
     
 class CsvAdapter():
-    
     def __init__(self) -> None:
         pass
 

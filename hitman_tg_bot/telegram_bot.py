@@ -1927,6 +1927,11 @@ def help(update: Update, context: CallbackContext):
     context.bot.send_photo(chat_id=update.effective_chat.id, photo='https://media.hitmaps.com/img/hitman3/story/background_season2.jpg')
     context.bot.send_message(chat_id=update.effective_chat.id, text=make_heading('Обучение') + '*_Передвежение_* – перемещение по локациям игры\. Иногда данное действие требует некоторых условий, таких как нужной маскировки или небходимого предмета\.\n\n*_Взаимодействие_* – использование текущего предмета\. Может являться нелегальным действием\.\n\n*_Инвентарь_* – открытие меню с вашими предметами и текущей маскировкой\.\n\n*_Обыскать локацию_* – добавляет все предметы на текущей локации вам в инвентарь\.\n\n*_Статус_* – показывает нахождение целей задания, а также состояние текущей локации\.\n\n*_Испытания_* – открывает список со всеми испытаниями\. Выполненные испытания отмечаются отдельно\.\n\n*_Сохранить и выйти_* – завершает игру, сохраняя текущие выполненные испытания, а также уровень игрока\.\n\n*_Уровень игрока_* – за выполнение испытаний, а также прохождения уровня на высокий рейтинг у вас будут появляться новые стартовые локации, и появится возможность брать с собой снаряжение\.\n\n*_Рейтинг задания_* – убийство невинных, количество найденных тел и раз, когда вас заметили – всё это снижает рейтинг прохождения\.\n\n*_Система шансов_* – успех некоторых действий зависит от пределенного шанса, написанного в скобках рядом с ним\. Шанс является вероятностью выполнения действия, то есть десйствие с шансом "\(7/10\)" будет выполняться с вероятностью 0,7\.', parse_mode='MarkdownV2')
 
+def support(update: Update, context: CallbackContext):
+    """Вывод поддержки авторов"""
+    context.bot.send_photo(chat_id=update.effective_chat.id, photo='https://4kwallpapers.com/images/wallpapers/agent-47-hitman-3840x2160-13948.jpeg')
+    context.bot.send_message(chat_id=update.effective_chat.id, text=make_heading('Поддержать авторов') + 'Рады\, что вам понравилась наша игра\.\n\n`4817760323535330`', parse_mode='MarkdownV2')
+
 def stats(update: Update, context: CallbackContext):
     """Вывод статистики игрока"""
     user_id = update.message.from_user['id']
@@ -2025,6 +2030,7 @@ def run_bot():
     dispatcher = updater.dispatcher
 
     dispatcher.add_handler(CommandHandler('start', start))
+    dispatcher.add_handler(CommandHandler('support', support))
     dispatcher.add_handler(CommandHandler('help', help))
     dispatcher.add_handler(CommandHandler('stats', stats))
     dispatcher.add_handler(CommandHandler('new_game', new_game))
