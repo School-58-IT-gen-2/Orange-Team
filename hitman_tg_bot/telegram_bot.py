@@ -1930,7 +1930,7 @@ def help(update: Update, context: CallbackContext):
 def support(update: Update, context: CallbackContext):
     """Вывод поддержки авторов"""
     context.bot.send_photo(chat_id=update.effective_chat.id, photo='https://4kwallpapers.com/images/wallpapers/agent-47-hitman-3840x2160-13948.jpeg')
-    context.bot.send_message(chat_id=update.effective_chat.id, text=make_heading('Поддержать авторов') + 'Рады\, что вам понравилась наша игра\.\n\n`4817760323535330`', parse_mode='MarkdownV2')
+    context.bot.send_message(chat_id=update.effective_chat.id, text=make_heading('Поддержать авторов') + 'Рады\, что вам понравилась наша игра\.\n\nОтправьте нам донат\: `4817760323535330` \(Виолетта\)', parse_mode='MarkdownV2')
 
 def stats(update: Update, context: CallbackContext):
     """Вывод статистики игрока"""
