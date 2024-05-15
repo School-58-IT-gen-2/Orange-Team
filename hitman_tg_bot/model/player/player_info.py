@@ -12,20 +12,13 @@ class PlayerInfo:
                  illegal_item='',
                  thrown_weapon=False,
                  player_lvl=6,
-                 completed_challenges='',
-                 unlocked_disguises='',
-                 unlocked_locations='',
+                 saved_data={},
                  player=Player(),
                  message=-1,
-                 challenges={},
-                 npcs={},
-                 targets=[],
-                 events={},
-                 locations={},
-                 items={},
-                 disguises={},
                  carry_on_items=[],
-                 loadout={}
+                 loadout={},
+                 locations_values={},
+                 mission='ica'
                  ):
         
         self.suspicion_count = suspicion_count
@@ -36,17 +29,34 @@ class PlayerInfo:
         self.illegal_item = illegal_item
         self.thrown_weapon = thrown_weapon
         self.player_lvl = player_lvl
-        self.completed_challenges = completed_challenges
-        self.unlocked_disguises = unlocked_disguises
-        self.unlocked_locations = unlocked_locations
+        self.saved_data = saved_data
+        self.mission = mission
+        self.completed_challenges = self.saved_data[self.mission]['challenges']
+        self.unlocked_disguises = self.saved_data[self.mission]['disguises']
+        self.unlocked_locations = self.saved_data[self.mission]['locations']
         self.player = player
         self.message = message
-        self.challenges = challenges
-        self.npcs = npcs
-        self.targets = targets
-        self.events = events
-        self.locations = locations
+        self.locations_values = locations_values
         self.carry_on_items = carry_on_items
-        self.items = items
-        self.disguises = disguises
+        self.challenges = self.locations_values[self.mission]['challenges']
+        self.npcs = self.locations_values[self.mission]['npcs']
+        self.targets = self.locations_values[self.mission]['targets']
+        self.events = self.locations_values[self.mission]['events']
+        self.locations = self.locations_values[self.mission]['locations']
+        self.items = self.locations_values[self.mission]['items']
+        self.disguises = self.locations_values[self.mission]['disguises']
         self.loadout = loadout
+
+    def change_mission(self, mission: str):
+        "Смена миссии и замена соответствующих данных"
+        self.mission = mission
+        self.completed_challenges = self.saved_data[self.mission]['challenges']
+        self.unlocked_disguises = self.saved_data[self.mission]['disguises']
+        self.unlocked_locations = self.saved_data[self.mission]['locations']
+        self.challenges = self.locations_values[self.mission]['challenges']
+        self.npcs = self.locations_values[self.mission]['npcs']
+        self.targets = self.locations_values[self.mission]['targets']
+        self.events = self.locations_values[self.mission]['events']
+        self.locations = self.locations_values[self.mission]['locations']
+        self.items = self.locations_values[self.mission]['items']
+        self.disguises = self.locations_values[self.mission]['disguises']

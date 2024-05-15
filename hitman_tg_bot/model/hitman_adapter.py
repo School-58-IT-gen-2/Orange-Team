@@ -60,7 +60,7 @@ class HitmanAdapter:
         """Изменение параметра по id"""
         update_param = update.split('=')[0]
         update_value = update.split('=')[1]
-        request = f'UPDATE "Orange_team"."{table_name}" SET "{update_param}"=\'{update_value}\' WHERE "user_id" = {id}'
+        request = f'UPDATE "Orange_team"."{table_name}" SET "{update_param}"=\'{update_value}\' WHERE "id" = {id}'
         cursor = self.conn.cursor()
         cursor.execute(request)
         self.conn.commit()
