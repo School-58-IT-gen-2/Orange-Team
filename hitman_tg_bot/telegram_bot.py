@@ -919,7 +919,6 @@ def drink_kill_keyboard_2():
 def drink_kill_keyboard_3():
     return InlineKeyboardMarkup([[InlineKeyboardButton('Утопить цель', callback_data='Утопить Кэлвина')], [InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
 
-
 def cigar_kill_keyboard_1():
     return InlineKeyboardMarkup([[InlineKeyboardButton('Положить новую пачку', callback_data='ПНПС')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
 
@@ -1124,6 +1123,7 @@ def stem_cells(update: Update, context: CallbackContext):
             if users[user_id].challenges['Так можно и пораниться'].completed == False:
                 context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                 users[user_id].player_lvl += users[user_id].challenges['Так можно и пораниться'].xp
+            context.bot.send_animation(chat_id=update.effective_chat.id, animation=open('hitman_tg_bot/assets/stem_cells_kill.mp4', 'rb'))
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].targets['Erich Soders'].kill(), reply_markup=(choose_action_keyboard(update=update, context=context)))
         else:
             query.edit_message_text(text=users[user_id].targets['Erich Soders'].kill(), reply_markup=(choose_action_keyboard(update=update, context=context)))
@@ -1214,6 +1214,7 @@ def cigar_kill_4(update: Update, context: CallbackContext):
             if users[user_id].challenges['Так можно и пораниться'].completed == False:
                 context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                 users[user_id].player_lvl += users[user_id].challenges['Так можно и пораниться'].xp
+            context.bot.send_animation(chat_id=update.effective_chat.id, animation=open('hitman_tg_bot/assets/smoking_kill.mp4', 'rb'))
             context.bot.send_message(chat_id=update.effective_chat.id, text=text, reply_markup=(choose_action_keyboard(update=update, context=context)))
         else:
             query.edit_message_text(text=text, reply_markup=(choose_action_keyboard(update=update, context=context)))
@@ -1257,6 +1258,7 @@ def sushi_kill_4(update: Update, context: CallbackContext):
         if users[user_id].challenges['Без вкуса, без следа'].completed == False:
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Без вкуса, без следа'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             users[user_id].player_lvl += users[user_id].challenges['Без вкуса, без следа'].xp
+        context.bot.send_animation(chat_id=update.effective_chat.id, animation=open('hitman_tg_bot/assets/sushi_kill.mp4', 'rb'))
         context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].targets['Yuki Yamazaki'].kill(), reply_markup=choose_action_keyboard(update=update, context=context))
     else:
         query.edit_message_text(text=users[user_id].targets['Yuki Yamazaki'].kill(), reply_markup=choose_action_keyboard(update=update, context=context))
@@ -1355,6 +1357,7 @@ def yoga_kill_2(update: Update, context: CallbackContext):
         if users[user_id].challenges['Так можно и пораниться'].completed == False:
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             users[user_id].player_lvl += users[user_id].challenges['Так можно и пораниться'].xp
+        context.bot.send_animation(chat_id=update.effective_chat.id, animation=open('hitman_tg_bot/assets/yoga_kill.mov.mp4', 'rb'))
         context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].targets['Yuki Yamazaki'].kill(), reply_markup=(choose_action_keyboard(update=update, context=context)))
     else:
         query.edit_message_text(text=users[user_id].targets['Yuki Yamazaki'].kill(), reply_markup=(choose_action_keyboard(update=update, context=context)))
@@ -1445,6 +1448,7 @@ def sauna_kill_2(update: Update, context: CallbackContext):
         if users[user_id].challenges['Так можно и пораниться'].completed == False:
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             users[user_id].player_lvl += users[user_id].challenges['Так можно и пораниться'].xp
+        context.bot.send_animation(chat_id=update.effective_chat.id, animation=open('hitman_tg_bot/assets/sauna_kill.mp4', 'rb'))
         context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].targets['Yuki Yamazaki'].kill(), reply_markup=(choose_action_keyboard(update=update, context=context)))
     else:
         query.edit_message_text(text=users[user_id].targets['Yuki Yamazaki'].kill(), reply_markup=(choose_action_keyboard(update=update, context=context)))
@@ -1469,6 +1473,7 @@ def lifeboat_kill_1(update: Update, context: CallbackContext):
         if users[user_id].challenges['Использовать только при ЧП'].completed == False:
             query.edit_message_text(text=users[user_id].challenges['Использовать только при ЧП'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             users[user_id].player_lvl += users[user_id].challenges['Использовать только при ЧП'].xp
+            context.bot.send_animation(chat_id=update.effective_chat.id, animation=open('hitman_tg_bot/assets/lifeboat_kill.mp4', 'rb'))
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].targets['Kalvin Ritter'].kill(), reply_markup=(choose_action_keyboard(update=update, context=context)))
         else:
             query.edit_message_text(text=users[user_id].targets['Kalvin Ritter'].kill(), reply_markup=(choose_action_keyboard(update=update, context=context)))
@@ -1486,6 +1491,7 @@ def robot_kill_2(update: Update, context: CallbackContext):
         if users[user_id].challenges['Так можно и пораниться'].completed == False:
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             users[user_id].player_lvl += users[user_id].challenges['Так можно и пораниться'].xp
+        context.bot.send_animation(chat_id=update.effective_chat.id, animation=open('hitman_tg_bot/assets/operation_kill.mp4', 'rb'))
         context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].targets['Erich Soders'].kill(), reply_markup=(choose_action_keyboard(update=update, context=context)))
     else:
         query.edit_message_text(text=users[user_id].targets['Erich Soders'].kill(), reply_markup=(choose_action_keyboard(update=update, context=context)))
@@ -1506,6 +1512,7 @@ def destroy_heart(update: Update, context: CallbackContext):
     if users[user_id].challenges['Бессердечный'].completed == False:
         query.edit_message_text(text=users[user_id].challenges['Бессердечный'].achieved(update=update, context=context), parse_mode='MarkdownV2')
         users[user_id].player_lvl += users[user_id].challenges['Бессердечный'].xp
+        context.bot.send_animation(chat_id=update.effective_chat.id, animation=open('hitman_tg_bot/assets/heart_kill.mp4', 'rb'))
         context.bot.send_message(chat_id=update.effective_chat.id, text='Диана: 47-й, без сердца для пересадки Содерс не выживет. Ты смог от него избавиться даже не прикасаясь, изящный ход.', reply_markup=(choose_action_keyboard(update=update, context=context)))
     else:
         query.edit_message_text(text='Диана: 47-й, без сердца для пересадки Содерс не выживет. Ты смог от него избавиться даже не прикасаясь, изящный ход.', reply_markup=(choose_action_keyboard(update=update, context=context)))
@@ -1522,6 +1529,7 @@ def destroy_servers(update: Update, context: CallbackContext):
         if users[user_id].challenges['Так можно и пораниться'].completed == False:
             context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Так можно и пораниться'].achieved(update=update, context=context), parse_mode='MarkdownV2')
             users[user_id].player_lvl += users[user_id].challenges['Так можно и пораниться'].xp
+        context.bot.send_animation(chat_id=update.effective_chat.id, animation=open('hitman_tg_bot/assets/kai_kill.mp4', 'rb'))
         context.bot.send_message(chat_id=update.effective_chat.id, text='Хирург: Что происходит с роботом?! Как его отключить?! Пациент сейчас умрет!\n\nДиана: Это было впечатляюще, агент. Эрих Содерс мертв.', reply_markup=(choose_action_keyboard(update=update, context=context)))
     else:
         query.edit_message_text(text='Хирург: Что происходит с роботом?! Как его отключить?! Пациент сейчас умрет!\n\nДиана: Это было впечатляюще, агент. Эрих Содерс мертв.', reply_markup=(choose_action_keyboard(update=update, context=context)))
@@ -2397,9 +2405,11 @@ def new_game(update: Update, context: CallbackContext):
     
 def begin(update: Update, context: CallbackContext):
     """Начало игры"""
+    user_id = update.callback_query.from_user['id']
     query = update.callback_query
     query.answer()
     if query.data == 'ХоккЯП':
+        users[user_id].change_mission('hokkaido')
         query.edit_message_text(text='*_Транспозиция органов\n\nХоккайдо, Япония_*', reply_markup=choose_equipment_keyboard(update=update, context=context), parse_mode='MarkdownV2')
     elif query.data == 'СТ':
         query.edit_message_text(text='*_Свободная тренировка\n\nКомплекс МКА, ЗАСЕКРЕЧЕНО_*', reply_markup=start_tutorial_keyboard_2(), parse_mode='MarkdownV2')
