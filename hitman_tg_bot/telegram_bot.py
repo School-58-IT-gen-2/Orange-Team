@@ -155,6 +155,7 @@ def choose_action_menu(update: Update, context: CallbackContext):
     query.answer()
     query.edit_message_text(text='Выберите действие', reply_markup=(choose_action_keyboard(update=update, context=context)))
     
+
 def status_menu(update: Update, context: CallbackContext):
     user_id = update.callback_query.from_user['id']
     result_string = ''
@@ -172,6 +173,7 @@ def status_menu(update: Update, context: CallbackContext):
     query = update.callback_query
     query.answer()
     query.edit_message_text(text=result_string, reply_markup=(status_keyboard()), parse_mode='MarkdownV2')
+
 
 def challenges_menu(update: Update, context: CallbackContext):
     query = update.callback_query
@@ -245,7 +247,8 @@ def classics_menu(update: Update, context: CallbackContext):
     text = text[:-1]
     query.answer()
     query.edit_message_text(text=text, reply_markup=challenges_section_keyboard(), parse_mode='MarkdownV2')
-    
+
+
 def choose_start_location_menu(update: Update, context: CallbackContext):
     query = update.callback_query
     query.answer()
@@ -275,6 +278,7 @@ def choose_pistol_menu(update: Update, context: CallbackContext):
     else:
         spawn_player(update=update, context=context)
 
+
 def safe_move_menu(update: Update, context: CallbackContext):
     query = update.callback_query
     query.answer()
@@ -287,6 +291,12 @@ def move_menu(update: Update, context: CallbackContext):
     query.answer()
     query.edit_message_text(text='Выберите локацию', reply_markup=(move_keyboard(update=update, context=context)))
 
+def no_disguise_move_menu(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='У вас нет подходящей маскировки. Переместиться на локацию?', reply_markup=(no_disguise_move_keyboard()))
+
+
 def attack_menu(update: Update, context: CallbackContext):
     query = update.callback_query
     query.answer()
@@ -297,10 +307,6 @@ def hide_menu(update: Update, context: CallbackContext):
     query.answer()
     query.edit_message_text(text='Выберите действие', reply_markup=(hide_keyboard()))
 
-def no_disguise_move_menu(update: Update, context: CallbackContext):
-    query = update.callback_query
-    query.answer()
-    query.edit_message_text(text='У вас нет подходящей маскировки. Переместиться на локацию?', reply_markup=(no_disguise_move_keyboard()))
 
 def loot_menu(update: Update, context: CallbackContext):
     user_id = update.callback_query.from_user['id']
@@ -352,6 +358,7 @@ def loot_menu(update: Update, context: CallbackContext):
             query.edit_message_text(text=result_string, reply_markup=(choose_action_keyboard(update=update, context=context)), parse_mode='MarkdownV2')
     users[user_id].player.current_location.items = []
 
+
 def inventory_menu(update: Update, context: CallbackContext):
     user_id = update.callback_query.from_user['id']
     query = update.callback_query
@@ -385,6 +392,7 @@ def choose_illegal_item_menu(update: Update, context: CallbackContext):
         else:
             query.edit_message_text(text=f'Сейчас в руках: {users[user_id].player.item.name}', reply_markup=(choose_action_keyboard(update=update, context=context)))
 
+
 def combat_start_menu(update: Update, context: CallbackContext):
     query = update.callback_query
     query.answer()
@@ -399,6 +407,7 @@ def choose_weapon_action_menu(update: Update, context: CallbackContext):
     query = update.callback_query
     query.answer()
     query.edit_message_text(text=f'Выберите действие', reply_markup=(choose_weapon_action_keyboard(update=update, context=context, item_name=query.data)))
+
 
 def interact_menu(update: Update, context: CallbackContext):
     user_id = update.callback_query.from_user['id']
@@ -473,15 +482,18 @@ def confirm_distract_menu(update: Update, context: CallbackContext):
     query.answer()
     query.edit_message_text(text=f'{npc.name} ({npc.disguise.name})', reply_markup=(confirm_distract_keyboard(query.data)))
 
+
 def destroy_heart_menu_2(update: Update, context: CallbackContext):
     query = update.callback_query
     query.answer()
     query.edit_message_text(text='Выберите действие', reply_markup=(destroy_heart_keyboard_2()))
 
+
 def save_and_quit_confirm_menu(update: Update, context: CallbackContext):
     query = update.callback_query
     query.answer()
     query.edit_message_text(text='*ВНИМАНИЕ*: При выходе будут сохранены ваш текущий уровень и выполненные испытания, но не текущее продвижение по миссии\.\n\nВы уверены, что хотите завершить игру\?', reply_markup=(save_and_quit_confirm_keyboard()), parse_mode='MarkdownV2')
+
 
 def choose_equipment_menu(update: Update, context: CallbackContext):
     user_id = update.callback_query.from_user['id']
@@ -495,6 +507,33 @@ def choose_tutorial_menu(update: Update, context: CallbackContext):
     query.answer()
     query.edit_message_text(text='Выберите миссию', reply_markup=choose_tutorial_keyboard())
 
+
+def skip_choose_action_menu(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    data = query.data.replace('SKIP', '')
+    if data == 'sauna':
+        query.edit_message_text(text='Выберите действие', reply_markup=skip_choose_action_keyboard(update=update, context=context, skip_sauna=True))
+    elif data == 'hokkaido_exit':
+        query.edit_message_text(text='Выберите действие', reply_markup=skip_choose_action_keyboard(update=update, context=context, skip_hokkaido_exit=True))
+    elif data == 'sushi':
+        query.edit_message_text(text='Выберите действие', reply_markup=skip_choose_action_keyboard(update=update, context=context, skip_sushi=True))
+    elif data == 'cigars_1':
+        query.edit_message_text(text='Выберите действие', reply_markup=skip_choose_action_keyboard(update=update, context=context, skip_cigars_1=True))
+    elif data == 'cigars_2':
+        query.edit_message_text(text='Выберите действие', reply_markup=skip_choose_action_keyboard(update=update, context=context, skip_cigars_2=True))
+    elif data == 'cells':
+        query.edit_message_text(text='Выберите действие', reply_markup=skip_choose_action_keyboard(update=update, context=context, skip_cells=True))
+    elif data == 'operation':
+        query.edit_message_text(text='Выберите действие', reply_markup=skip_choose_action_keyboard(update=update, context=context, skip_operation=True))
+    elif data == 'lifeboat':
+        query.edit_message_text(text='Выберите действие', reply_markup=skip_choose_action_keyboard(update=update, context=context, skip_lifeboat=True))
+    elif data == 'ica_exit':
+        query.edit_message_text(text='Выберите действие', reply_markup=skip_choose_action_keyboard(update=update, context=context, skip_ica_exit=True))
+    elif data == 'drink':
+        query.edit_message_text(text='Выберите действие', reply_markup=skip_choose_action_keyboard(update=update, context=context, skip_drink=True))
+        
+        
 
 
 #----------Клавиатуры для меню----------
@@ -601,7 +640,7 @@ def choose_action_keyboard(update: Update, context: CallbackContext):
         if users[user_id].events['Убийство в сауне'].completed == False and users[user_id].player.current_location.name == 'Водоснабжение спа':
             context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=sauna_kill_keyboard_1())
         elif users[user_id].events['Все цели убиты'].completed == True and (users[user_id].player.current_location.name == 'Канатная дорога' or users[user_id].player.current_location.name == 'Гараж' or users[user_id].player.current_location.name == 'Вертолетная площадка' or users[user_id].player.current_location.name == 'Горная тропа'):
-            context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=(exit_mission_keyboard()))
+            context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=(exit_mission_keyboard(update=update, context=context)))
         elif users[user_id].events['Вырубить Джейсона'].completed == False and users[user_id].player.current_location.name == 'Холл' and users[user_id].player.disguise.name == 'VIP - пациент' and users[user_id].npcs['Jason Portman'].alive:
             users[user_id].events['Вырубить Джейсона'].completed = True
             context.bot.send_message(chat_id=update.effective_chat.id, text='Джейсон Портман: Эй, ты! Думаешь ты такой же фанат Хельмута, как и я?', reply_markup=(knock_jason_portman_keyboard_1()))
@@ -640,14 +679,97 @@ def choose_action_keyboard(update: Update, context: CallbackContext):
                 [InlineKeyboardButton("Сохранить и выйти", callback_data="Сохранить и выйти")]
             ])
     elif users[user_id].mission == 'ica':
-        if users[user_id].events['Сбросить шлюпку'].completed == False and users[user_id].player.current_location.name == 'Капитанский мостик' and users[user_id].items['Лом'] in users[user_id].player.inventory:
+        if users[user_id].events['Сбросить шлюпку'].completed == False and users[user_id].player.current_location.name == 'Капитанский мостик':
             context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=lifeboat_kill_keyboard_1())
         elif users[user_id].events['Все цели убиты'].completed == True and (users[user_id].player.current_location.name == 'Пирс' or users[user_id].player.current_location.name == 'Капитанский мостик'):
-            context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=(exit_mission_keyboard()))
+            context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=(exit_mission_keyboard(update=update, context=context)))
         elif users[user_id].events['Встреча'].completed == False and users[user_id].player.current_location.name == users[user_id].targets['Kalvin Ritter'].move(users[user_id].time) and users[user_id].player.disguise.name == 'Терри Норфолк' and users[user_id].targets['Kalvin Ritter'].alive:
             context.bot.send_message(chat_id=update.effective_chat.id, text='47-й: Мистер Риттер, я Терри Норфолк.\nКэлвин Риттер: Мистер Норфолк! Наконец-то мы встретились. Пройдемте за мной.', reply_markup=private_meeting_keyboard_1())
             users[user_id].events['Встреча'].completed = True
         elif users[user_id].items['Крысиный яд'] in users[user_id].player.inventory and users[user_id].player.current_location.name == 'Бар' and users[user_id].events['Отравить напиток'].completed == False and users[user_id].targets['Kalvin Ritter'].alive:
+            context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=(drink_kill_keyboard_1(update=update, context=context)))
+        else:
+            return InlineKeyboardMarkup([
+                [InlineKeyboardButton("Передвижение", callback_data="Передвижение"), InlineKeyboardButton("Взаимодействие", callback_data="Взаимодействие")],
+                [InlineKeyboardButton("Инвентарь", callback_data="Инвентарь"), InlineKeyboardButton("Обыскать локацию", callback_data="Обыскать локацию")],
+                [InlineKeyboardButton("Статус", callback_data="Статус"), InlineKeyboardButton("Испытания", callback_data="Испытания")],
+                [InlineKeyboardButton("Сохранить и выйти", callback_data="Сохранить и выйти")]
+            ])
+
+def skip_choose_action_keyboard(update: Update, context: CallbackContext, skip_sauna=False, skip_hokkaido_exit=False, skip_sushi=False, skip_cigars_1=False, skip_cigars_2=False, skip_cells=False, skip_operation=False, skip_lifeboat=False, skip_ica_exit=False, skip_drink=False):
+    user_id = update.callback_query.from_user['id']
+    if users[user_id].mission == 'hokkaido':
+        if users[user_id].disguises['Охранник'] in users[user_id].player.found_disguises or users[user_id].disguises['Телохранитель'] in users[user_id].player.found_disguises:
+            users[user_id].player.inventory.append(users[user_id].items['Bartoli 75R'])
+    elif users[user_id].mission == 'ica':
+        if users[user_id].disguises['Охранник яхты'] in users[user_id].player.found_disguises or users[user_id].disguises['Телохранитель'] in users[user_id].player.found_disguises:
+            users[user_id].player.inventory.append(users[user_id].items['Bartoli 75R'])
+    unlocked_disguises = 0
+    for i in list(users[user_id].disguises.values()):
+        if i.unlocked:
+            unlocked_disguises += 1
+    unlocked_locations = 0
+    for i in list(users[user_id].locations.values()):
+        if i.unlocked:
+            unlocked_locations += 1
+    if users[user_id].mission == 'hokkaido':
+        if users[user_id].challenges['Хамелеон'].completed == False and unlocked_disguises == len(users[user_id].disguises):
+            context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Хамелеон'].achieved(update=update, context=context), parse_mode='MarkdownV2')
+            users[user_id].player_lvl += users[user_id].challenges['Хамелеон'].xp
+        if users[user_id].challenges['Исследуйте Хоккайдо'].completed == False and unlocked_locations == len(users[user_id].locations):
+            context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Исследуйте Хоккайдо'].achieved(update=update, context=context), parse_mode='MarkdownV2')
+            users[user_id].player_lvl += users[user_id].challenges['Исследуйте Хоккайдо'].xp
+        if users[user_id].events['Убийство в сауне'].completed == False and users[user_id].player.current_location.name == 'Водоснабжение спа' and skip_sauna == False:
+                context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=sauna_kill_keyboard_1())
+        elif users[user_id].events['Все цели убиты'].completed == True and (users[user_id].player.current_location.name == 'Канатная дорога' or users[user_id].player.current_location.name == 'Гараж' or users[user_id].player.current_location.name == 'Вертолетная площадка' or users[user_id].player.current_location.name == 'Горная тропа') and skip_hokkaido_exit == False:
+                context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=(exit_mission_keyboard(update=update, context=context)))
+        elif users[user_id].events['Вырубить Джейсона'].completed == False and users[user_id].player.current_location.name == 'Холл' and users[user_id].player.disguise.name == 'VIP - пациент' and users[user_id].npcs['Jason Portman'].alive:
+            users[user_id].events['Вырубить Джейсона'].completed = True
+            context.bot.send_message(chat_id=update.effective_chat.id, text='Джейсон Портман: Эй, ты! Думаешь ты такой же фанат Хельмута, как и я?', reply_markup=(knock_jason_portman_keyboard_1()))
+        elif  users[user_id].player.current_location.name == 'Холл' and users[user_id].player.disguise.name == 'Джейсон Портман' and users[user_id].events['Обследование'].completed == False:
+            users[user_id].events['Обследование'].completed = True
+            context.bot.send_message(chat_id=update.effective_chat.id, text='Врач: Наконец-то я вас нашла! Джейсон Портман, пожалуйста, проходите. Врач уже вас ожидает.', reply_markup=(medical_checkup_keyboard()))
+        elif (users[user_id].items['Яд рыбы Фугу'] in users[user_id].player.inventory or users[user_id].items['Крысиный яд'] in users[user_id].player.inventory or users[user_id].items['Смертельный яд'] in users[user_id].player.inventory or users[user_id].items['Рвотный яд'] in users[user_id].player.inventory) and users[user_id].player.current_location.name == 'Ресторан' and users[user_id].events['Убийство ядом'].completed == False and users[user_id].targets['Yuki Yamazaki'].alive and skip_sushi == False:
+            context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=(sushi_kill_keyboard_1(update=update, context=context)))
+        elif users[user_id].player.current_location.name == 'Номер Юки Ямадзаки':
+            if users[user_id].events['Сигареты на столе'].completed == False and users[user_id].items['Пачка сигарет'] in users[user_id].player.inventory and skip_cigars_1 == False:
+                context.bot.send_message(chat_id=update.effective_chat.id, text='На столе находится пустая пачка сигарет.', reply_markup=(cigar_kill_keyboard_1()))
+            elif users[user_id].events['Сигареты на столе'].completed and users[user_id].targets['Yuki Yamazaki'].alive and skip_cigars_2 == False:
+                users[user_id].player.inventory.append(users[user_id].items['Пачка сигарет'])
+                cigar_kill_1(update=update, context=context)
+            else:
+                return InlineKeyboardMarkup([
+                [InlineKeyboardButton("Передвижение", callback_data="Передвижение"), InlineKeyboardButton("Взаимодействие", callback_data="Взаимодействие")],
+                [InlineKeyboardButton("Инвентарь", callback_data="Инвентарь"), InlineKeyboardButton("Обыскать локацию", callback_data="Обыскать локацию")],
+                [InlineKeyboardButton("Статус", callback_data="Статус"), InlineKeyboardButton("Испытания", callback_data="Испытания")],
+                [InlineKeyboardButton("Сохранить и выйти", callback_data="Сохранить и выйти")]
+            ])
+        elif users[user_id].events['Отравить стволовые клетки'].completed == False and users[user_id].player.current_location.name == 'Операционная' and users[user_id].items['Стволовые клетки'] in users[user_id].player.inventory and skip_cells == False:
+            context.bot.send_message(chat_id=update.effective_chat.id, text='Ввести смертельные стволовые клетки?', reply_markup=stem_cells_keyboard())
+        elif users[user_id].events['Убийство в операционной'].completed == False and users[user_id].player.current_location.name == 'Операционная' and users[user_id].player.disguise.name == 'Главный хирург' and users[user_id].targets['Erich Soders'].alive and skip_operation == False:
+            context.bot.send_message(chat_id=update.effective_chat.id, text='В операционной находится пульт управления робо-руками, проводящими операцию.', reply_markup=robot_kill_keyboard_1())
+        elif users[user_id].events['Устранение главного хирурга'].completed == False and users[user_id].player.current_location.name == 'Вертолетная площадка' and users[user_id].player.disguise.name == 'Пилот' and users[user_id].npcs['Nicholas Laurent'].alive:
+            context.bot.send_message(chat_id=update.effective_chat.id, text='Главный хирург вышел из мед-комплекса\n\nГлавный хирург: У тебя еще остались те таблетки?\n47-й: Конечно, следуй за мной.', reply_markup=surgeon_knock_out_keyboard_1())
+            users[user_id].events['Устранение главного хирурга'].completed = True
+        elif users[user_id].events['Убийство во время йоги'].completed == False and users[user_id].player.current_location.name == 'Зона отдыха' and users[user_id].player.disguise.name == 'Инструктор по йоге' and users[user_id].targets['Yuki Yamazaki'].alive:
+            context.bot.send_message(chat_id=update.effective_chat.id, text='Юки Ямадзаки: Наконец-то, сколько можно вас ждать!', reply_markup=yoga_kill_keyboard_1())
+            users[user_id].events['Убийство во время йоги'].completed = True
+        else:
+            return InlineKeyboardMarkup([
+                [InlineKeyboardButton("Передвижение", callback_data="Передвижение"), InlineKeyboardButton("Взаимодействие", callback_data="Взаимодействие")],
+                [InlineKeyboardButton("Инвентарь", callback_data="Инвентарь"), InlineKeyboardButton("Обыскать локацию", callback_data="Обыскать локацию")],
+                [InlineKeyboardButton("Статус", callback_data="Статус"), InlineKeyboardButton("Испытания", callback_data="Испытания")],
+                [InlineKeyboardButton("Сохранить и выйти", callback_data="Сохранить и выйти")]
+            ])
+    elif users[user_id].mission == 'ica':
+        if users[user_id].events['Сбросить шлюпку'].completed == False and users[user_id].player.current_location.name == 'Капитанский мостик' and skip_lifeboat == False:
+            context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=lifeboat_kill_keyboard_1())
+        elif users[user_id].events['Все цели убиты'].completed == True and (users[user_id].player.current_location.name == 'Пирс' or users[user_id].player.current_location.name == 'Капитанский мостик') and skip_ica_exit == False:
+            context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=(exit_mission_keyboard(update=update, context=context)))
+        elif users[user_id].events['Встреча'].completed == False and users[user_id].player.current_location.name == users[user_id].targets['Kalvin Ritter'].move(users[user_id].time) and users[user_id].player.disguise.name == 'Терри Норфолк' and users[user_id].targets['Kalvin Ritter'].alive:
+            context.bot.send_message(chat_id=update.effective_chat.id, text='47-й: Мистер Риттер, я Терри Норфолк.\nКэлвин Риттер: Мистер Норфолк! Наконец-то мы встретились. Пройдемте за мной.', reply_markup=private_meeting_keyboard_1())
+            users[user_id].events['Встреча'].completed = True
+        elif users[user_id].items['Крысиный яд'] in users[user_id].player.inventory and users[user_id].player.current_location.name == 'Бар' and users[user_id].events['Отравить напиток'].completed == False and users[user_id].targets['Kalvin Ritter'].alive and skip_drink == False:
             context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=(drink_kill_keyboard_1(update=update, context=context)))
         else:
             return InlineKeyboardMarkup([
@@ -843,26 +965,27 @@ def destroy_heart_keyboard_1():
 def destroy_heart_keyboard_2():
     return InlineKeyboardMarkup([[InlineKeyboardButton('Повредить сердце', callback_data='DH2')], [InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
 
-def exit_mission_keyboard():
-    return InlineKeyboardMarkup([[InlineKeyboardButton('Завершить миссию', callback_data='Завершить миссию'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+def exit_mission_keyboard(update: Update, context: CallbackContext):
+    user_id = update.callback_query.from_user['id']
+    return InlineKeyboardMarkup([[InlineKeyboardButton('Завершить миссию', callback_data='Завершить миссию')], [InlineKeyboardButton('Назад', callback_data='SKIP' + users[user_id].mission + '_exit')]])
 
 def destroy_servers_keyboard():
     return InlineKeyboardMarkup([[InlineKeyboardButton('Повредить серверы', callback_data='Повредить серверы'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
 
 def lifeboat_kill_keyboard_1():
-    return InlineKeyboardMarkup([[InlineKeyboardButton('Сбросить шлюпку', callback_data='СБШР')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+    return InlineKeyboardMarkup([[InlineKeyboardButton('Сбросить шлюпку', callback_data='СБШР')], [InlineKeyboardButton('Назад', callback_data='SKIPlifeboat')]])
 
 def sauna_kill_keyboard_1():
-    return InlineKeyboardMarkup([[InlineKeyboardButton('Увеличить температуру воды', callback_data='УТВ')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+    return InlineKeyboardMarkup([[InlineKeyboardButton('Увеличить температуру воды', callback_data='УТВ')], [InlineKeyboardButton('Назад', callback_data='SKIPsauna')]])
 
 def sauna_kill_keyboard_2():
     return InlineKeyboardMarkup([[InlineKeyboardButton('Запереть дверь в парилку', callback_data='ЗДП')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
 
 def robot_kill_keyboard_1():
-    return InlineKeyboardMarkup([[InlineKeyboardButton('Взять управление', callback_data='Взять управление'), InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+    return InlineKeyboardMarkup([[InlineKeyboardButton('Взять управление', callback_data='Взять управление'), InlineKeyboardButton('Назад', callback_data='SKIPoperation')]])
 
 def robot_kill_keyboard_2():
-    return InlineKeyboardMarkup([[InlineKeyboardButton('Убить Эриха Содерса', callback_data='УЭС')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+    return InlineKeyboardMarkup([[InlineKeyboardButton('Убить Эриха Содерса', callback_data='УЭС')], [InlineKeyboardButton('Назад', callback_data='SKIPoperation')]])
 
 def surgeon_knock_out_keyboard_1():
     return InlineKeyboardMarkup([[InlineKeyboardButton('Пойти в комнату пилота', callback_data='ПКП')], [InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
@@ -885,9 +1008,9 @@ def yoga_kill_keyboard_2():
 def sushi_kill_keyboard_1(update: Update, context: CallbackContext):
     user_id = update.callback_query.from_user['id']
     if users[user_id].player.disguise.name == 'Шеф':
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Отравить роллы', callback_data='ОР')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Отравить роллы', callback_data='ОР')], [InlineKeyboardButton('Назад', callback_data='SKIPsushi')]])
     else:
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Отравить роллы (3/10)', callback_data='ОР')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Отравить роллы (3/10)', callback_data='ОР')], [InlineKeyboardButton('Назад', callback_data='SKIPsushi')]])
 
 def sushi_kill_keyboard_2(update: Update, context: CallbackContext):
     user_id = update.callback_query.from_user['id']
@@ -897,7 +1020,7 @@ def sushi_kill_keyboard_2(update: Update, context: CallbackContext):
         if i in users[user_id].player.inventory:
             gained_poisons.append(i.name)
     keyboard = make_keyboard(gained_poisons, 'ОСЮ')
-    keyboard.append([InlineKeyboardButton('Назад', callback_data='Выбор действия')])
+    keyboard.append([InlineKeyboardButton('Назад', callback_data='SKIPsushi')])
     return InlineKeyboardMarkup(keyboard)
 
 def sushi_kill_keyboard_3():
@@ -909,9 +1032,9 @@ def sushi_kill_keyboard_4():
 def drink_kill_keyboard_1(update: Update, context: CallbackContext):
     user_id = update.callback_query.from_user['id']
     if users[user_id].player.disguise.name == 'Экипаж яхты':
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Отравить напиток', callback_data='ОНАП')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Отравить напиток', callback_data='ОНАП')], [InlineKeyboardButton('Назад', callback_data='SKIPdrink')]])
     else:
-        return InlineKeyboardMarkup([[InlineKeyboardButton('Отравить роллы (3/10)', callback_data='ОНАП')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+        return InlineKeyboardMarkup([[InlineKeyboardButton('Отравить роллы (3/10)', callback_data='ОНАП')], [InlineKeyboardButton('Назад', callback_data='SKIPdrink')]])
 
 def drink_kill_keyboard_2():
     return InlineKeyboardMarkup([[InlineKeyboardButton('Пойти за целью', callback_data='Пойти за Кэлвином')], [InlineKeyboardButton('Остаться', callback_data='Выбор действия')]])
@@ -920,10 +1043,10 @@ def drink_kill_keyboard_3():
     return InlineKeyboardMarkup([[InlineKeyboardButton('Утопить цель', callback_data='Утопить Кэлвина')], [InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
 
 def cigar_kill_keyboard_1():
-    return InlineKeyboardMarkup([[InlineKeyboardButton('Положить новую пачку', callback_data='ПНПС')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+    return InlineKeyboardMarkup([[InlineKeyboardButton('Положить новую пачку', callback_data='ПНПС')], [InlineKeyboardButton('Назад', callback_data='SKIPcigars_1')]])
 
 def cigar_kill_keyboard_2():
-    return InlineKeyboardMarkup([[InlineKeyboardButton('Пойти на балкон', callback_data='ПНБ')], [InlineKeyboardButton('Назад', callback_data='Выбор действия')]])
+    return InlineKeyboardMarkup([[InlineKeyboardButton('Пойти на балкон', callback_data='ПНБ')], [InlineKeyboardButton('Назад', callback_data='SKIPcigars_2')]])
 
 def cigar_kill_keyboard_3():
     return InlineKeyboardMarkup([[InlineKeyboardButton('Создать утечку газа', callback_data='СУГ')], [InlineKeyboardButton('Подождать Юки Ямадзаки', callback_data='ПЮЯ')], [InlineKeyboardButton('Уйти с балкона', callback_data='Выбор действия')]])
@@ -962,7 +1085,8 @@ def start_keyboard():
     return InlineKeyboardMarkup([[InlineKeyboardButton('Комплекс МКА, ЗАСЕКРЕЧЕНО', callback_data='МКАЗАС')], [InlineKeyboardButton('Хоккайдо, Япония', callback_data='ХоккЯП')]])
 
 def choose_tutorial_keyboard():
-    return InlineKeyboardMarkup([[InlineKeyboardButton('Тренировка под наблюдением', callback_data='ТПН')], [InlineKeyboardButton('Свободная тренировка', callback_data='СТ')]])
+    #[InlineKeyboardButton('Тренировка под наблюдением', callback_data='ТПН')], 
+    return InlineKeyboardMarkup([[InlineKeyboardButton('Свободная тренировка', callback_data='СТ')]])
 
 def start_tutorial_keyboard_1():
     return InlineKeyboardMarkup([[InlineKeyboardButton('Брифинг', callback_data='ica_briefing_1')], [InlineKeyboardButton('Начать игру', callback_data='НАЧИТПН')]])
@@ -987,18 +1111,12 @@ def knock_jason_portman_keyboard_2():
 def medical_checkup_keyboard():
     return InlineKeyboardMarkup([[InlineKeyboardButton('Проследовать за врачом', callback_data='ПЗВ')], [InlineKeyboardButton('Уйти', callback_data='Выбор действия')]])
 
-"""return InlineKeyboardMarkup([
-            [InlineKeyboardButton("Передвижение", callback_data="Передвижение"), InlineKeyboardButton("Взаимодействие", callback_data="Взаимодействие")],
-            [InlineKeyboardButton("Инвентарь", callback_data="Инвентарь"), InlineKeyboardButton("Обыскать локацию", callback_data="Обыскать локацию")],
-            [InlineKeyboardButton("Статус", callback_data="Статус"), InlineKeyboardButton("Испытания", callback_data="Испытания")],
-            [InlineKeyboardButton("Сохранить и выйти", callback_data="Сохранить и выйти")]
-        ])"""
 def tutorial_keyboard_1():
     return InlineKeyboardMarkup([
-            [InlineKeyboardButton("Передвижение", callback_data=""), InlineKeyboardButton("Взаимодействие", callback_data="")],
-            [InlineKeyboardButton("Инвентарь", callback_data=""), InlineKeyboardButton("Обыскать локацию", callback_data="")],
-            [InlineKeyboardButton("Статус", callback_data="Статус"), InlineKeyboardButton("Испытания", callback_data="")],
-            [InlineKeyboardButton("Сохранить и выйти", callback_data="")]
+            [InlineKeyboardButton("Передвижение", callback_data="pass"), InlineKeyboardButton("Взаимодействие", callback_data="pass")],
+            [InlineKeyboardButton("Инвентарь", callback_data="pass"), InlineKeyboardButton("Обыскать локацию", callback_data="pass")],
+            [InlineKeyboardButton("Статус", callback_data="tutorial_1"), InlineKeyboardButton("Испытания", callback_data="pass")],
+            [InlineKeyboardButton("Сохранить и выйти", callback_data="pass")]
         ])
 
 def accept_tutorial_keyboard():
@@ -1007,6 +1125,9 @@ def accept_tutorial_keyboard():
 
 
 #----------Проверка query для меню----------
+
+def is_skip(query):
+    return 'SKIP' in query
 
 def is_begin(query):
     return query == 'ТПН' or query == 'ХоккЯП' or query == 'СТ'
@@ -1105,6 +1226,482 @@ def is_sushi_kill_2(query):
 
 def is_private_meeting_kill(query):
     return query == 'ЗЦУ' or query == 'ЗЦИП'
+
+
+
+#----------Пошаговое обучение----------
+
+def tutorial_1(update: Update, context: CallbackContext):
+    user_id = update.callback_query.from_user['id']
+    result_string = ''
+    for i in list(users[user_id].targets.values()):
+        if i.alive == True:
+            result_string += f'{i.name}: {i.move(users[user_id].time)}\n'
+        else:
+            result_string += f'{i.name}: Цель устранена\n'
+    result_string += f'\nТекущая маскировка: {users[user_id].player.disguise.name}\n'
+    result_string += f'Предмет в руках: {users[user_id].player.item.name}'
+    if int(5-(users[user_id].bodies*0.5)-(users[user_id].kills*0.7)-(users[user_id].suspicion_count*0.2)) == 5:
+        result_string += f'\n\nБесшумный убийца'
+    result_string = make_heading('Статус') + tg_text_convert(result_string)
+    result_string += '\n\n\n' + location_status(update=update, context=context, location=users[user_id].player.current_location)
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Используя статус вы можете увидеть, где находится ваша цель, ваши текущие маскировку и предмет в руках, сохранён ли у вас статус бесшемного убийцы (статус прохождения на максимальный рейтинг) и состояние локации.')
+    context.bot.send_message(chat_id=update.effective_chat.id, text=result_string, reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Выйти", callback_data="tutorial_2")]
+        ]), parse_mode='MarkdownV2')
+
+def tutorial_2(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Диана: Отлично\, теперь постарайся найти для себя что\-нибудь полезное\.\n\n_Используйте Обыскать локацию\, чтобы подобрать все предметы на текущей локации\._', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Передвижение", callback_data="pass"), InlineKeyboardButton("Взаимодействие", callback_data="pass")],
+            [InlineKeyboardButton("Инвентарь", callback_data="pass"), InlineKeyboardButton("Обыскать локацию", callback_data="tutorial_3")],
+            [InlineKeyboardButton("Статус", callback_data="pass"), InlineKeyboardButton("Испытания", callback_data="pass")],
+            [InlineKeyboardButton("Сохранить и выйти", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+    
+def tutorial_3(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    user_id = update.callback_query.from_user['id']
+    users[user_id].time += 10
+    query = update.callback_query
+    query.answer()
+    users[user_id].player.inventory += users[user_id].player.current_location.items
+    result_string = ''
+    if users[user_id].player.current_location.items == []:
+        query.edit_message_text(text='На локации нет предметов\n', reply_markup=(choose_action_keyboard(update=update, context=context)))
+    else:
+        for i in list(users[user_id].items.values()):
+            if i in users[user_id].player.current_location.items:
+                result_string += f'{i.name} ({users[user_id].player.current_location.items.count(i)})\n'
+        result_string = '*_Найдены предметы:_*\n\n' + tg_text_convert(result_string)
+    result_string += '\nДиана: А ты быстро учишься\, теперь постарайся попасть в гараж\.'
+    query.edit_message_text(text='Найденные предметы отображаются в виде списка и автоматически добавляются к вам в инвентарь.')
+    context.bot.send_message(chat_id=update.effective_chat.id, text=result_string, reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Передвижение", callback_data="tutorial_4"), InlineKeyboardButton("Взаимодействие", callback_data="pass")],
+            [InlineKeyboardButton("Инвентарь", callback_data="pass"), InlineKeyboardButton("Обыскать локацию", callback_data="pass")],
+            [InlineKeyboardButton("Статус", callback_data="pass"), InlineKeyboardButton("Испытания", callback_data="pass")],
+            [InlineKeyboardButton("Сохранить и выйти", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+
+def tutorial_4(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Выберите локацию', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Гараж", callback_data="tutorial_5"), InlineKeyboardButton("Грузовой отсек", callback_data="pass")],
+            [InlineKeyboardButton("Нижняя палуба", callback_data="pass"), InlineKeyboardButton("Главная палуба", callback_data="pass")],
+            [InlineKeyboardButton("Отменить действие", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+
+def tutorial_5(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Некоторые действия выполняются только с определенным шансом, написанным в скобках рядом с ним. Например сейчас вас никто не видит, поэтому шанс составляет 10/10, то есть вы без опаски можете переместиться на другую локацию.')
+    context.bot.send_message(chat_id=update.effective_chat.id, text='У вас нет подходящей маскировки. Переместиться на локацию?', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Да (10/10)", callback_data="tutorial_6"), InlineKeyboardButton("Нет", callback_data="pass")]
+        ]))
+    
+def tutorial_6(update: Update, context: CallbackContext):
+    user_id = update.callback_query.from_user['id']
+    users[user_id].player.current_location = users[user_id].locations['Гараж']
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Используйте Взаимодействие, чтобы использовать тот предмет, который находится у вас в руках. Если в руках ничего нет, то вы сможете усмирить (нелетально) NPC на текущей локаци\._')
+    context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(users[user_id].player.current_location) + '\n\nДиана: Хорошо\, теперь устрани того механика\.', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Передвижение", callback_data="pass"), InlineKeyboardButton("Взаимодействие", callback_data="tutorial_7")],
+            [InlineKeyboardButton("Инвентарь", callback_data="pass"), InlineKeyboardButton("Обыскать локацию", callback_data="pass")],
+            [InlineKeyboardButton("Статус", callback_data="pass"), InlineKeyboardButton("Испытания", callback_data="pass")],
+            [InlineKeyboardButton("Сохранить и выйти", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+    
+def tutorial_7(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Выберите действие', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Усмирить", callback_data="tutorial_8")],
+            [InlineKeyboardButton("Назад", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+
+def tutorial_8(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Выберите цель', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Механик", callback_data="tutorial_9")],
+            [InlineKeyboardButton("Отменить действие", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+    
+def tutorial_9(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Действия видят 0 человек\n\nEwan Roberts (Механик)', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Вырубить", callback_data="tutorial_10")],
+            [InlineKeyboardButton("Назад", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+    
+def tutorial_10(update: Update, context: CallbackContext):
+    user_id = update.callback_query.from_user['id']
+    users[user_id].player.found_disguises.append(users[user_id].npcs['Ewan Roberts'].disguise)
+    users[user_id].npcs['Ewan Roberts'].alive = False
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Используйте Инвентарь, чтобы открыть инвентарь и Сменить маскировку, чтобы сменить текущую маскировку на одну из тех, которые вы уже находили.')
+    context.bot.send_message(chat_id=update.effective_chat.id, text='Цель устранена: Ewan Roberts', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Передвижение", callback_data="pass"), InlineKeyboardButton("Взаимодействие", callback_data="pass")],
+            [InlineKeyboardButton("Инвентарь", callback_data="tutorial_11"), InlineKeyboardButton("Обыскать локацию", callback_data="pass")],
+            [InlineKeyboardButton("Статус", callback_data="pass"), InlineKeyboardButton("Испытания", callback_data="pass")],
+            [InlineKeyboardButton("Сохранить и выйти", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+    
+def tutorial_11(update: Update, context: CallbackContext):
+    user_id = update.callback_query.from_user['id']
+    query = update.callback_query
+    query.answer()
+    result_string = make_heading('Инвентарь')
+    result_string += f'Сейчас в руках: {users[user_id].player.item.name}'
+    query.edit_message_text(text=result_string, reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("ICA 19 (1)", callback_data="pass")],
+            [InlineKeyboardButton("Удавка (1)", callback_data="pass")],
+            [InlineKeyboardButton("Монета (3)", callback_data="pass")],
+            [InlineKeyboardButton("Сменить маскировку", callback_data="tutorial_12")],
+            [InlineKeyboardButton("Выйти", callback_data="pass")]
+        ]))
+    
+def tutorial_12(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Текущая маскировка: Тактическая водолазка', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Тактическая водолазка", callback_data="pass")],
+            [InlineKeyboardButton("Механик", callback_data="tutorial_13")],
+        ]), parse_mode='MarkdownV2')
+
+def tutorial_13(update: Update, context: CallbackContext):
+    user_id = update.callback_query.from_user['id']
+    users[user_id].player.disguise = users[user_id].disguises['Механик']
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Текущая маскировка: Механик\n\nДиана: Переоделся в механика? Интересно... Что ж, это позволит тебе пробраться на судно. Пройди через грузовой отсек и выйди на главную палубу.', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Передвижение", callback_data="tutorial_14"), InlineKeyboardButton("Взаимодействие", callback_data="pass")],
+            [InlineKeyboardButton("Инвентарь", callback_data="pass"), InlineKeyboardButton("Обыскать локацию", callback_data="pass")],
+            [InlineKeyboardButton("Статус", callback_data="pass"), InlineKeyboardButton("Испытания", callback_data="pass")],
+            [InlineKeyboardButton("Сохранить и выйти", callback_data="pass")]
+        ]))
+
+def tutorial_14(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Выберите локацию', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Пирс", callback_data="pass")],
+            [InlineKeyboardButton("Грузовой отсек", callback_data="tutorial_15")],
+            [InlineKeyboardButton("Отменить действие", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+    
+def tutorial_15(update: Update, context: CallbackContext):
+    user_id = update.callback_query.from_user['id']
+    users[user_id].player.current_location = users[user_id].locations['Грузовой отсек']
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text=location_status(users[user_id].player.current_location), reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Передвижение", callback_data="tutorial_16"), InlineKeyboardButton("Взаимодействие", callback_data="pass")],
+            [InlineKeyboardButton("Инвентарь", callback_data="pass"), InlineKeyboardButton("Обыскать локацию", callback_data="pass")],
+            [InlineKeyboardButton("Статус", callback_data="pass"), InlineKeyboardButton("Испытания", callback_data="pass")],
+            [InlineKeyboardButton("Сохранить и выйти", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+
+def tutorial_16(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Выберите локацию', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Пирс", callback_data="pass"), InlineKeyboardButton("Гараж", callback_data="pass")],
+            [InlineKeyboardButton("Моторный отсек", callback_data="pass"), InlineKeyboardButton("Главная палуба", callback_data="tutorial_17")],
+            [InlineKeyboardButton("Отменить действие", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+    
+def tutorial_17(update: Update, context: CallbackContext):
+    user_id = update.callback_query.from_user['id']
+    users[user_id].player.current_location = users[user_id].locations['Главная палуба']
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text=location_status(users[user_id].player.current_location) + '\n\nДиана: Похоже дальше охрана тебя не пропустит\, может ещё раз сделаешь этот трюк с переодеванием\? Мне кажется на кухне есть тот\, кто тебе нужен\.', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Передвижение", callback_data="tutorial_18"), InlineKeyboardButton("Взаимодействие", callback_data="pass")],
+            [InlineKeyboardButton("Инвентарь", callback_data="pass"), InlineKeyboardButton("Обыскать локацию", callback_data="pass")],
+            [InlineKeyboardButton("Статус", callback_data="pass"), InlineKeyboardButton("Испытания", callback_data="pass")],
+            [InlineKeyboardButton("Сохранить и выйти", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+
+def tutorial_18(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Выберите локацию', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Пирс", callback_data="pass"), InlineKeyboardButton("Грузовой отсек", callback_data="pass")],
+            [InlineKeyboardButton("Нижняя палуба", callback_data="pass"), InlineKeyboardButton("Кухня", callback_data="tutorial_19")],
+            [InlineKeyboardButton("Бар", callback_data="pass"), InlineKeyboardButton("Верхняя палуба", callback_data="pass")],
+            [InlineKeyboardButton("Отменить действие", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+    
+def tutorial_19(update: Update, context: CallbackContext):
+    user_id = update.callback_query.from_user['id']
+    users[user_id].player.current_location = users[user_id].locations['Кухня']
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text=location_status(users[user_id].player.current_location), reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Передвижение", callback_data="pass"), InlineKeyboardButton("Взаимодействие", callback_data="tutorial_20")],
+            [InlineKeyboardButton("Инвентарь", callback_data="pass"), InlineKeyboardButton("Обыскать локацию", callback_data="pass")],
+            [InlineKeyboardButton("Статус", callback_data="pass"), InlineKeyboardButton("Испытания", callback_data="pass")],
+            [InlineKeyboardButton("Сохранить и выйти", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+    
+def tutorial_20(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Выберите действие', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Усмирить", callback_data="tutorial_21")],
+            [InlineKeyboardButton("Назад", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+
+def tutorial_21(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Выберите цель', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Экпипаж яхты", callback_data="tutorial_22")],
+            [InlineKeyboardButton("Отменить действие", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+    
+def tutorial_22(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Действия видят 0 человек\n\nJames Potts (Экипаж яхты)', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Вырубить", callback_data="tutorial_23")],
+            [InlineKeyboardButton("Назад", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+    
+def tutorial_23(update: Update, context: CallbackContext):
+    user_id = update.callback_query.from_user['id']
+    users[user_id].player.found_disguises.append(users[user_id].npcs['James Potts'].disguise)
+    users[user_id].npcs['James Potts'].alive = False
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Цель устранена: Ewan Roberts\n\nДиана: Вижу ты уже привык к этому\, переодевайся и отправляйся на верхнюю палубу\.', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Передвижение", callback_data="pass"), InlineKeyboardButton("Взаимодействие", callback_data="pass")],
+            [InlineKeyboardButton("Инвентарь", callback_data="tutorial_24"), InlineKeyboardButton("Обыскать локацию", callback_data="pass")],
+            [InlineKeyboardButton("Статус", callback_data="pass"), InlineKeyboardButton("Испытания", callback_data="pass")],
+            [InlineKeyboardButton("Сохранить и выйти", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+
+def tutorial_24(update: Update, context: CallbackContext):
+    user_id = update.callback_query.from_user['id']
+    query = update.callback_query
+    query.answer()
+    result_string = make_heading('Инвентарь')
+    result_string += f'Сейчас в руках: {users[user_id].player.item.name}'
+    query.edit_message_text(text=result_string, reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("ICA 19 (1)", callback_data="pass")],
+            [InlineKeyboardButton("Удавка (1)", callback_data="pass")],
+            [InlineKeyboardButton("Монета (3)", callback_data="pass")],
+            [InlineKeyboardButton("Сменить маскировку", callback_data="tutorial_25")],
+            [InlineKeyboardButton("Выйти", callback_data="pass")]
+        ]))
+    
+def tutorial_25(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Текущая маскировка: Тактическая водолазка', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Тактическая водолазка", callback_data="pass")],
+            [InlineKeyboardButton("Механик", callback_data="pass")],
+            [InlineKeyboardButton("Экипаж яхты", callback_data="tutorial_26")]
+        ]), parse_mode='MarkdownV2')
+
+def tutorial_26(update: Update, context: CallbackContext):
+    user_id = update.callback_query.from_user['id']
+    users[user_id].player.disguise = users[user_id].disguises['Экипаж яхты']
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Текущая маскировка: Экипаж яхты', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Передвижение", callback_data="tutorial_27"), InlineKeyboardButton("Взаимодействие", callback_data="pass")],
+            [InlineKeyboardButton("Инвентарь", callback_data="pass"), InlineKeyboardButton("Обыскать локацию", callback_data="pass")],
+            [InlineKeyboardButton("Статус", callback_data="pass"), InlineKeyboardButton("Испытания", callback_data="pass")],
+            [InlineKeyboardButton("Сохранить и выйти", callback_data="pass")]
+        ]))
+
+def tutorial_27(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Выберите локацию', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Главная палуба", callback_data="tutorial_28")],
+            [InlineKeyboardButton("Отменить действие", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+    
+def tutorial_28(update: Update, context: CallbackContext):
+    user_id = update.callback_query.from_user['id']
+    users[user_id].player.current_location = users[user_id].locations['Главная палуба']
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text=location_status(users[user_id].player.current_location), reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Передвижение", callback_data="tutorial_29"), InlineKeyboardButton("Взаимодействие", callback_data="pass")],
+            [InlineKeyboardButton("Инвентарь", callback_data="pass"), InlineKeyboardButton("Обыскать локацию", callback_data="pass")],
+            [InlineKeyboardButton("Статус", callback_data="pass"), InlineKeyboardButton("Испытания", callback_data="pass")],
+            [InlineKeyboardButton("Сохранить и выйти", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+
+def tutorial_29(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Выберите локацию', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Пирс", callback_data="pass"), InlineKeyboardButton("Грузовой отсек", callback_data="pass")],
+            [InlineKeyboardButton("Нижняя палуба", callback_data="pass"), InlineKeyboardButton("Кухня", callback_data="pass")],
+            [InlineKeyboardButton("Бар", callback_data="pass"), InlineKeyboardButton("Верхняя палуба", callback_data="tutorial_30")],
+            [InlineKeyboardButton("Отменить действие", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+    
+def tutorial_30(update: Update, context: CallbackContext):
+    user_id = update.callback_query.from_user['id']
+    users[user_id].player.current_location = users[user_id].locations['Верхняя палуба']
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Для того, чтобы попасть в запретную зону, не меняя маскировку, можно использовать монеты, если конечно они есть у вас в инвентаре.')
+    context.bot.send_message(chat_id=update.effective_chat.id, text=location_status(users[user_id].player.current_location) + '\n\nДиана: А ты хорош\, но как ты попадешь в офис Риттера\?', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Передвижение", callback_data="pass"), InlineKeyboardButton("Взаимодействие", callback_data="pass")],
+            [InlineKeyboardButton("Инвентарь", callback_data="tutorial_31"), InlineKeyboardButton("Обыскать локацию", callback_data="pass")],
+            [InlineKeyboardButton("Статус", callback_data="pass"), InlineKeyboardButton("Испытания", callback_data="pass")],
+            [InlineKeyboardButton("Сохранить и выйти", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+
+def tutorial_31(update: Update, context: CallbackContext):
+    user_id = update.callback_query.from_user['id']
+    query = update.callback_query
+    query.answer()
+    result_string = make_heading('Инвентарь')
+    result_string += f'Сейчас в руках: {users[user_id].player.item.name}'
+    query.edit_message_text(text=result_string, reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("ICA 19 (1)", callback_data="pass")],
+            [InlineKeyboardButton("Удавка (1)", callback_data="pass")],
+            [InlineKeyboardButton("Монета (3)", callback_data="tutorial_32")],
+            [InlineKeyboardButton("Сменить маскировку", callback_data="pass")],
+            [InlineKeyboardButton("Выйти", callback_data="pass")]
+        ]))
+    
+def tutorial_32(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Сейчас в руках: Монета', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Передвижение", callback_data="pass"), InlineKeyboardButton("Взаимодействие", callback_data="tutorial_33")],
+            [InlineKeyboardButton("Инвентарь", callback_data="pass"), InlineKeyboardButton("Обыскать локацию", callback_data="pass")],
+            [InlineKeyboardButton("Статус", callback_data="pass"), InlineKeyboardButton("Испытания", callback_data="pass")],
+            [InlineKeyboardButton("Сохранить и выйти", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+
+def tutorial_33(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Выберите действие', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Бросить для отвлечения", callback_data="tutorial_34")],
+            [InlineKeyboardButton("Назад", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+    
+def tutorial_34(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='На локации слишком много людей', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Отвлечь для перемещения", callback_data="tutorial_35")],
+            [InlineKeyboardButton("Отменить действие", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+    
+def tutorial_35(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Выберите локацию', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Главная палуба", callback_data="pass")],
+            [InlineKeyboardButton("Офис Риттера", callback_data="tutorial_36")],
+            [InlineKeyboardButton("Капитанский мостик", callback_data="pass")],
+            [InlineKeyboardButton("Отменить действие", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+
+def tutorial_36(update: Update, context: CallbackContext):
+    user_id = update.callback_query.from_user['id']
+    users[user_id].player.current_location = users[user_id].locations['Верхняя палуба']
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text=make_heading('Офис Риттера') + '\nНа локации находятся:\n\nKalvin Ritter\n\nДиана: Поразительно... Он в твоём полном расположении\, может задущищь его удавкой\?', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Передвижение", callback_data="pass"), InlineKeyboardButton("Взаимодействие", callback_data="pass")],
+            [InlineKeyboardButton("Инвентарь", callback_data="tutorial_37"), InlineKeyboardButton("Обыскать локацию", callback_data="pass")],
+            [InlineKeyboardButton("Статус", callback_data="pass"), InlineKeyboardButton("Испытания", callback_data="pass")],
+            [InlineKeyboardButton("Сохранить и выйти", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+
+def tutorial_37(update: Update, context: CallbackContext):
+    user_id = update.callback_query.from_user['id']
+    query = update.callback_query
+    query.answer()
+    result_string = make_heading('Инвентарь')
+    result_string += f'Сейчас в руках: {users[user_id].player.item.name}'
+    query.edit_message_text(text=result_string, reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("ICA 19 (1)", callback_data="pass")],
+            [InlineKeyboardButton("Удавка (1)", callback_data="tutorial_38")],
+            [InlineKeyboardButton("Монета (3)", callback_data="pass")],
+            [InlineKeyboardButton("Сменить маскировку", callback_data="pass")],
+            [InlineKeyboardButton("Выйти", callback_data="pass")]
+        ]))
+    
+def tutorial_38(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Сейчас в руках: Удавка', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Передвижение", callback_data="pass"), InlineKeyboardButton("Взаимодействие", callback_data="tutorial_39")],
+            [InlineKeyboardButton("Инвентарь", callback_data="pass"), InlineKeyboardButton("Обыскать локацию", callback_data="pass")],
+            [InlineKeyboardButton("Статус", callback_data="pass"), InlineKeyboardButton("Испытания", callback_data="pass")],
+            [InlineKeyboardButton("Сохранить и выйти", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+    
+def tutorial_39(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Выберите цель', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Kalvin Ritter", callback_data="tutorial_40")],
+            [InlineKeyboardButton("Отменить действие", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+    
+def tutorial_40(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Действия видят 0 человек\n\nKalvin Ritter', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Убить", callback_data="tutorial_41")],
+            [InlineKeyboardButton("Назад", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+    
+def tutorial_41(update: Update, context: CallbackContext):
+    user_id = update.callback_query.from_user['id']
+    users[user_id].targets['Kalvin Ritter'].alive = False
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Диана: Kalvin Ritter больше нас не побеспокоит. Отличная работа 47-й.')
+    context.bot.send_message(chat_id=update.effective_chat.id, text='Цель устранена: Kalvin Ritter\n\nДиана: Что ж\, ты устранил цель\, осталось покинуть зону задания\. Спустись на пирс через главную палубу\.', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Передвижение", callback_data="tutorial_42"), InlineKeyboardButton("Взаимодействие", callback_data="pass")],
+            [InlineKeyboardButton("Инвентарь", callback_data="pass"), InlineKeyboardButton("Обыскать локацию", callback_data="pass")],
+            [InlineKeyboardButton("Статус", callback_data="pass"), InlineKeyboardButton("Испытания", callback_data="pass")],
+            [InlineKeyboardButton("Сохранить и выйти", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+
+def tutorial_42(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text='Выберите локацию', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Верхняя палуба", callback_data="tutorial_43")],
+            [InlineKeyboardButton("Отменить действие", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
+    
+def tutorial_43(update: Update, context: CallbackContext):
+    user_id = update.callback_query.from_user['id']
+    users[user_id].player.current_location = users[user_id].locations['Верхняя палуба']
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text=location_status(users[user_id].player.current_location), reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Передвижение", callback_data="pass"), InlineKeyboardButton("Взаимодействие", callback_data="pass")],
+            [InlineKeyboardButton("Инвентарь", callback_data="tutorial_31"), InlineKeyboardButton("Обыскать локацию", callback_data="pass")],
+            [InlineKeyboardButton("Статус", callback_data="pass"), InlineKeyboardButton("Испытания", callback_data="pass")],
+            [InlineKeyboardButton("Сохранить и выйти", callback_data="pass")]
+        ]), parse_mode='MarkdownV2')
 
 
 
@@ -1468,17 +2065,20 @@ def lifeboat_kill_1(update: Update, context: CallbackContext):
     user_id = update.callback_query.from_user['id']
     query = update.callback_query
     query.answer()
-    users[user_id].events['Сбросить шлюпку'].completed = True
-    if users[user_id].targets['Kalvin Ritter'].alive:
-        if users[user_id].challenges['Использовать только при ЧП'].completed == False:
-            query.edit_message_text(text=users[user_id].challenges['Использовать только при ЧП'].achieved(update=update, context=context), parse_mode='MarkdownV2')
-            users[user_id].player_lvl += users[user_id].challenges['Использовать только при ЧП'].xp
-            context.bot.send_animation(chat_id=update.effective_chat.id, animation=open('hitman_tg_bot/assets/lifeboat_kill.mp4', 'rb'))
-            context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].targets['Kalvin Ritter'].kill(), reply_markup=(choose_action_keyboard(update=update, context=context)))
+    if users[user_id].items['Лом'] in users[user_id].player.inventory:
+        users[user_id].events['Сбросить шлюпку'].completed = True
+        if users[user_id].targets['Kalvin Ritter'].alive:
+            if users[user_id].challenges['Использовать только при ЧП'].completed == False:
+                query.edit_message_text(text=users[user_id].challenges['Использовать только при ЧП'].achieved(update=update, context=context), parse_mode='MarkdownV2')
+                users[user_id].player_lvl += users[user_id].challenges['Использовать только при ЧП'].xp
+                context.bot.send_animation(chat_id=update.effective_chat.id, animation=open('hitman_tg_bot/assets/lifeboat_kill.mp4', 'rb'))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].targets['Kalvin Ritter'].kill(), reply_markup=(choose_action_keyboard(update=update, context=context)))
+            else:
+                query.edit_message_text(text=users[user_id].targets['Kalvin Ritter'].kill(), reply_markup=(choose_action_keyboard(update=update, context=context)))
         else:
-            query.edit_message_text(text=users[user_id].targets['Kalvin Ritter'].kill(), reply_markup=(choose_action_keyboard(update=update, context=context)))
+            query.edit_message_text(text='Выберите действие', reply_markup=(choose_action_keyboard(update=update, context=context)))
     else:
-        query.edit_message_text(text='Выберите действие', reply_markup=(choose_action_keyboard(update=update, context=context)))
+        query.edit_message_text(text='У вас нет лома', reply_markup=(skip_choose_action_keyboard(update=update, context=context, skip_lifeboat=True)))
 
 
 def robot_kill_2(update: Update, context: CallbackContext):
@@ -1606,7 +2206,7 @@ def remove_item(update: Update, context: CallbackContext):
     query = update.callback_query
     users[user_id].player.item = users[user_id].items['Нет предмета']
     query.answer()
-    query.edit_message_text(text=f'Сейчас в руках: {users[user_id].player.item.name}', reply_markup=(choose_action_keyboard(update=update, context=context)))
+    query.edit_message_text(text=f'Сейчас в руках: {users[user_id].player.item.name}', reply_markup=(inventory_keyboard(update=update, context=context)))
 
 def change_disguise(update: Update, context: CallbackContext):
     """Смена маскировки"""
@@ -1717,8 +2317,8 @@ def kill(update: Update, context: CallbackContext):
         users[user_id].player.inventory.remove(users[user_id].player.item)
         users[user_id].thrown_weapon = False
     query = update.callback_query
-    data = query.data.replace('con_knock', '')[:-1]
-    chance = int(query.data.replace('con_knock', '')[-1])
+    data = query.data.replace('con_kill', '')[:-1]
+    chance = int(query.data.replace('con_kill', '')[-1])
     if data in list(users[user_id].npcs.keys()):
         target = users[user_id].npcs[data]
         users[user_id].player.found_disguises.append(target.disguise)
@@ -2016,6 +2616,7 @@ def no_disguise_move(update: Update, context: CallbackContext):
 
 def combat(update: Update, context: CallbackContext, start_string='', type='edit'):
     """Бой"""
+    start_string = make_heading('Бой') + start_string
     user_id = update.callback_query.from_user['id']
     users[user_id].time += 10
     enemies = []
@@ -2027,22 +2628,22 @@ def combat(update: Update, context: CallbackContext, start_string='', type='edit
     if type == 'edit':
         if users[user_id].player.health == 0:
             query.answer()
-            query.edit_message_text(text='Вы умерли. Миссия провалена.')
+            query.edit_message_text(text='Вы умерли. Миссия провалена.', parse_mode='MarkdownV2')
         if enemies == []:
             users[user_id].player.health = 100
             query.answer()
-            query.edit_message_text(text=start_string + f'Бой закончился.\n\nУбито невинных: {users[user_id].kills}\nНайдено тел: {users[user_id].bodies}', reply_markup=(choose_action_keyboard(update=update, context=context)))
+            query.edit_message_text(text=start_string + f'*_Бой закончился_*\.\n\nУбито невинных: {users[user_id].kills}\nНайдено тел: {users[user_id].bodies}', reply_markup=(choose_action_keyboard(update=update, context=context)), parse_mode='MarkdownV2')
         else:
             query.answer()
-            query.edit_message_text(text=start_string + f'Выберите оружие', reply_markup=(choose_weapon_keyboard(update=update, context=context)))
+            query.edit_message_text(text=start_string + f'Выберите оружие', reply_markup=(choose_weapon_keyboard(update=update, context=context)), parse_mode='MarkdownV2')
     elif type == 'add':
         if users[user_id].player.health == 0:
-            context.bot.send_message(chat_id=update.effective_chat.id, text='Вы умерли. Миссия провалена.')
+            context.bot.send_message(chat_id=update.effective_chat.id, text='Вы умерли. Миссия провалена.', parse_mode='MarkdownV2')
         if enemies == []:
             users[user_id].player.health = 100
-            context.bot.send_message(chat_id=update.effective_chat.id, text=start_string + f'Бой закончился.\n\nУбито невинных: {users[user_id].kills}\nНайдено тел: {users[user_id].bodies}', reply_markup=(choose_action_keyboard(update=update, context=context)))
+            context.bot.send_message(chat_id=update.effective_chat.id, text=start_string + f'*_Бой закончился_*\.\n\nУбито невинных: {users[user_id].kills}\nНайдено тел: {users[user_id].bodies}', reply_markup=(choose_action_keyboard(update=update, context=context)), parse_mode='MarkdownV2')
         else:
-            context.bot.send_message(chat_id=update.effective_chat.id, text=start_string + f'Выберите оружие', reply_markup=(choose_weapon_keyboard(update=update, context=context)))
+            context.bot.send_message(chat_id=update.effective_chat.id, text=start_string + f'Выберите оружие', reply_markup=(choose_weapon_keyboard(update=update, context=context)), parse_mode='MarkdownV2')
 
 def combat_chance(update: Update, context: CallbackContext):
     """Проверка вероятности во время боя"""
@@ -2296,7 +2897,7 @@ def help(update: Update, context: CallbackContext):
     """Вывод инструкции к игре"""
     context.bot.send_photo(chat_id=update.effective_chat.id, photo='https://media.hitmaps.com/img/hitman3/story/background_season2.jpg')
     context.bot.send_message(chat_id=update.effective_chat.id, text=make_heading('Обучение') + '*_Передвежение_* – перемещение по локациям игры\. Иногда данное действие требует некоторых условий, таких как нужной маскировки или небходимого предмета\.\n\n*_Взаимодействие_* – использование текущего предмета\. Может являться нелегальным действием\.\n\n*_Инвентарь_* – открытие меню с вашими предметами и текущей маскировкой\.\n\n*_Обыскать локацию_* – добавляет все предметы на текущей локации вам в инвентарь\.\n\n*_Статус_* – показывает нахождение целей задания, а также состояние текущей локации\.\n\n*_Испытания_* – открывает список со всеми испытаниями\. Выполненные испытания отмечаются отдельно\.\n\n*_Сохранить и выйти_* – завершает игру, сохраняя текущие выполненные испытания, а также уровень игрока\.\n\n*_Уровень игрока_* – за выполнение испытаний, а также прохождения уровня на высокий рейтинг у вас будут появляться новые стартовые локации, и появится возможность брать с собой снаряжение\.\n\n*_Рейтинг задания_* – убийство невинных, количество найденных тел и раз, когда вас заметили – всё это снижает рейтинг прохождения\.\n\n*_Система шансов_* – успех некоторых действий зависит от пределенного шанса, написанного в скобках рядом с ним\. Шанс является вероятностью выполнения действия, то есть десйствие с шансом "\(7/10\)" будет выполняться с вероятностью 0,7\.', parse_mode='MarkdownV2')
-    context.bot.send_message(chat_id=update.effective_chat.id, text='Пройти обучающий уровень?', reply_markup=accept_tutorial_keyboard())
+    #context.bot.send_message(chat_id=update.effective_chat.id, text='Пройти обучающий уровень?', reply_markup=accept_tutorial_keyboard())
 
 def support(update: Update, context: CallbackContext):
     """Вывод поддержки авторов"""
@@ -2363,7 +2964,7 @@ def start(update: Update, context: CallbackContext):
     created = int(tm.time())
     if adapter.search('users', f'id={user_id}') == 0:
         adapter.insert('users', [
-            f'user_id={user_id}',
+            f'id={user_id}',
             f'chat_id={chat_id}',
             f'created={created}',
             f'user_nickname={user_nickname}',
@@ -2522,6 +3123,7 @@ def run_bot():
     dispatcher.add_handler(CallbackQueryHandler(drink_kill_1, pattern='ОНАП'))
     dispatcher.add_handler(CallbackQueryHandler(drink_kill_2, pattern='Пойти за Кэлвином'))
     dispatcher.add_handler(CallbackQueryHandler(drink_kill_3, pattern='Утопить Кэлвина'))
+    dispatcher.add_handler(CallbackQueryHandler(skip_choose_action_menu, pattern=is_skip))
 
     updater.start_polling()
     updater.idle()

@@ -31,4 +31,4 @@ class Target:
     
     def kill(self):
         self.alive = False
-        return f'{self.name} больше нас не побеспокоит. Отличная работа, 47-й.'
+        return f'Диана: {self.name} больше нас не побеспокоит. Отличная работа, 47-й.'
