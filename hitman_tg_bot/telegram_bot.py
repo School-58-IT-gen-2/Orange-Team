@@ -94,7 +94,10 @@ def location_status(update: Update, context: CallbackContext, location: Location
                 result_string += f'\n{location.witnesses} Гость'
         for i in list(users[user_id].disguises.values()):
             if i.name in location_disguises:
-                result_string += f'\n{location_disguises.count(i.name)} {i.name}'
+                if i.name in ['Джейсон Портман', 'Амос Декстер', 'Терри Норфолк']:
+                    result_string += f'\n{i.name}'
+                else:
+                    result_string += f'\n{location_disguises.count(i.name)} {i.name}'
         if users[user_id].mission == 'hokkaido':
             if users[user_id].targets['Yuki Yamazaki'].alive == False and users[user_id].targets['Erich Soders'].alive == False and users[user_id].events['Все цели убиты'].completed == False:
                 users[user_id].events['Все цели убиты'].completed = True
@@ -285,8 +288,6 @@ def safe_move_menu(update: Update, context: CallbackContext):
     query.edit_message_text(text='Выберите локацию', reply_markup=(safe_move_keyboard(update=update, context=context)))
 
 def move_menu(update: Update, context: CallbackContext):
-    user_id = update.callback_query.from_user['id']
-    users[user_id].time += 5
     query = update.callback_query
     query.answer()
     query.edit_message_text(text='Выберите локацию', reply_markup=(move_keyboard(update=update, context=context)))
@@ -310,7 +311,7 @@ def hide_menu(update: Update, context: CallbackContext):
 
 def loot_menu(update: Update, context: CallbackContext):
     user_id = update.callback_query.from_user['id']
-    users[user_id].time += 10
+    users[user_id].time += 5
     query = update.callback_query
     query.answer()
     users[user_id].player.inventory += users[user_id].player.current_location.items
@@ -411,7 +412,6 @@ def choose_weapon_action_menu(update: Update, context: CallbackContext):
 
 def interact_menu(update: Update, context: CallbackContext):
     user_id = update.callback_query.from_user['id']
-    users[user_id].time += 10
     query = update.callback_query
     query.answer()
     if users[user_id].player.item.usage == []:
@@ -910,9 +910,30 @@ def kill_keyboard(update: Update, context: CallbackContext):
         if i.move(users[user_id].time) == users[user_id].player.current_location.name and i.alive == True:
             location_disguises.append(i.name)
             location_npcs.append(i.name)
-    keyboard = []
+    npc_disguises = {}
+    for i in location_disguises:
+        npc_disguises[i] = 1
+    npcs = []
+    npc_values = []
     for i in range(len(location_npcs)):
-        keyboard.append([InlineKeyboardButton(f"{location_disguises[i]}", callback_data=location_npcs[i] + 'KILL')])
+        if location_disguises[i] in ['Джейсон Портман', 'Амос Декстер', 'Терри Норфолк'] or location_disguises[i] in list(users[user_id].targets.keys()):
+            npcs.append(f"{location_disguises[i]}")
+        else:
+            npcs.append(f"{location_disguises[i]} {npc_disguises[location_disguises[i]]}")
+        npc_disguises[location_disguises[i]] += 1
+        npc_values.append(location_npcs[i])
+    keyboard = []
+    if len(npcs) > 3:
+        if len(npcs) % 2 == 0:
+            for i in range(0, len(npcs), 2):
+                keyboard.append([InlineKeyboardButton(f'{npcs[i]}', callback_data=f'{npc_values[i]}' + 'KILL'), InlineKeyboardButton(f'{npcs[i + 1]}', callback_data=f'{npc_values[i + 1]}' + 'KILL')])
+        else:
+            for i in range(0, len(npcs) - 1, 2):
+                keyboard.append([InlineKeyboardButton(f'{npcs[i]}', callback_data=f'{npc_values[i]}' + 'KILL'), InlineKeyboardButton(f'{npcs[i + 1]}', callback_data=f'{npc_values[i + 1]}' + 'KILL')])
+            keyboard.append([InlineKeyboardButton(f'{npcs[-1]}', callback_data=f'{npc_values[-1]}' + 'KILL')])
+    else:
+        for i in range(len(npcs)):
+            keyboard.append([InlineKeyboardButton(f"{npcs[i]}", callback_data=npc_values[i] + 'KILL')])
     keyboard.append([InlineKeyboardButton(f"Отменить действие", callback_data=f"Взаимодействие")])
     return InlineKeyboardMarkup(keyboard)
 
@@ -923,9 +944,30 @@ def knock_out_keyboard(update: Update, context: CallbackContext):
     for i in find_location_npcs(update=update, context=context, location=users[user_id].player.current_location):
         location_disguises.append(i.disguise.name)
         location_npcs.append(i.name)
-    keyboard = []
+    npc_disguises = {}
+    for i in location_disguises:
+        npc_disguises[i] = 1
+    npcs = []
+    npc_values = []
     for i in range(len(location_npcs)):
-        keyboard.append([InlineKeyboardButton(f"{location_disguises[i]}", callback_data=location_npcs[i] + 'KNOCK')])
+        if location_disguises[i] in ['Джейсон Портман', 'Амос Декстер', 'Терри Норфолк']:
+            npcs.append(f"{location_disguises[i]}")
+        else:
+            npcs.append(f"{location_disguises[i]} {npc_disguises[location_disguises[i]]}")
+        npc_disguises[location_disguises[i]] += 1
+        npc_values.append(location_npcs[i])
+    keyboard = []
+    if len(npcs) > 3:
+        if len(npcs) % 2 == 0:
+            for i in range(0, len(npcs), 2):
+                keyboard.append([InlineKeyboardButton(f'{npcs[i]}', callback_data=f'{npc_values[i]}' + 'KNOCK'), InlineKeyboardButton(f'{npcs[i + 1]}', callback_data=f'{npc_values[i + 1]}' + 'KNOCK')])
+        else:
+            for i in range(0, len(npcs) - 1, 2):
+                keyboard.append([InlineKeyboardButton(f'{npcs[i]}', callback_data=f'{npc_values[i]}' + 'KNOCK'), InlineKeyboardButton(f'{npcs[i + 1]}', callback_data=f'{npc_values[i + 1]}' + 'KNOCK')])
+            keyboard.append([InlineKeyboardButton(f'{npcs[-1]}', callback_data=f'{npc_values[-1]}' + 'KNOCK')])
+    else:
+        for i in range(len(npcs)):
+            keyboard.append([InlineKeyboardButton(f"{npcs[i]}", callback_data=npc_values[i] + 'KNOCK')])
     keyboard.append([InlineKeyboardButton(f"Отменить действие", callback_data=f"Взаимодействие")])
     return InlineKeyboardMarkup(keyboard)
 
@@ -1266,7 +1308,7 @@ def tutorial_3(update: Update, context: CallbackContext):
     query = update.callback_query
     query.answer()
     user_id = update.callback_query.from_user['id']
-    users[user_id].time += 10
+    users[user_id].time += 5
     query = update.callback_query
     query.answer()
     users[user_id].player.inventory += users[user_id].player.current_location.items
@@ -2174,6 +2216,7 @@ def save_and_quit(update: Update, context: CallbackContext):
 def use(update: Update, context: CallbackContext):
     """Использовать предмет"""
     user_id = update.callback_query.from_user['id']
+    users[user_id].time += 5
     query = update.callback_query
     query.answer()
     if users[user_id].player.item.name == 'Пульт от нейрочипа' and users[user_id].events['Уничтожить сердце'].completed == False and users[user_id].player.current_location.name == 'Морг':
@@ -2294,6 +2337,7 @@ def distract_knock_out(update: Update, context: CallbackContext):
 def knock_out(update: Update, context: CallbackContext):
     """Вырубить предметом"""
     user_id = update.callback_query.from_user['id']
+    users[user_id].time += 5
     query = update.callback_query
     data = query.data.replace('con_knock', '')[:-1]
     chance = int(query.data.replace('con_knock', '')[-1])
@@ -2313,12 +2357,14 @@ def knock_out(update: Update, context: CallbackContext):
 def kill(update: Update, context: CallbackContext):
     """Убить предметом"""
     user_id = update.callback_query.from_user['id']
+    users[user_id].time += 5
     if users[user_id].thrown_weapon:
         users[user_id].player.inventory.remove(users[user_id].player.item)
         users[user_id].thrown_weapon = False
     query = update.callback_query
     data = query.data.replace('con_kill', '')[:-1]
     chance = int(query.data.replace('con_kill', '')[-1])
+    edit = True
     if data in list(users[user_id].npcs.keys()):
         target = users[user_id].npcs[data]
         users[user_id].player.found_disguises.append(target.disguise)
@@ -2329,11 +2375,15 @@ def kill(update: Update, context: CallbackContext):
             if data == 'Erich Soders' and (users[user_id].player.item.name == 'Bartoli 75R' or users[user_id].player.item.name == 'ICA 19') and users[user_id].challenges['Личное прощание'].completed == False:
                 context.bot.send_message(chat_id=update.effective_chat.id, text=users[user_id].challenges['Личное прощание'].achieved(update=update, context=context), parse_mode='MarkdownV2')
                 users[user_id].player_lvl += users[user_id].challenges['Личное прощание'].xp
+        edit = False
         context.bot.send_message(chat_id=update.effective_chat.id, text=target.kill())
     target.alive = False
     if chance > 0:
         users[user_id].bodies += 1
-        combat(update=update, context=context, start_string=f'Цель устранена: {target.name}\n\n', type='add')
+        if edit:
+            combat(update=update, context=context, start_string=f'Цель устранена: {target.name}\n\n')
+        else:
+            combat(update=update, context=context, start_string=f'Цель устранена: {target.name}\n\n', type='add')
     else:
         if users[user_id].mission == 'hokkaido':
             if data == 'Erich Soders' and (users[user_id].player.item.name == 'Bartoli 75R' or users[user_id].player.item.name == 'ICA 19'):
@@ -2350,6 +2400,7 @@ def move(update: Update, context: CallbackContext):
     """Передвижение по локациям"""
     user_id = update.callback_query.from_user['id']
     query = update.callback_query
+    users[user_id].time += 5
     query.answer()
     move_to_location = users[user_id].locations[query.data.replace('basic_move', '')]
     edit = True
@@ -2618,7 +2669,7 @@ def combat(update: Update, context: CallbackContext, start_string='', type='edit
     """Бой"""
     start_string = make_heading('Бой') + start_string
     user_id = update.callback_query.from_user['id']
-    users[user_id].time += 10
+    users[user_id].time += 5
     enemies = []
     query = update.callback_query
 
