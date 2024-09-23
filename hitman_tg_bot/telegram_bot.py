@@ -25,7 +25,7 @@ def create_locations_values(challenges: dict, npcs: dict, targets: dict, events:
     items_values = list(items.values())
     user_items = {list(items.keys())[i]: Item(name=items_values[i].name, usage=items_values[i].usage, legal=items_values[i].legal, lethal=items_values[i].lethal, weapon=items_values[i].weapon) for i in range(len(items))}
     locations_values = list(locations.values())
-    user_locations = {list(locations.keys())[i]: Location(name=locations_values[i].name, connetcted_locations=locations_values[i].connected_locations, disguise=[user_disguises[j.name] for j in locations_values[i].disguise], witnesses=locations_values[i].witnesses, items=[user_items[j.name] for j in locations_values[i].items], url=locations_values[i].url) for i in range(len(locations))}
+    user_locations = {list(locations.keys())[i]: Location(name=locations_values[i].name, connetcted_locations=locations_values[i].connected_locations, disguise=[user_disguises[j.name] for j in locations_values[i].disguise], witnesses=locations_values[i].witnesses, items=[user_items[j.name] for j in locations_values[i].items], path=locations_values[i].path) for i in range(len(locations))}
     npcs_values = list(npcs.values())
     user_npcs = {list(npcs.keys())[i]: NPC(name=npcs_values[i].name, disguise=user_disguises[npcs_values[i].disguise.name], route=npcs_values[i].route, witness_chance=npcs_values[i].witness_chance, guard=npcs_values[i].guard) for i in range(len(npcs))}
     targets_values = list(targets.values())
@@ -385,6 +385,7 @@ def choose_illegal_item_menu(update: Update, context: CallbackContext):
             users[user_id].illegal_item = query.data[:-4]
             query.edit_message_text(text=f'Вы собираетесь взять нелегальный предмет. Достать предмет?', reply_markup=(choose_illegal_item_keyboard()))
         else:
+            users[user_id].player.item = users[user_id].items[query.data[:-4]]
             query.edit_message_text(text=f'Сейчас в руках: {users[user_id].player.item.name}', reply_markup=(choose_action_keyboard(update=update, context=context)))
     elif users[user_id].mission == 'ica':
         if users[user_id].player.disguise.name != 'Охранник яхты' and users[user_id].player.disguise.name != 'Телохранитель':
@@ -639,7 +640,7 @@ def choose_action_keyboard(update: Update, context: CallbackContext):
             users[user_id].player_lvl += users[user_id].challenges['Исследуйте Хоккайдо'].xp
         if users[user_id].events['Убийство в сауне'].completed == False and users[user_id].player.current_location.name == 'Водоснабжение спа':
             context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=sauna_kill_keyboard_1())
-        elif users[user_id].events['Все цели убиты'].completed == True and (users[user_id].player.current_location.name == 'Канатная дорога' or users[user_id].player.current_location.name == 'Гараж' or users[user_id].player.current_location.name == 'Вертолетная площадка' or users[user_id].player.current_location.name == 'Горная тропа'):
+        elif users[user_id].events['Все цели убиты'].completed == True and (users[user_id].player.current_location.name == 'Канатная дорога' or users[user_id].player.current_location.name == 'Гараж' or users[user_id].player.current_location.name == 'Вертолётная площадка' or users[user_id].player.current_location.name == 'Горная тропа'):
             context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=(exit_mission_keyboard(update=update, context=context)))
         elif users[user_id].events['Вырубить Джейсона'].completed == False and users[user_id].player.current_location.name == 'Холл' and users[user_id].player.disguise.name == 'VIP - пациент' and users[user_id].npcs['Jason Portman'].alive:
             users[user_id].events['Вырубить Джейсона'].completed = True
@@ -665,7 +666,7 @@ def choose_action_keyboard(update: Update, context: CallbackContext):
             context.bot.send_message(chat_id=update.effective_chat.id, text='Ввести смертельные стволовые клетки?', reply_markup=stem_cells_keyboard())
         elif users[user_id].events['Убийство в операционной'].completed == False and users[user_id].player.current_location.name == 'Операционная' and users[user_id].player.disguise.name == 'Главный хирург' and users[user_id].targets['Erich Soders'].alive:
             context.bot.send_message(chat_id=update.effective_chat.id, text='В операционной находится пульт управления робо-руками, проводящими операцию.', reply_markup=robot_kill_keyboard_1())
-        elif users[user_id].events['Устранение главного хирурга'].completed == False and users[user_id].player.current_location.name == 'Вертолетная площадка' and users[user_id].player.disguise.name == 'Пилот' and users[user_id].npcs['Nicholas Laurent'].alive:
+        elif users[user_id].events['Устранение главного хирурга'].completed == False and users[user_id].player.current_location.name == 'Вертолётная площадка' and users[user_id].player.disguise.name == 'Пилот' and users[user_id].npcs['Nicholas Laurent'].alive:
             context.bot.send_message(chat_id=update.effective_chat.id, text='Главный хирург вышел из мед-комплекса\n\nГлавный хирург: У тебя еще остались те таблетки?\n47-й: Конечно, следуй за мной.', reply_markup=surgeon_knock_out_keyboard_1())
             users[user_id].events['Устранение главного хирурга'].completed = True
         elif users[user_id].events['Убийство во время йоги'].completed == False and users[user_id].player.current_location.name == 'Зона отдыха' and users[user_id].player.disguise.name == 'Инструктор по йоге' and users[user_id].targets['Yuki Yamazaki'].alive:
@@ -700,10 +701,12 @@ def skip_choose_action_keyboard(update: Update, context: CallbackContext, skip_s
     user_id = update.callback_query.from_user['id']
     if users[user_id].mission == 'hokkaido':
         if users[user_id].disguises['Охранник'] in users[user_id].player.found_disguises or users[user_id].disguises['Телохранитель'] in users[user_id].player.found_disguises:
-            users[user_id].player.inventory.append(users[user_id].items['Bartoli 75R'])
+            if users[user_id].items['Bartoli 75R'] in users[user_id].player.inventory == False:
+                users[user_id].player.inventory.append(users[user_id].items['Bartoli 75R'])
     elif users[user_id].mission == 'ica':
         if users[user_id].disguises['Охранник яхты'] in users[user_id].player.found_disguises or users[user_id].disguises['Телохранитель'] in users[user_id].player.found_disguises:
-            users[user_id].player.inventory.append(users[user_id].items['Bartoli 75R'])
+            if users[user_id].items['Bartoli 75R'] in users[user_id].player.inventory == False:
+                users[user_id].player.inventory.append(users[user_id].items['Bartoli 75R'])
     unlocked_disguises = 0
     for i in list(users[user_id].disguises.values()):
         if i.unlocked:
@@ -721,7 +724,7 @@ def skip_choose_action_keyboard(update: Update, context: CallbackContext, skip_s
             users[user_id].player_lvl += users[user_id].challenges['Исследуйте Хоккайдо'].xp
         if users[user_id].events['Убийство в сауне'].completed == False and users[user_id].player.current_location.name == 'Водоснабжение спа' and skip_sauna == False:
                 context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=sauna_kill_keyboard_1())
-        elif users[user_id].events['Все цели убиты'].completed == True and (users[user_id].player.current_location.name == 'Канатная дорога' or users[user_id].player.current_location.name == 'Гараж' or users[user_id].player.current_location.name == 'Вертолетная площадка' or users[user_id].player.current_location.name == 'Горная тропа') and skip_hokkaido_exit == False:
+        elif users[user_id].events['Все цели убиты'].completed == True and (users[user_id].player.current_location.name == 'Канатная дорога' or users[user_id].player.current_location.name == 'Гараж' or users[user_id].player.current_location.name == 'Вертолётная площадка' or users[user_id].player.current_location.name == 'Горная тропа') and skip_hokkaido_exit == False:
                 context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=(exit_mission_keyboard(update=update, context=context)))
         elif users[user_id].events['Вырубить Джейсона'].completed == False and users[user_id].player.current_location.name == 'Холл' and users[user_id].player.disguise.name == 'VIP - пациент' and users[user_id].npcs['Jason Portman'].alive:
             users[user_id].events['Вырубить Джейсона'].completed = True
@@ -748,7 +751,7 @@ def skip_choose_action_keyboard(update: Update, context: CallbackContext, skip_s
             context.bot.send_message(chat_id=update.effective_chat.id, text='Ввести смертельные стволовые клетки?', reply_markup=stem_cells_keyboard())
         elif users[user_id].events['Убийство в операционной'].completed == False and users[user_id].player.current_location.name == 'Операционная' and users[user_id].player.disguise.name == 'Главный хирург' and users[user_id].targets['Erich Soders'].alive and skip_operation == False:
             context.bot.send_message(chat_id=update.effective_chat.id, text='В операционной находится пульт управления робо-руками, проводящими операцию.', reply_markup=robot_kill_keyboard_1())
-        elif users[user_id].events['Устранение главного хирурга'].completed == False and users[user_id].player.current_location.name == 'Вертолетная площадка' and users[user_id].player.disguise.name == 'Пилот' and users[user_id].npcs['Nicholas Laurent'].alive:
+        elif users[user_id].events['Устранение главного хирурга'].completed == False and users[user_id].player.current_location.name == 'Вертолётная площадка' and users[user_id].player.disguise.name == 'Пилот' and users[user_id].npcs['Nicholas Laurent'].alive:
             context.bot.send_message(chat_id=update.effective_chat.id, text='Главный хирург вышел из мед-комплекса\n\nГлавный хирург: У тебя еще остались те таблетки?\n47-й: Конечно, следуй за мной.', reply_markup=surgeon_knock_out_keyboard_1())
             users[user_id].events['Устранение главного хирурга'].completed = True
         elif users[user_id].events['Убийство во время йоги'].completed == False and users[user_id].player.current_location.name == 'Зона отдыха' and users[user_id].player.disguise.name == 'Инструктор по йоге' and users[user_id].targets['Yuki Yamazaki'].alive:
@@ -1124,7 +1127,8 @@ def hokkaido_briefing_keyboard_6(update: Update, context: CallbackContext):
     return InlineKeyboardMarkup([[InlineKeyboardButton('Подготовка к миссии', callback_data='Выбор снаряжения')]])
 
 def start_keyboard():
-    return InlineKeyboardMarkup([[InlineKeyboardButton('Комплекс МКА, ЗАСЕКРЕЧЕНО', callback_data='МКАЗАС')], [InlineKeyboardButton('Хоккайдо, Япония', callback_data='ХоккЯП')]])
+    #[InlineKeyboardButton('Комплекс МКА, ЗАСЕКРЕЧЕНО', callback_data='МКАЗАС')], 
+    return InlineKeyboardMarkup([[InlineKeyboardButton('Хоккайдо, Япония', callback_data='ХоккЯП')]])
 
 def choose_tutorial_keyboard():
     #[InlineKeyboardButton('Тренировка под наблюдением', callback_data='ТПН')], 
@@ -1406,7 +1410,6 @@ def tutorial_11(update: Update, context: CallbackContext):
     query.edit_message_text(text=result_string, reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("ICA 19 (1)", callback_data="pass")],
             [InlineKeyboardButton("Удавка (1)", callback_data="pass")],
-            [InlineKeyboardButton("Монета (3)", callback_data="pass")],
             [InlineKeyboardButton("Сменить маскировку", callback_data="tutorial_12")],
             [InlineKeyboardButton("Выйти", callback_data="pass")]
         ]))
@@ -2431,7 +2434,7 @@ def move(update: Update, context: CallbackContext):
                 query.edit_message_text(text=make_heading('Расписание занятий по йоге') + tg_text_convert('Диана: Расписание занятий по йоге. Имя Юки Ямадзаки — в каждой графе. Что ж, судя по всему, Юки Ямадзаки — настоящий фанат йоги.\n\nИз расписания у горячего источника видно, что она заняла тренера на целый день. Готов размяться, 47-й?'), parse_mode='MarkdownV2')
                 users[user_id].events['Расписание занятий по йоге'].completed = True
                 edit = False
-            if users[user_id].events['Информация о пилоте'].completed == False and (move_to_location.name == 'Вертолетная площадка' or move_to_location.name == 'Комната пилота'):
+            if users[user_id].events['Информация о пилоте'].completed == False and (move_to_location.name == 'Вертолётная площадка' or move_to_location.name == 'Комната пилота'):
                 query.edit_message_text(text=make_heading('Сведения о пилоте') + tg_text_convert('Диана: 47-й, у меня есть сведения о пилоте. Мне удалось извлечь кое-какие данные из системы безопасности клиники.\n\nГлавный хирург, Николя Лоран, похоже, часто встречается с пилотом вертолёта у выхода из мед-комплекса. А если верить слухам, у главного хирурга дрожат руки.'), parse_mode='MarkdownV2')
                 users[user_id].events['Информация о пилоте'].completed = True
                 edit = False
@@ -2514,7 +2517,7 @@ def move(update: Update, context: CallbackContext):
                         query.edit_message_text(text='Для входа необходима маскировка директора клиники или ключ-карта', reply_markup=move_keyboard(update=update, context=context))
                     else:
                         context.bot.send_message(chat_id=update.effective_chat.id, text='Для входа необходима маскировка директора клиники или ключ-карта', reply_markup=move_keyboard(update=update, context=context))
-            elif move_to_location.name == 'Хранилище':
+            elif move_to_location.name == 'Хранилище органов' or move_to_location.name == 'Хранилище сердца' or move_to_location.name == 'Комната директора':
                 if users[user_id].items['Дешифровщик'] in users[user_id].player.inventory:
                     if move_to_location.unlocked == False:
                         if edit:
@@ -2580,7 +2583,7 @@ def safe_move(update: Update, context: CallbackContext):
             query.edit_message_text(text=make_heading('Расписание занятий по йоге') + tg_text_convert('Диана: Расписание занятий по йоге. Имя Юки Ямадзаки — в каждой графе. Что ж, судя по всему, Юки Ямадзаки — настоящий фанат йоги.\n\nИз расписания у горячего источника видно, что она заняла тренера на целый день. Готов размяться, 47-й?'), parse_mode='MarkdownV2')
             users[user_id].events['Расписание занятий по йоге'].completed = True
             edit = False
-        if users[user_id].events['Информация о пилоте'].completed == False and (move_to_location.name == 'Вертолетная площадка' or move_to_location.name == 'Комната пилота'):
+        if users[user_id].events['Информация о пилоте'].completed == False and (move_to_location.name == 'Вертолётная площадка' or move_to_location.name == 'Комната пилота'):
             query.edit_message_text(text=make_heading('Сведения о пилоте') + tg_text_convert('Диана: 47-й, у меня есть сведения о пилоте. Мне удалось извлечь кое-какие данные из системы безопасности клиники.\n\nГлавный хирург, Николя Лоран, похоже, часто встречается с пилотом вертолёта у выхода из мед-комплекса. А если верить слухам, у главного хирурга дрожат руки.'), parse_mode='MarkdownV2')
             users[user_id].events['Информация о пилоте'].completed = True
             edit = False
@@ -2631,7 +2634,7 @@ def no_disguise_move(update: Update, context: CallbackContext):
             query.edit_message_text(text=make_heading('Расписание занятий по йоге') + tg_text_convert('Диана: Расписание занятий по йоге. Имя Юки Ямадзаки — в каждой графе. Что ж, судя по всему, Юки Ямадзаки — настоящий фанат йоги.\n\nИз расписания у горячего источника видно, что она заняла тренера на целый день. Готов размяться, 47-й?'), parse_mode='MarkdownV2')
             users[user_id].events['Расписание занятий по йоге'].completed = True
             edit = False
-        if users[user_id].events['Информация о пилоте'].completed == False and (move_to_location.name == 'Вертолетная площадка' or move_to_location.name == 'Комната пилота'):
+        if users[user_id].events['Информация о пилоте'].completed == False and (move_to_location.name == 'Вертолётная площадка' or move_to_location.name == 'Комната пилота'):
             query.edit_message_text(text=make_heading('Сведения о пилоте') + tg_text_convert('Диана: 47-й, у меня есть сведения о пилоте. Мне удалось извлечь кое-какие данные из системы безопасности клиники.\n\nГлавный хирург, Николя Лоран, похоже, часто встречается с пилотом вертолёта у выхода из мед-комплекса. А если верить слухам, у главного хирурга дрожат руки.'), parse_mode='MarkdownV2')
             users[user_id].events['Информация о пилоте'].completed = True
             edit = False
@@ -2958,6 +2961,19 @@ def support(update: Update, context: CallbackContext):
 def stats(update: Update, context: CallbackContext):
     """Вывод статистики игрока"""
     user_id = update.message.from_user['id']
+    user_nickname = str(update.message.from_user['username'])
+    chat_id = int(update.effective_chat.id)
+    created = int(tm.time())
+    if adapter.search('users', f'id={user_id}') == 0:
+        context.bot.send_message(chat_id=update.effective_chat.id, text='*_Пользователь не найден_*\n\nПожалуйста воспользуйтесь коммандой \start.', parse_mode='MarkdownV2')
+        adapter.insert('users', [
+            f'id={user_id}',
+            f'chat_id={chat_id}',
+            f'created={created}',
+            f'user_nickname={user_nickname}',
+            f'updated={created}'
+        ])
+        users[user_id] = create_user(user_id=user_id)
     text = make_heading('Карьера')
     text += f'*_Текущий уровень: {users[user_id].player_lvl // 6}_*\n\n'
     text_check = make_heading('Карьера') + f'*_Текущий уровень: {users[user_id].player_lvl // 6}_*\n\n' + make_heading('Свободная тренировка')

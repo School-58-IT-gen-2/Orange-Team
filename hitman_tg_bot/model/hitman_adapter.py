@@ -9,24 +9,21 @@ class HitmanAdapter:
 
     def __get_connect(self):
         """Подключение к базе"""
-        try:
-            conn = psycopg2.connect(
-                """
-				host=rc1d-9cjee2y71olglqhg.mdb.yandexcloud.net
-				port=6432
-				dbname=sch58_db
-				user=Admin
-				password=atdhfkm2024
-				target_session_attrs=read-write
-			"""
-            )
-            return conn
-        except:
-            print("connection error")
+        conn = psycopg2.connect(
+            """
+            host=85.208.86.99
+            port=6432
+            dbname=sch58_db
+            user=Admin
+            password=atdhfkm2024
+            target_session_attrs=read-write
+        """
+        )
+        return conn
 
     def get_all(self, table_name: str):
         """Получение всей таблицы"""
-        request = f'SELECT * FROM "Orange_team"."{table_name}"'
+        request = f'SELECT * FROM "orange_team"."{table_name}"'
         cursor = self.conn.cursor()
         cursor.execute(request)
         data = cursor.fetchall()
@@ -34,7 +31,7 @@ class HitmanAdapter:
 
     def get_by_id(self, table_name: str, id: int):
         """Получение строки по id"""
-        request = f'SELECT * FROM "Orange_team"."{table_name}" WHERE id = {id}'
+        request = f'SELECT * FROM "orange_team"."{table_name}" WHERE id = {id}'
         cursor = self.conn.cursor()
         cursor.execute(request)
         data = cursor.fetchall()
@@ -50,7 +47,7 @@ class HitmanAdapter:
     
     def search(self, table_name: str, selection: str):
         """Проверка наличия значения в таблице"""
-        request = f'SELECT COUNT(1) FROM "Orange_team"."{table_name}" WHERE {selection.split("=")[0]} = {selection.split("=")[1]}'
+        request = f'SELECT COUNT(1) FROM "orange_team"."{table_name}" WHERE {selection.split("=")[0]} = {selection.split("=")[1]}'
         cursor = self.conn.cursor()
         cursor.execute(request)
         data = cursor.fetchall()
@@ -60,11 +57,11 @@ class HitmanAdapter:
         """Изменение параметра по id"""
         update_param = update.split('=')[0]
         update_value = update.split('=')[1]
-        request = f'UPDATE "Orange_team"."{table_name}" SET "{update_param}"=\'{update_value}\' WHERE "id" = {id}'
+        request = f'UPDATE "orange_team"."{table_name}" SET "{update_param}"=\'{update_value}\' WHERE "id" = {id}'
         cursor = self.conn.cursor()
         cursor.execute(request)
         self.conn.commit()
-        request = f'SELECT * FROM "Orange_team"."{table_name}"'
+        request = f'SELECT * FROM "orange_team"."{table_name}"'
         cursor = self.conn.cursor()
         cursor.execute(request)
         data = cursor.fetchall()
@@ -76,11 +73,11 @@ class HitmanAdapter:
         update_value = update.split('=')[1]
         curlb_left = '{'
         curlb_right = '}'
-        request = f'UPDATE "Orange_team"."{table_name}" SET "{update_param}"=\'{{{update_value}}}\' WHERE "user_id" = {id}'
+        request = f'UPDATE "orange_team"."{table_name}" SET "{update_param}"=\'{{{update_value}}}\' WHERE "user_id" = {id}'
         cursor = self.conn.cursor()
         cursor.execute(request)
         self.conn.commit()
-        request = f'SELECT * FROM "Orange_team"."{table_name}"'
+        request = f'SELECT * FROM "orange_team"."{table_name}"'
         cursor = self.conn.cursor()
         cursor.execute(request)
         data = cursor.fetchall()
@@ -88,11 +85,11 @@ class HitmanAdapter:
     
     def delete_by_id(self, table_name: str, id: int):
         """Удаление строки по id"""
-        request = f'DELETE FROM "Orange_team"."{table_name}" WHERE id = {id}'
+        request = f'DELETE FROM "orange_team"."{table_name}" WHERE id = {id}'
         cursor = self.conn.cursor()
         cursor.execute(request)
         self.conn.commit()
-        request = f'SELECT * FROM "Orange_team"."{table_name}"'
+        request = f'SELECT * FROM "orange_team"."{table_name}"'
         cursor = self.conn.cursor()
         cursor.execute(request)
         data = cursor.fetchall()
@@ -109,11 +106,11 @@ class HitmanAdapter:
             values += f'\'{y}\', '
         columns = columns[:-2]
         values = values[:-2]
-        request = f'INSERT INTO "Orange_team"."{table_name}" ({columns}) VALUES ({values})'
+        request = f'INSERT INTO "orange_team"."{table_name}" ({columns}) VALUES ({values})'
         cursor = self.conn.cursor()
         cursor.execute(request)
         self.conn.commit()
-        request = f'SELECT * FROM "Orange_team"."{table_name}" '
+        request = f'SELECT * FROM "orange_team"."{table_name}" '
         cursor = self.conn.cursor()
         cursor.execute(request)
         data = cursor.fetchall()
