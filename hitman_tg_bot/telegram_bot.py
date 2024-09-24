@@ -487,7 +487,16 @@ def confirm_distract_menu(update: Update, context: CallbackContext):
 def destroy_heart_menu_2(update: Update, context: CallbackContext):
     query = update.callback_query
     query.answer()
-    query.edit_message_text(text='Выберите действие', reply_markup=(destroy_heart_keyboard_2()))
+    user_id = update.callback_query.from_user['id']
+    users[user_id].player.current_location = users[user_id].locations['Уборная']
+    edit = True
+    if users[user_id].player.current_location.unlocked == False:
+        query.edit_message_text(text=users[user_id].player.current_location.unlock(update=update, context=context), parse_mode='MarkdownV2')
+        edit = False
+    if edit:
+        query.edit_message_text(text='Выберите действие', reply_markup=(destroy_heart_keyboard_2()))
+    else:
+        context.bot.send_message(chat_id=update.effective_chat.id,text='Выберите действие', reply_markup=(destroy_heart_keyboard_2()))
 
 
 def save_and_quit_confirm_menu(update: Update, context: CallbackContext):
@@ -642,7 +651,7 @@ def choose_action_keyboard(update: Update, context: CallbackContext):
             context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=sauna_kill_keyboard_1())
         elif users[user_id].events['Все цели убиты'].completed == True and (users[user_id].player.current_location.name == 'Канатная дорога' or users[user_id].player.current_location.name == 'Гараж' or users[user_id].player.current_location.name == 'Вертолётная площадка' or users[user_id].player.current_location.name == 'Горная тропа'):
             context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=(exit_mission_keyboard(update=update, context=context)))
-        elif users[user_id].events['Вырубить Джейсона'].completed == False and users[user_id].player.current_location.name == 'Холл' and users[user_id].player.disguise.name == 'VIP - пациент' and users[user_id].npcs['Jason Portman'].alive:
+        elif users[user_id].events['Вырубить Джейсона'].completed == False and users[user_id].player.current_location.name == 'Холл' and (users[user_id].player.disguise.name == 'VIP - пациент' or users[user_id].player.disguise.name == 'Пациент') and users[user_id].npcs['Jason Portman'].alive:
             users[user_id].events['Вырубить Джейсона'].completed = True
             context.bot.send_message(chat_id=update.effective_chat.id, text='Джейсон Портман: Эй, ты! Думаешь ты такой же фанат Хельмута, как и я?', reply_markup=(knock_jason_portman_keyboard_1()))
         elif  users[user_id].player.current_location.name == 'Холл' and users[user_id].player.disguise.name == 'Джейсон Портман':
@@ -726,7 +735,7 @@ def skip_choose_action_keyboard(update: Update, context: CallbackContext, skip_s
                 context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=sauna_kill_keyboard_1())
         elif users[user_id].events['Все цели убиты'].completed == True and (users[user_id].player.current_location.name == 'Канатная дорога' or users[user_id].player.current_location.name == 'Гараж' or users[user_id].player.current_location.name == 'Вертолётная площадка' or users[user_id].player.current_location.name == 'Горная тропа') and skip_hokkaido_exit == False:
                 context.bot.send_message(chat_id=update.effective_chat.id, text='Выберите действие', reply_markup=(exit_mission_keyboard(update=update, context=context)))
-        elif users[user_id].events['Вырубить Джейсона'].completed == False and users[user_id].player.current_location.name == 'Холл' and users[user_id].player.disguise.name == 'VIP - пациент' and users[user_id].npcs['Jason Portman'].alive:
+        elif users[user_id].events['Вырубить Джейсона'].completed == False and users[user_id].player.current_location.name == 'Холл' and (users[user_id].player.disguise.name == 'VIP - пациент' or users[user_id].player.disguise.name == 'Пациент') and users[user_id].npcs['Jason Portman'].alive:
             users[user_id].events['Вырубить Джейсона'].completed = True
             context.bot.send_message(chat_id=update.effective_chat.id, text='Джейсон Портман: Эй, ты! Думаешь ты такой же фанат Хельмута, как и я?', reply_markup=(knock_jason_portman_keyboard_1()))
         elif  users[user_id].player.current_location.name == 'Холл' and users[user_id].player.disguise.name == 'Джейсон Портман' and users[user_id].events['Обследование'].completed == False:
